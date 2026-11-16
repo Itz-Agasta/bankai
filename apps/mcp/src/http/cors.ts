@@ -24,6 +24,7 @@ export function withCors(req: Request, res: Response, allowed: string[]): Respon
   const out = new Response(res.body, res);
   out.headers.set("Access-Control-Allow-Origin", origin);
   out.headers.append("Vary", "Origin");
+  out.headers.set("Access-Control-Expose-Headers", "mcp-session-id, mcp-protocol-version");
   return out;
 }
 

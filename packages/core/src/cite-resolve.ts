@@ -1,4 +1,5 @@
 import type { Citation } from "@bankai/schemas";
+import { cite } from "./cite";
 import { BankaiFailure } from "./errors";
 import type { Project } from "./project/types";
 
@@ -7,8 +8,6 @@ function split(ref: string, sep: string, last = false): [string, string] | null 
   const i = last ? ref.lastIndexOf(sep) : ref.indexOf(sep);
   return i > 0 && i + sep.length < ref.length ? [ref.slice(0, i), ref.slice(i + sep.length)] : null;
 }
-
-const lineOf = (s: string) => (/^L\d+$/.test(s) ? Number(s.slice(1)) : NaN);
 
 /**
  * The record a citation points at, in the ref formats `cite.ts` writes. A submittal id can
@@ -26,18 +25,12 @@ function lookup(p: Project, { kind, ref }: Citation): unknown {
       const s = split(ref, "#");
       return s && s[0] === "equipment_schedule.csv" ? p.byTag.get(s[1]) : undefined;
     }
-    case "po_line": {
-      const s = split(ref, "#");
-      return s ? p.poLines.find((l) => l.po === s[0] && l.line === lineOf(s[1])) : undefined;
-    }
-    case "delivery_line": {
-      const s = split(ref, "#");
-      return s ? p.deliveries.find((d) => d.ticket === s[0] && d.line === lineOf(s[1])) : undefined;
-    }
-    case "drawing": {
-      const s = split(ref, "@rev");
-      return s ? p.drawings.find((d) => d.drawing === s[0] && d.revision === s[1]) : undefined;
-    }
+    case "po_line":
+      return p.poLines.find((l) => cite.poLine(l).ref === ref);
+    case "delivery_line":
+      return p.deliveries.find((d) => cite.deliveryLine(d).ref === ref);
+    case "drawing":
+      return p.drawings.find((d) => cite.drawing(d.drawing, d.revision).ref === ref);
     case "schedule_activity":
       return p.activityById.get(ref);
     case "submittal": {

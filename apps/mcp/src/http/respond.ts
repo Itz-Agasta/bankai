@@ -14,7 +14,11 @@ export const json = (body: unknown, status = 200): Response => Response.json(bod
 
 /** A BankaiFailure keeps its code; anything else is a bug: log it, tell the client nothing. */
 export function errorResponse(e: unknown): Response {
-  if (e instanceof BankaiFailure) return json({ error: e.toJSON() }, STATUS[e.code]);
+  if (e instanceof BankaiFailure) {
+    // Core details name full paths for the CLI; a web client gets the file name only.
+    const detail = e.detail?.replace(/(?:\/[^\s/:]+)+\/([^\s/:]+)/g, "$1");
+    return json({ error: { ...e.toJSON(), detail } }, STATUS[e.code]);
+  }
   console.error(e);
   return json({ error: { code: "INTERNAL", message: "internal error" } }, 500);
 }

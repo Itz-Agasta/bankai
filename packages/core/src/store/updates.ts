@@ -75,30 +75,43 @@ function mustGet(db: Database, id: string): ProposedUpdate {
   return u;
 }
 
-/** Idempotent: approving twice returns the first approval. Read, check and write hold one write lock. */
-export function approveUpdate(
+/** Pending to approved or rejected, once. Repeating the same decision returns the first. Read, check and write hold one write lock. */
+function decide(
   db: Database,
   id: string,
   by: string,
   at: string,
   auditFile: string,
+  to: "approved" | "rejected",
 ): ProposedUpdate {
   const actor = ActorId.parse(by);
   return db
     .transaction(() => {
       const u = mustGet(db, id);
-      if (u.approval === "approved") return u;
-      if (u.approval === "rejected")
-        throw new BankaiFailure("APPROVAL_REQUIRED", `update ${id} was rejected`);
-      const approved: ProposedUpdate = { ...u, approval: "approved", approved_by: actor, at };
+      if (u.approval === to) return u;
+      if (u.approval !== "pending")
+        throw new BankaiFailure(
+          "APPROVAL_REQUIRED",
+          u.approval === "rejected"
+            ? `update ${id} was rejected`
+            : `update ${id} was already approved`,
+        );
+      const done: ProposedUpdate = { ...u, approval: to, approved_by: actor, at };
       db.query(
-        `UPDATE updates SET json = $json, approval = 'approved', approved_by = $by, at = $at WHERE id = $id`,
-      ).run({ json: JSON.stringify(approved), by: actor, at, id });
-      appendAudit(auditFile, [event(approved, actor, "approved", at)]);
-      return approved;
+        `UPDATE updates SET json = $json, approval = $to, approved_by = $by, at = $at WHERE id = $id`,
+      ).run({ json: JSON.stringify(done), to, by: actor, at, id });
+      appendAudit(auditFile, [event(done, actor, to, at)]);
+      return done;
     })
     .immediate();
 }
+
+export const approveUpdate = (db: Database, id: string, by: string, at: string, audit: string) =>
+  decide(db, id, by, at, audit, "approved");
+
+/** A person said no: the update leaves pending for good. */
+export const rejectUpdate = (db: Database, id: string, by: string, at: string, audit: string) =>
+  decide(db, id, by, at, audit, "rejected");
 
 /** A declined approval leaves the update pending; only a pending update's decline is logged. */
 export function declineUpdate(
@@ -112,29 +125,4 @@ export function declineUpdate(
   const u = mustGet(db, id);
   if (u.approval !== "pending") return;
   appendAudit(auditFile, [event(u, actor, "declined", at)]);
-}
-
-/** A person said no: the update leaves pending for good. Idempotent; an approved update stays approved. */
-export function rejectUpdate(
-  db: Database,
-  id: string,
-  by: string,
-  at: string,
-  auditFile: string,
-): ProposedUpdate {
-  const actor = ActorId.parse(by);
-  return db
-    .transaction(() => {
-      const u = mustGet(db, id);
-      if (u.approval === "rejected") return u;
-      if (u.approval === "approved")
-        throw new BankaiFailure("APPROVAL_REQUIRED", `update ${id} was already approved`);
-      const rejected: ProposedUpdate = { ...u, approval: "rejected", approved_by: actor, at };
-      db.query(
-        `UPDATE updates SET json = $json, approval = 'rejected', approved_by = $by, at = $at WHERE id = $id`,
-      ).run({ json: JSON.stringify(rejected), by: actor, at, id });
-      appendAudit(auditFile, [event(rejected, actor, "rejected", at)]);
-      return rejected;
-    })
-    .immediate();
 }

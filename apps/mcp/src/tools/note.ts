@@ -2,7 +2,7 @@ import { NoteRun } from "@bankai/schemas";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { AudioInput, resolveAudio } from "../audio";
-import { note } from "../actions";
+import { note, speechModels } from "../actions";
 import type { ServerContext } from "../context";
 import { fail, ok } from "../results";
 
@@ -23,6 +23,7 @@ export function registerNote(server: McpServer, ctx: ServerContext): void {
     },
     async ({ audio }) => {
       try {
+        speechModels(ctx); // refuse before writing base64 audio
         return ok(await note(ctx, { audio: await resolveAudio(audio, ctx) }));
       } catch (e) {
         return fail(e);

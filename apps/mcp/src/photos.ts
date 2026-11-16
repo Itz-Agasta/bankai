@@ -1,8 +1,7 @@
-import { MAX_IMAGE_BYTES, sha256Hex } from "@bankai/core";
-import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { MAX_IMAGE_BYTES } from "@bankai/core";
 import { z } from "zod";
 import type { ServerContext } from "./context";
+import { storeUpload } from "./http/uploads";
 import { allowedPath } from "./paths";
 
 /** Base64 length of core's image size limit: refuse before decoding. */
@@ -29,10 +28,7 @@ export async function resolvePhotos(inputs: PhotoInput[], ctx: ServerContext): P
       out.push(allowedPath(input.path, ctx, "photo"));
     } else {
       const bytes = Buffer.from(input.base64, "base64");
-      await mkdir(ctx.tmpDir, { recursive: true });
-      const p = join(ctx.tmpDir, `${sha256Hex(bytes)}.${EXT[input.mediaType]}`);
-      await writeFile(p, bytes);
-      out.push(p);
+      out.push(await storeUpload(ctx.tmpDir, bytes, EXT[input.mediaType]));
     }
   }
   return out;

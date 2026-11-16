@@ -103,10 +103,11 @@ describe("HTTP routes", () => {
   });
 
   test("CORS: listed origin gets headers, unlisted gets none", async () => {
-    const s = await startTest({ allowedOrigins: ["app.test"] });
+    const s = await startTest({ allowedOrigins: ["App.Test"] });
     const ok = await fetch(s.at("/api/status"), { headers: { origin: "https://app.test" } });
     expect(ok.headers.get("access-control-allow-origin")).toBe("https://app.test");
     expect(ok.headers.get("vary")).toContain("Origin");
+    expect(ok.headers.get("access-control-expose-headers")).toContain("mcp-session-id");
     const bad = await fetch(s.at("/api/status"), { headers: { origin: "https://evil.test" } });
     expect(bad.headers.get("access-control-allow-origin")).toBeNull();
     const err = await fetch(s.at("/api/nope"), { headers: { origin: "https://app.test" } });

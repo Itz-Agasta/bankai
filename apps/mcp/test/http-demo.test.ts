@@ -43,10 +43,11 @@ describe("demo mode", () => {
   test("reset clears an approval", async () => {
     const s = await startTest({ demo: true });
     const v = (await (await verify(s)).json()) as { proposed_updates: { id: string }[] };
-    await fetch(s.at(`/api/updates/${v.proposed_updates[0]!.id}/approve`), {
+    const ok = await fetch(s.at(`/api/updates/${v.proposed_updates[0]!.id}/approve`), {
       method: "POST",
       body: JSON.stringify({ approved_by: "SUPT-01" }),
     });
+    expect(ok.status).toBe(200);
     const before = s.ctx().projectDir;
     expect((await reset(s)).status).toBe(200);
     expect(s.ctx().projectDir).not.toBe(before);
@@ -69,6 +70,18 @@ describe("demo mode", () => {
     await Promise.all([reset(s), reset(s)]);
     await s.stop();
     expect(demos()).toBe(before);
+  });
+
+  test("a demo boot that fails leaves no copy behind", async () => {
+    const demos = () => readdirSync(tmpdir()).filter((d) => d.startsWith("bankai-demo-")).length;
+    const before = demos();
+    const bad = await mkdtemp(join(tmpdir(), "bankai-bad-"));
+    try {
+      await expect(startHttp({ projectDir: bad, port: 0, demo: true })).rejects.toThrow();
+      expect(demos()).toBe(before);
+    } finally {
+      await rm(bad, { recursive: true, force: true });
+    }
   });
 
   test("a replay miss is 503 with the demo message", async () => {

@@ -59,7 +59,7 @@ Body `{ error: { code, message, detail? } }` (`BankaiError`).
 | `PROJECT_INVALID` | 500 |
 | `INTERNAL` | 500, no details |
 
-Requests over 64 MB are refused. Core also caps each photo at 20 MB and each audio file at 25 MB.
+Requests over 64 MB are refused by Bun itself with a plain (not JSON) 413. Core also caps each photo at 20 MB and each audio file at 25 MB.
 
 ## CORS
 

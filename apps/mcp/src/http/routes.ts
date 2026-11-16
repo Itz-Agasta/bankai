@@ -17,12 +17,6 @@ const text = (f: FormData, k: string): string | undefined => {
   return typeof v === "string" && v.trim() ? v.trim() : undefined;
 };
 
-function count(paths: string[], min: number, field: string): string[] {
-  if (paths.length < min || paths.length > 6)
-    throw new BankaiFailure("INPUT_UNSUPPORTED", `send ${min} to 6 ${field}`);
-  return paths;
-}
-
 function lineNumber(s: string | undefined): number | undefined {
   if (s === undefined) return undefined;
   if (!/^\d+$/.test(s)) throw new BankaiFailure("INPUT_UNSUPPORTED", "line must be a number");
@@ -42,7 +36,7 @@ export function apiRoutes(getCtx: () => ServerContext, info: { demo: boolean; re
       POST: safe(async (req) => {
         const ctx = getCtx();
         const f = await formOf(req);
-        const photos = count(await saveUploads(f, "photos", ctx, "photo"), 1, "photos");
+        const photos = await saveUploads(f, "photos", ctx, "photo", [1, 6]);
         const components = text(f, "components")
           ?.split(",")
           .map((c) => c.trim())
@@ -58,7 +52,7 @@ export function apiRoutes(getCtx: () => ServerContext, info: { demo: boolean; re
         const f = await formOf(req);
         const po = text(f, "po");
         if (!po) throw new BankaiFailure("INPUT_UNSUPPORTED", "po is required");
-        const photos = count(await saveUploads(f, "photos", ctx, "photo"), 0, "photos");
+        const photos = await saveUploads(f, "photos", ctx, "photo", [0, 6]);
         return json(
           await act.delivery(ctx, {
             po,
@@ -73,9 +67,9 @@ export function apiRoutes(getCtx: () => ServerContext, info: { demo: boolean; re
       POST: safe(async (req) => {
         const ctx = getCtx();
         const f = await formOf(req);
-        const audio = await saveUploads(f, "audio", ctx, "audio");
-        if (audio.length !== 1) throw new BankaiFailure("INPUT_UNSUPPORTED", "send one audio file");
-        return json(await act.note(ctx, { audio: audio[0]! }));
+        act.speechModels(ctx); // refuse before keeping the upload
+        const [audio] = await saveUploads(f, "audio", ctx, "audio", [1, 1]);
+        return json(await act.note(ctx, { audio: audio! }));
       }),
     },
   };

@@ -1,4 +1,10 @@
-import { audioMediaType, BankaiFailure, sha256Hex } from "@bankai/core";
+import {
+  audioMediaType,
+  BankaiFailure,
+  MAX_AUDIO_BYTES,
+  MAX_IMAGE_BYTES,
+  sha256Hex,
+} from "@bankai/core";
 import { mkdir, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { ServerContext } from "../context";
@@ -25,20 +31,50 @@ function imageExt(b: Uint8Array): string | null {
 }
 
 /**
- * Write each file of a form field to the tmp folder as `<sha256>.<ext>`, ext from the bytes.
- * Client file names and paths are never used.
+ * Store bytes under the tmp folder as `<sha256>.<ext>`. The name is the content: an existing
+ * file is this upload, and another request may be reading it, so it is never rewritten; a new
+ * one appears whole, via rename.
+ */
+export async function storeUpload(dir: string, bytes: Uint8Array, ext: string): Promise<string> {
+  await mkdir(dir, { recursive: true });
+  const p = join(dir, `${sha256Hex(bytes)}.${ext}`);
+  if (!(await Bun.file(p).exists())) {
+    const tmp = `${p}.${crypto.randomUUID()}.tmp`;
+    await writeFile(tmp, bytes);
+    await rename(tmp, p);
+  }
+  return p;
+}
+
+/**
+ * Store each file of a form field, ext from the bytes. Count and size are checked before
+ * anything is written. Client file names and paths are never used.
  */
 export async function saveUploads(
   form: FormData,
   field: string,
   ctx: ServerContext,
   kind: "photo" | "audio",
+  [min, max]: [number, number],
 ): Promise<string[]> {
-  const out: string[] = [];
-  for (const v of form.getAll(field)) {
+  const values = form.getAll(field);
+  if (values.length < min || values.length > max)
+    throw new BankaiFailure(
+      "INPUT_UNSUPPORTED",
+      min === max ? `send ${min} ${field} file` : `send ${min} to ${max} ${field}`,
+    );
+  const limit = kind === "photo" ? MAX_IMAGE_BYTES : MAX_AUDIO_BYTES;
+  const files: File[] = [];
+  for (const v of values) {
     if (typeof v === "string")
       throw new BankaiFailure("INPUT_UNSUPPORTED", `${field} must be a file upload`);
-    const bytes = new Uint8Array(await v.arrayBuffer());
+    if (v.size > limit)
+      throw new BankaiFailure("INPUT_TOO_LARGE", `${kind} over ${limit / 1024 / 1024} MB`);
+    files.push(v);
+  }
+  const out: string[] = [];
+  for (const f of files) {
+    const bytes = new Uint8Array(await f.arrayBuffer());
     const sniffed = audioMediaType(bytes);
     const ext = kind === "photo" ? imageExt(bytes) : sniffed && AUDIO_EXT[sniffed];
     if (!ext)
@@ -46,16 +82,7 @@ export async function saveUploads(
         "INPUT_UNSUPPORTED",
         kind === "photo" ? "photo must be jpg, png or webp" : "audio format not supported",
       );
-    await mkdir(ctx.tmpDir, { recursive: true });
-    const p = join(ctx.tmpDir, `${sha256Hex(bytes)}.${ext}`);
-    // The name is the content: an existing file is this upload, and another request may be
-    // reading it. A new one appears whole, via rename.
-    if (!(await Bun.file(p).exists())) {
-      const tmp = `${p}.${crypto.randomUUID()}.tmp`;
-      await writeFile(tmp, bytes);
-      await rename(tmp, p);
-    }
-    out.push(p);
+    out.push(await storeUpload(ctx.tmpDir, bytes, ext));
   }
   return out;
 }

@@ -25,6 +25,9 @@ export async function serveCommand(opts: {
       demo: opts.demo || process.env.BANKAI_DEMO === "1",
     });
     console.error(`bankai serving ${s.url}`);
+    // A demo copy lives in the temp folder: remove it on the way out.
+    for (const sig of ["SIGINT", "SIGTERM"] as const)
+      process.once(sig, () => void s.stop().finally(() => process.exit(0)));
     return undefined;
   } catch (e) {
     if (!(e instanceof BankaiFailure)) throw e;

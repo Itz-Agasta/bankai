@@ -54,7 +54,8 @@ export async function delivery(
   return result;
 }
 
-export async function note(ctx: ServerContext, i: { audio: string }): Promise<NoteRun> {
+/** Speech and extraction models, or PERCEPTION_UNAVAILABLE. Callers check before storing audio. */
+export function speechModels(ctx: ServerContext) {
   const { speech, extract } = ctx.models;
   if (!speech || !extract)
     throw new BankaiFailure(
@@ -62,13 +63,19 @@ export async function note(ctx: ServerContext, i: { audio: string }): Promise<No
       "speech is not configured",
       "set GROQ_API_KEY to process site notes",
     );
+  return { speech, extract };
+}
+
+export async function note(ctx: ServerContext, i: { audio: string }): Promise<NoteRun> {
+  const { speech, extract } = speechModels(ctx);
   const project = await loadProject(ctx.projectDir);
   const run = await processNote(
     { audio: i.audio },
     { project, models: { speech, extract }, tracer: (id) => ctx.store.restartTrace(id) },
   );
   ctx.store.saveNote(run.result, new Date().toISOString());
-  return run;
+  // A re-run keeps approvals already given: answer with what is stored.
+  return { ...run, result: ctx.store.getNote(run.result.id) ?? run.result };
 }
 
 function actor(by: string): string {

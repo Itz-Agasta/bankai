@@ -1,5 +1,5 @@
 import { liveModels, modelConfig, type Models } from "@bankai/core";
-import { cp, mkdtemp } from "node:fs/promises";
+import { cp, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join, resolve } from "node:path";
 
@@ -7,11 +7,17 @@ import { basename, join, resolve } from "node:path";
 export async function demoCopy(projectDir: string): Promise<string> {
   const src = resolve(projectDir);
   // Keep the folder name: it is the project's name.
-  const dest = join(await mkdtemp(join(tmpdir(), "bankai-demo-")), basename(src));
-  await cp(src, dest, {
-    recursive: true,
-    filter: (p) => !p.slice(src.length).split(/[\\/]/).includes(".bankai"),
-  });
+  const parent = await mkdtemp(join(tmpdir(), "bankai-demo-"));
+  const dest = join(parent, basename(src));
+  try {
+    await cp(src, dest, {
+      recursive: true,
+      filter: (p) => !p.slice(src.length).split(/[\\/]/).includes(".bankai"),
+    });
+  } catch (e) {
+    await rm(parent, { recursive: true, force: true });
+    throw e;
+  }
   return dest;
 }
 

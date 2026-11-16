@@ -1,6 +1,9 @@
 import { afterAll, describe, expect, test } from "bun:test";
+import { fakeExtractor, fakeTranscriber } from "@bankai/core";
+import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { approve, explain, reject, status, verify } from "../src/actions";
+import { extractScript, N001, transcript } from "../../../packages/core/test/fixtures/notes";
+import { approve, explain, note, reject, status, verify } from "../src/actions";
 import { buildContext } from "../src/context";
 import { cleanup, fakeModels, miniProject, track } from "./helpers";
 
@@ -62,6 +65,30 @@ describe("actions", () => {
     expect(out.kind).toBe("update");
     expect(out.verdict?.id).toBe(r.verdict.id);
     expect(out.trace.length).toBeGreaterThan(0);
+  });
+
+  test("a note re-run shows the approval already given", async () => {
+    const project = await miniProject();
+    const ctx = track(
+      await buildContext({
+        projectDir: project,
+        models: {
+          ...fakeModels(),
+          speech: fakeTranscriber("fake-speech", { "*": transcript(N001) }),
+          extract: fakeExtractor("fake-extract", extractScript()),
+        },
+      }),
+    );
+    const audio = join(project, "n001.wav");
+    writeFileSync(
+      audio,
+      new Uint8Array([0x52, 0x49, 0x46, 0x46, 9, 0, 0, 0, 0x57, 0x41, 0x56, 0x45, 9]),
+    );
+    const first = await note(ctx, { audio });
+    const id = first.result.updates[0]!.id;
+    approve(ctx, id, "SUPT-01");
+    const again = await note(ctx, { audio });
+    expect(again.result.updates.find((u) => u.id === id)?.approval).toBe("approved");
   });
 
   test("status lists the pending update", async () => {

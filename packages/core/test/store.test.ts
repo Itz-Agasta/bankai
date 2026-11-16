@@ -294,8 +294,8 @@ describe("rejectUpdate", () => {
       store.saveUpdates("v1", [upd, { ...upd, id: "upd_s" }]);
       store.approveUpdate("upd_r", "SUPT-01", "t2");
       expect(() => store.rejectUpdate("upd_r", "SUPT-01", "t3")).toThrow("already approved");
-      store.rejectUpdate("upd_s", "SUPT-01", "t2");
-      expect(store.rejectUpdate("upd_s", "PM-2", "t4")).toMatchObject({ approved_by: "SUPT-01" });
+      const first = store.rejectUpdate("upd_s", "SUPT-01", "t2");
+      expect(store.rejectUpdate("upd_s", "PM-2", "t4")).toEqual(first);
     } finally {
       store.close();
     }

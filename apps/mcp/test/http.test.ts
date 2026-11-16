@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, test } from "bun:test";
 import { fakeExtractor, fakeTranscriber, sha256Hex } from "@bankai/core";
 import { NoteRun, VerifyResult } from "@bankai/schemas";
-import { chmodSync, mkdirSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { extractScript, N001, transcript } from "../../../packages/core/test/fixtures/notes";
 import { cleanup, PLATE } from "./helpers";
@@ -70,10 +70,19 @@ describe("HTTP API", () => {
     expect(await errCode(r)).toBe("INPUT_UNSUPPORTED");
   });
 
-  test("more than six photos is 400", async () => {
+  test("more than six photos is 400 and nothing is written", async () => {
     const s = await startTest();
     const r = await post(s.at("/api/verify"), form({ photos: Array(7).fill(plate()) }));
     expect(r.status).toBe(400);
+    expect(existsSync(s.ctx().tmpDir) ? readdirSync(s.ctx().tmpDir) : []).toEqual([]);
+  });
+
+  test("a photo over 20 MB is 413 and not written", async () => {
+    const s = await startTest();
+    const big = new Blob([new Uint8Array(20 * 1024 * 1024 + 1)]);
+    const r = await post(s.at("/api/verify"), form({ photos: big }));
+    expect(r.status).toBe(413);
+    expect(existsSync(s.ctx().tmpDir) ? readdirSync(s.ctx().tmpDir) : []).toEqual([]);
   });
 
   test("a text file as a photo is 400", async () => {
@@ -118,11 +127,21 @@ describe("HTTP API", () => {
     NoteRun.parse(await r.json());
   });
 
-  test("note without speech models is 503", async () => {
+  test("note without speech models is 503 and the audio is not kept", async () => {
     const s = await startTest();
     const r = await post(s.at("/api/notes"), form({ audio: new Blob([WAV]) }));
     expect(r.status).toBe(503);
     expect(await errCode(r)).toBe("PERCEPTION_UNAVAILABLE");
+    expect(existsSync(s.ctx().tmpDir) ? readdirSync(s.ctx().tmpDir) : []).toEqual([]);
+  });
+
+  test("error details do not show server folders", async () => {
+    const s = await startTest();
+    const junk = new Blob([new Uint8Array([0xff, 0xd8, 0xff, 1, 2, 3])]);
+    const r = await post(s.at("/api/verify"), form({ photos: junk }));
+    const body = (await r.json()) as { error: { detail?: string } };
+    expect(body.error.detail).toBeDefined();
+    expect(JSON.stringify(body)).not.toContain(s.project);
   });
 
   test("unknown route is 404 JSON", async () => {

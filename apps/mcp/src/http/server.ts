@@ -32,10 +32,18 @@ export async function startHttp(opts: {
   allowedOrigins?: string[];
 }): Promise<HttpServer> {
   const demo = opts.demo ?? false;
-  const allowed = opts.allowedOrigins ?? allowedOrigins();
+  const allowed = (opts.allowedOrigins ?? allowedOrigins()).map((h) => h.toLowerCase());
   const models = opts.models ?? (demo ? replayModels() : undefined);
-  const build = async () =>
-    buildContext({ projectDir: demo ? await demoCopy(opts.projectDir) : opts.projectDir, models });
+  const build = async () => {
+    if (!demo) return buildContext({ projectDir: opts.projectDir, models });
+    const copy = await demoCopy(opts.projectDir);
+    try {
+      return await buildContext({ projectDir: copy, models });
+    } catch (e) {
+      await rm(dirname(copy), { recursive: true, force: true });
+      throw e;
+    }
+  };
   let ctx = await build();
   const getCtx = () => ctx;
   const retiring = new Set<() => Promise<void>>();
