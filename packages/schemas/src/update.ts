@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { ActorId, Citation } from "./citation";
 import { Confidence, NonNegative } from "./numbers";
-import { Status } from "./verdict";
+import { Status, Verdict } from "./verdict";
 
 export const ProposedUpdate = z.object({
   id: z.string(),
@@ -16,6 +16,12 @@ export const ProposedUpdate = z.object({
   at: z.nullable(z.string()),
 });
 export type ProposedUpdate = z.infer<typeof ProposedUpdate>;
+
+export const VerifyResult = z.object({
+  verdict: Verdict,
+  proposed_updates: z.array(ProposedUpdate),
+});
+export type VerifyResult = z.infer<typeof VerifyResult>;
 
 export const ClaimType = z.enum(["status", "date_change", "issue", "decision", "action_item"]);
 export type ClaimType = z.infer<typeof ClaimType>;

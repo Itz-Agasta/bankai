@@ -1,9 +1,12 @@
-import type { TraceEvent, Verdict } from "@bankai/schemas";
+import type { ProposedUpdate, TraceEvent, Verdict } from "@bankai/schemas";
 import { join } from "node:path";
 import type { Tracer } from "../models/meter";
 import { openDb } from "./db";
 import { dbTracer, readTrace } from "./trace";
+import { approveUpdate, declineUpdate, getUpdate, pendingUpdates, saveUpdates } from "./updates";
 import { getVerdict, openItems, resolve, saveVerdict, type OpenItem } from "./verdicts";
+
+export { appendAudit, auditPath, type AuditEvent } from "./audit";
 
 export type { OpenItem } from "./verdicts";
 
@@ -15,6 +18,11 @@ export interface Store {
   resolve(verdictId: string, by: string, at: string): void;
   tracer(runId: string): Tracer;
   trace(runId: string): TraceEvent[];
+  saveUpdates(verdictId: string, us: ProposedUpdate[], auditFile: string): void;
+  getUpdate(id: string): ProposedUpdate | null;
+  pendingUpdates(): ProposedUpdate[];
+  approveUpdate(id: string, by: string, at: string, auditFile: string): ProposedUpdate;
+  declineUpdate(id: string, by: string, at: string, auditFile: string): void;
   close(): void;
 }
 
@@ -30,6 +38,11 @@ export function openStore(path: string): Store {
     resolve: (id, by, at) => resolve(db, id, by, at),
     tracer: (runId) => dbTracer(db, runId),
     trace: (runId) => readTrace(db, runId),
+    saveUpdates: (vid, us, file) => saveUpdates(db, vid, us, file),
+    getUpdate: (id) => getUpdate(db, id),
+    pendingUpdates: () => pendingUpdates(db),
+    approveUpdate: (id, by, at, file) => approveUpdate(db, id, by, at, file),
+    declineUpdate: (id, by, at, file) => declineUpdate(db, id, by, at, file),
     close: () => db.close(),
   };
 }

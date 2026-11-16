@@ -21,6 +21,14 @@ CREATE TABLE IF NOT EXISTS trace (
   at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS trace_run ON trace (run_id, seq);
+CREATE TABLE IF NOT EXISTS updates (
+  id TEXT PRIMARY KEY,
+  verdict_id TEXT NOT NULL,
+  json TEXT NOT NULL,
+  approval TEXT NOT NULL,
+  approved_by TEXT,
+  at TEXT
+);
 `;
 
 /** SQLite file with WAL (readers do not block the writer) and the schema in place. */
