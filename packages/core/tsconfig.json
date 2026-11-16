@@ -2,9 +2,10 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "rootDir": ".",
-    "outDir": "../../.cache/tsc/core"
+    "outDir": "../../.cache/tsc/core",
+    "resolveJsonModule": true
   },
-  "include": ["src", "test", "scripts"],
+  "include": ["src", "test", "scripts", "calibrator.json"],
   "references": [
     {
       "path": "../schemas"

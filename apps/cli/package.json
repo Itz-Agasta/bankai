@@ -7,6 +7,8 @@
   },
   "type": "module",
   "dependencies": {
-    "@bankai/core": "workspace:*"
+    "@bankai/core": "workspace:*",
+    "@bankai/schemas": "workspace:*",
+    "commander": "^15.1.0"
   }
 }
