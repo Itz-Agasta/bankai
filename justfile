@@ -7,9 +7,6 @@ check:
 check-ci:
     bunx oxlint --deny-warnings && bunx oxfmt --check . && bunx knip
 
-knip:
-    bunx knip
-
 types:
     bunx tsc -b
 
