@@ -15,6 +15,7 @@ export function createServer(ctx: ServerContext): McpServer {
   registerDelivery(server, ctx);
   registerApply(server, ctx);
   registerExplain(server, ctx);
+  ctx.skills.attach(server);
   return server;
 }
 

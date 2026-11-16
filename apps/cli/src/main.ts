@@ -2,6 +2,7 @@
 import { VERSION } from "@bankai/core";
 import { Command } from "commander";
 import { evalCommand } from "./commands/eval";
+import { mcpCommand } from "./commands/mcp";
 import { statusCommand } from "./commands/status";
 import { verifyCommand } from "./commands/verify";
 
@@ -41,6 +42,15 @@ program
   .option("--out <dir>", "where results.jsonl and EVAL_REPORT.md go", "eval/out")
   .action(async (opts) => {
     process.exitCode = await evalCommand(opts);
+  });
+
+program
+  .command("mcp")
+  .description("Serve the Bankai tools and skill over MCP (stdio)")
+  .option("--project <dir>", "project folder (default: $BANKAI_PROJECT)")
+  .action(async (opts) => {
+    const code = await mcpCommand(opts);
+    if (code !== undefined) process.exitCode = code;
   });
 
 await program.parseAsync();
