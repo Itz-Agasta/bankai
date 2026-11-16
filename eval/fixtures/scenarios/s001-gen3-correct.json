@@ -1,0 +1,8 @@
+{
+  "id": "s001-gen3-correct",
+  "project": "mini",
+  "photos": ["gen-3-plate.jpg"],
+  "location": "PAD-B",
+  "expected": { "status": "confirmed", "subject_tag": "GEN-3", "failing_checks": [] },
+  "kind": "correct"
+}

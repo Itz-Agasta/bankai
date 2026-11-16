@@ -1,0 +1,15 @@
+{
+  "photo": "cat-plate.jpg",
+  "equipment_type": "generator",
+  "fields": {
+    "manufacturer": "CATERPILLAR",
+    "model": "3516C",
+    "serial": "SBK00921",
+    "voltage": "480",
+    "kva": "2250",
+    "phase": "3",
+    "frequency": "60"
+  },
+  "hard": false,
+  "people_checked": true
+}

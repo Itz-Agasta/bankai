@@ -14,6 +14,8 @@ export interface VerifyInput {
   photos: string[];
   location: string | null;
   observedComponents?: string[];
+  /** Read the whole photo instead of the nameplate crop (spot-check comparison). */
+  noCrop?: boolean;
 }
 
 export interface VerifyDeps {
@@ -60,7 +62,9 @@ export async function verifyEquipment(input: VerifyInput, deps: VerifyDeps): Pro
   const { project, models, tracer } = deps;
   const meter = memoryMeter();
   const runId = crypto.randomUUID();
-  const perception = await perceivePhoto(input.photos, models, meter, tracer);
+  const perception = await perceivePhoto(input.photos, models, meter, tracer, {
+    noCrop: input.noCrop,
+  });
 
   const done = (v: Omit<Verdict, "id" | "models" | "cost_usd" | "latency_ms">): Verdict => {
     const verdict = dropUncited({ id: runId, ...v, ...meter.total() });
