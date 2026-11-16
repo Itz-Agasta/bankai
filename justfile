@@ -9,3 +9,6 @@ check-ci:
 
 types:
     bunx tsc -b
+
+validate-data dir:
+    bun packages/core/scripts/validate-data.ts {{dir}}

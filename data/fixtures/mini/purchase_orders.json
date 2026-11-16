@@ -1,0 +1,62 @@
+[
+  {
+    "po": "PO-1042",
+    "line": 14,
+    "tag": "GEN-3",
+    "manufacturer": "Cummins",
+    "model": "C2000D6",
+    "voltage": "415",
+    "kva": 2000,
+    "kw": null,
+    "components": ["generator", "controls cabinet", "day tank"],
+    "qty": 1
+  },
+  {
+    "po": "PO-1042",
+    "line": 15,
+    "tag": "GEN-4",
+    "manufacturer": "Cummins",
+    "model": "C2000D6",
+    "voltage": "415",
+    "kva": 2000,
+    "kw": null,
+    "components": ["generator", "controls cabinet", "day tank"],
+    "qty": 1
+  },
+  {
+    "po": "PO-1050",
+    "line": 1,
+    "tag": "TX-1",
+    "manufacturer": "Siemens",
+    "model": "GEAFOL 2500",
+    "voltage": "11000",
+    "kva": 2500,
+    "kw": null,
+    "components": ["transformer"],
+    "qty": 1
+  },
+  {
+    "po": "PO-1061",
+    "line": 3,
+    "tag": "CRAH-2",
+    "manufacturer": "Vertiv",
+    "model": "PX080",
+    "voltage": "415",
+    "kva": null,
+    "kw": null,
+    "components": ["crah unit"],
+    "qty": 1
+  },
+  {
+    "po": "PO-1070",
+    "line": 2,
+    "tag": "PUMP-9",
+    "manufacturer": "Grundfos",
+    "model": "CR 45-2",
+    "voltage": "415",
+    "kva": null,
+    "kw": 11,
+    "components": ["pump"],
+    "qty": 1
+  }
+]

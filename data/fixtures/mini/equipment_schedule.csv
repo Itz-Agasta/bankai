@@ -1,0 +1,6 @@
+tag,type,location,manufacturer,model,voltage,kva,kw,phase,frequency,drawing,revision
+GEN-3,generator,PAD-B,Cummins,C2000D6,415,2000,,3,50,E-201,C
+GEN-4,generator,PAD-C,Cummins,C2000D6,415,2000,,3,50,E-201,C
+TX-1,transformer,TX-YARD,Siemens,GEAFOL 2500,11000,2500,,3,50,E-101,A
+CRAH-2,crah,HALL-1,Vertiv,PX080,415,,,3,50,M-301,B
+GEN-3,generator,PAD-A,Cummins,C2000D6,415,2000,,3,50,E-201,B

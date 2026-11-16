@@ -1,0 +1,42 @@
+[
+  {
+    "id": "A10",
+    "name": "Set GEN-3",
+    "tag": "GEN-3",
+    "duration_days": 2,
+    "duration_low_days": 1,
+    "duration_high_days": 3,
+    "predecessors": [],
+    "milestone": false
+  },
+  {
+    "id": "A20",
+    "name": "Terminate GEN-3",
+    "tag": null,
+    "duration_days": 3,
+    "duration_low_days": 2,
+    "duration_high_days": 5,
+    "predecessors": ["A10"],
+    "milestone": false
+  },
+  {
+    "id": "A30",
+    "name": "Load bank test",
+    "tag": null,
+    "duration_days": 2,
+    "duration_low_days": 2,
+    "duration_high_days": 3,
+    "predecessors": ["A20"],
+    "milestone": false
+  },
+  {
+    "id": "A40",
+    "name": "Energization",
+    "tag": null,
+    "duration_days": 0,
+    "duration_low_days": 0,
+    "duration_high_days": 0,
+    "predecessors": ["A30"],
+    "milestone": true
+  }
+]
