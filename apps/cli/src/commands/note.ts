@@ -35,12 +35,12 @@ export async function noteCommand(audio: string, opts: NoteOptions): Promise<num
       { project, models: { speech, extract }, tracer: (id) => store.restartTrace(id) },
     );
     try {
+      // One transaction: the note and its proposals are kept together or not at all.
       store.saveNote(run.result, new Date().toISOString());
-      store.saveUpdates(run.result.id, run.result.updates);
     } catch (e) {
       // The model run already happened and was paid for: show the result, say it was not kept.
       console.error(
-        `warning: note not saved to ${storePath(opts.project)}: ${(e as Error).message}`,
+        `warning: note and its proposals not saved to ${storePath(opts.project)}: ${(e as Error).message}`,
       );
     }
     console.log(opts.json ? JSON.stringify(run, null, 2) : formatNote(run));

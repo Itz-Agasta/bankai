@@ -110,7 +110,8 @@ export function proposeForClaim(
         cite.action(`new-${key}`),
         "text",
         "",
-        c.owner_role ? quote : `unassigned: ${quote}`,
+        // Canonical owner id first: the spoken words may say "elec 02".
+        `${c.owner_role ?? "unassigned"}: ${quote}`,
       );
   }
 }

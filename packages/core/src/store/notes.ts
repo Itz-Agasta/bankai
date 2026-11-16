@@ -5,7 +5,8 @@ import { saveUpdates } from "./updates";
 /**
  * One transaction: the note and its proposals. The same audio keeps its note id, so a re-run
  * replaces the note, drops pending proposals it no longer makes (approved history stays), and
- * stores each proposal with its current approval.
+ * stores each proposal with its current approval. A withdrawn proposal is deleted without an
+ * audit event: the log keeps its `proposed` line, and the note no longer lists it.
  */
 export function saveNote(db: Database, n: NoteResult, at: string, auditFile: string): void {
   db.transaction(() => {

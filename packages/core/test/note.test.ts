@@ -65,7 +65,7 @@ describe("processNote", () => {
     expect(r.result.claims.map((c) => c.type)).toEqual(["date_change", "action_item", "issue"]);
     expect(r.result.updates.map((u) => [u.field, u.new])).toEqual([
       ["delay_days", "3"],
-      ["text", "Action for ELEC-02: confirm cable delivery by Friday."],
+      ["text", "ELEC-02: Action for ELEC-02: confirm cable delivery by Friday."],
     ]);
     expect(JSON.stringify(r)).not.toContain("Ravi");
   });
@@ -285,11 +285,11 @@ describe("cubic fixes: processNote", () => {
   });
 
   test("a hyphenated name the model flags is redacted", async () => {
-    const text = "ask Mary-Ann about the door";
+    const text = "ask mary-ann about the door"; // lower case: only the model can flag it
     const r = await run(wav.n001, {
       speech: fakeTranscriber("s", { "*": transcript(text) }),
       extract: fakeExtractor("e", { "*": { claims: [], names: [1] } } as never),
     });
-    expect(JSON.stringify(r)).not.toContain("Mary");
+    expect(JSON.stringify(r)).not.toContain("mary");
   });
 });

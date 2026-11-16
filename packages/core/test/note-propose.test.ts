@@ -151,7 +151,7 @@ describe("proposeForClaim", () => {
     const a = run(claim({ type: "action_item", owner_role: "ELEC-02", text: "x", span: said }));
     expect(a.update).toMatchObject({
       target: { kind: "action_item", ref: "actions.json#new-1" },
-      new: "action for ELEC-02 confirm cable delivery",
+      new: "ELEC-02: action for ELEC-02 confirm cable delivery",
     });
     const u = run(
       claim({ type: "action_item", text: "x", span: { ...SPAN, quote: "someone confirm cable" } }),

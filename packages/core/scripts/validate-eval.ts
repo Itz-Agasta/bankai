@@ -108,6 +108,7 @@ for (const file of await listFiles(join(ROOT, SET, "voice"))) {
     continue;
   }
   const s = r.data;
+  if (!bareName(file, "id", s.id)) continue;
   if (basename(file, ".json") !== s.id) errors.push(`${rel(file)}: name the file ${s.id}.json`);
   const script = join(ROOT, SET, "voice", `${s.id}.txt`);
   if (!existsSync(script)) errors.push(`${rel(file)}: script ${SET}/voice/${s.id}.txt not found`);
