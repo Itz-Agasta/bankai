@@ -19,6 +19,6 @@ export function indexProject(name: string, data: ProjectData): Project {
     byTag,
     poByTag,
     currentRevision: (drawing) => current.get(drawing),
-    locations: new Set([...byTag.values()].map((r) => r.location)),
+    locations: new Set(data.equipment.map((r) => r.location)),
   };
 }

@@ -1,6 +1,4 @@
 import { beforeAll, describe, expect, test } from "bun:test";
-import type { Field, Observation } from "@bankai/schemas";
-import { join } from "node:path";
 import {
   linkObservations,
   normalizeLocation,
@@ -8,24 +6,13 @@ import {
   normalizeTag,
   ocrDistance,
 } from "../src/link";
-import { loadProject } from "../src/project/load";
 import type { Project } from "../src/project/types";
+import { loadMini, obs } from "./helpers";
 
 let mini: Project;
 beforeAll(async () => {
-  mini = await loadProject(join(import.meta.dir, "../../../data/fixtures/mini"));
+  mini = await loadMini();
 });
-
-function obs(fields: Partial<Record<Field, string>>): Observation[] {
-  return Object.entries(fields).map(([field, value], i) => ({
-    id: `o${i}`,
-    source: "photo",
-    field: field as Field,
-    value,
-    model_votes: { primary: value, checker: value },
-    evidence: { kind: "photo_region", ref: `p1#${field}` },
-  }));
-}
 
 describe("normalize", () => {
   test("tags", () => {
@@ -95,7 +82,7 @@ describe("linkObservations", () => {
 
   test("a tag only on a PO links to the PO line", () => {
     const r = linkObservations(obs({ tag: "pump 9" }), mini);
-    expect(r.links[0]?.record).toEqual({ kind: "po_line", ref: "purchase_orders.json#PO-1070/2" });
+    expect(r.links[0]?.record).toEqual({ kind: "po_line", ref: "PO-1070#L2" });
   });
 
   test("an OCR-confused model still links fuzzily when unique", () => {

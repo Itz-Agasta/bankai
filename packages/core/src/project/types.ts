@@ -22,6 +22,6 @@ export interface Project extends ProjectData {
   byTag: Map<string, EquipmentRow>;
   poByTag: Map<string, PoLine>;
   currentRevision(drawing: string): DrawingRev | undefined;
-  /** Designed locations of current rows. */
+  /** Every location any revision places equipment at. */
   locations: Set<string>;
 }

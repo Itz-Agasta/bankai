@@ -1,4 +1,5 @@
 import type { Citation, Field, Link, Observation } from "@bankai/schemas";
+import { cite } from "../cite";
 import type { Project } from "../project/types";
 import { normalizeTag } from "./normalize";
 import { ocrDistance } from "./ocr-distance";
@@ -29,11 +30,11 @@ interface Target {
 function records(project: Project): Target[] {
   const out: Target[] = [...project.byTag.values()].map((r) => ({
     ...r,
-    record: { kind: "equipment_schedule_row", ref: `equipment_schedule.csv#${r.tag}` },
+    record: cite.equipmentRow(r.tag),
   }));
   for (const l of project.poLines) {
     if (project.byTag.has(l.tag)) continue;
-    out.push({ ...l, record: { kind: "po_line", ref: `purchase_orders.json#${l.po}/${l.line}` } });
+    out.push({ ...l, record: cite.poLine(l) });
   }
   return out;
 }
