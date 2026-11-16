@@ -8,3 +8,5 @@ export { aiVision } from "./ai";
 export { costUsd, loadUserEnv, modelConfig, PRICES } from "./config";
 export type { ModelConfig } from "./config";
 export { liveModels } from "./providers";
+export { modelsFromEnv } from "./env";
+export type { Models } from "./env";

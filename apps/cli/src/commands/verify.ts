@@ -1,5 +1,11 @@
-import { BankaiFailure, loadProject, openStore, storePath, verifyEquipment } from "@bankai/core";
-import { models } from "../deps";
+import {
+  BankaiFailure,
+  loadProject,
+  modelsFromEnv,
+  openStore,
+  storePath,
+  verifyEquipment,
+} from "@bankai/core";
 import { formatVerdict, safe } from "../format";
 
 export interface VerifyOptions {
@@ -23,7 +29,7 @@ export async function verifyCommand(photos: string[], opts: VerifyOptions): Prom
       .filter(Boolean);
     const verdict = await verifyEquipment(
       { photos, location: opts.location ?? null, observedComponents },
-      { project, models: await models(), tracer: store.tracer(runId), runId },
+      { project, models: await modelsFromEnv(), tracer: store.tracer(runId), runId },
     );
     try {
       store.saveVerdict(verdict, new Date().toISOString());
