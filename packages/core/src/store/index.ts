@@ -3,7 +3,14 @@ import { dirname, join } from "node:path";
 import type { Tracer } from "../models/meter";
 import { openDb } from "./db";
 import { dbTracer, readTrace } from "./trace";
-import { approveUpdate, declineUpdate, getUpdate, pendingUpdates, saveUpdates } from "./updates";
+import {
+  approveUpdate,
+  declineUpdate,
+  getUpdate,
+  pendingUpdates,
+  saveUpdates,
+  verdictOfUpdate,
+} from "./updates";
 import { getVerdict, openItems, resolve, saveVerdict, type OpenItem } from "./verdicts";
 
 export type { AuditEvent } from "./audit";
@@ -20,6 +27,8 @@ export interface Store {
   trace(runId: string): TraceEvent[];
   saveUpdates(verdictId: string, us: ProposedUpdate[]): void;
   getUpdate(id: string): ProposedUpdate | null;
+  /** The verdict that proposed this update. */
+  verdictOfUpdate(id: string): string | null;
   pendingUpdates(): ProposedUpdate[];
   approveUpdate(id: string, by: string, at: string): ProposedUpdate;
   declineUpdate(id: string, by: string, at: string): void;
@@ -42,6 +51,7 @@ export function openStore(path: string): Store {
     trace: (runId) => readTrace(db, runId),
     saveUpdates: (vid, us) => saveUpdates(db, vid, us, audit),
     getUpdate: (id) => getUpdate(db, id),
+    verdictOfUpdate: (id) => verdictOfUpdate(db, id),
     pendingUpdates: () => pendingUpdates(db),
     approveUpdate: (id, by, at) => approveUpdate(db, id, by, at, audit),
     declineUpdate: (id, by, at) => declineUpdate(db, id, by, at, audit),

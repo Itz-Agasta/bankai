@@ -3,6 +3,7 @@
   "references": [
     { "path": "packages/schemas" },
     { "path": "packages/core" },
-    { "path": "apps/cli" }
+    { "path": "apps/cli" },
+    { "path": "apps/mcp" }
   ]
 }

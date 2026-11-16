@@ -1,7 +1,6 @@
+import type { Models } from "../models/env";
 import type { Field, Scenario, ScenarioKind, Verdict } from "@bankai/schemas";
-import type { VisionModel } from "../models/types";
 
-export type Models = { primary: VisionModel; checker: VisionModel };
 /** Models for one case, given its photos (live runs return the same pair; fakes script per photo). */
 export type ModelsFor = (photos: string[]) => Models;
 
