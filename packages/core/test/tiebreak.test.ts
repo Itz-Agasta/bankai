@@ -165,8 +165,9 @@ describe("verify with a tie-break", () => {
         throw new Error("boom");
       },
     };
-    const { v } = await run(sizes, { primary: p.primary, checker: broken });
+    const { v, trace } = await run(sizes, { primary: p.primary, checker: broken });
     expect(v.subject_tag).toBeNull();
+    expect(trace.find((e) => e.step === "tiebreak.checker")?.summary).toContain("boom");
   });
 
   test("identical twins never call the tie-break", async () => {
