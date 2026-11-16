@@ -22,6 +22,8 @@ export interface VerifyDeps {
   project: Project;
   models: { primary: VisionModel; checker: VisionModel };
   tracer: Tracer;
+  /** Verdict id; pass the same id the tracer was opened with so the trail and verdict line up. */
+  runId?: string;
 }
 
 const DEPENDENT: Check["name"][] = ["spec", "substitution", "location", "revision", "completeness"];
@@ -61,7 +63,7 @@ function ratingCoverage(project: Project, tag: string | null, obs: Observation[]
 export async function verifyEquipment(input: VerifyInput, deps: VerifyDeps): Promise<Verdict> {
   const { project, models, tracer } = deps;
   const meter = memoryMeter();
-  const runId = crypto.randomUUID();
+  const runId = deps.runId ?? crypto.randomUUID();
   const perception = await perceivePhoto(input.photos, models, meter, tracer, {
     noCrop: input.noCrop,
   });

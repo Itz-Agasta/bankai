@@ -12,3 +12,5 @@ export { loadImage, perceivePhoto, validateField } from "./perceive";
 export type { Perception } from "./perceive";
 export * from "./verify";
 export * from "./eval";
+export { openStore, storePath } from "./store";
+export type { OpenItem, Store } from "./store";

@@ -2,6 +2,7 @@
 import { VERSION } from "@bankai/core";
 import { Command } from "commander";
 import { evalCommand } from "./commands/eval";
+import { statusCommand } from "./commands/status";
 import { verifyCommand } from "./commands/verify";
 
 const program = new Command()
@@ -19,6 +20,15 @@ program
   .option("--json", "print the Verdict as JSON")
   .action(async (photos: string[], opts) => {
     process.exitCode = await verifyCommand(photos, opts);
+  });
+
+program
+  .command("status")
+  .description("List open items (flagged or needing a human), oldest first")
+  .requiredOption("--project <dir>", "project folder")
+  .option("--json", "print open items as JSON")
+  .action((opts) => {
+    process.exitCode = statusCommand(opts);
   });
 
 program
