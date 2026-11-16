@@ -5,12 +5,15 @@ import { fakeModels, miniProject } from "./helpers";
 const servers: { stop(): Promise<void> }[] = [];
 
 /** A live server on a free port over a fresh mini copy, fake models unless given. */
-export async function startTest(opts: { models?: Partial<Models>; demo?: boolean } = {}) {
+export async function startTest(
+  opts: { models?: Partial<Models>; demo?: boolean; allowedOrigins?: string[] } = {},
+) {
   const project = await miniProject();
   const s = await startHttp({
     projectDir: project,
     port: 0,
     demo: opts.demo,
+    allowedOrigins: opts.allowedOrigins,
     models: { ...fakeModels(), ...opts.models },
   });
   servers.push(s);

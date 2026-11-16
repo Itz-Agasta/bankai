@@ -1,22 +1,8 @@
 import { BankaiFailure, loadProject, VERSION } from "@bankai/core";
 import * as act from "../actions";
 import type { ServerContext } from "../context";
-import { errorResponse, json } from "./respond";
+import { json, safe } from "./respond";
 import { saveUploads } from "./uploads";
-
-type Handler = (req: Request & { params: Record<string, string> }) => Promise<Response>;
-type Get = () => ServerContext;
-
-/** Every handler answers JSON; failures map to their status. */
-const safe =
-  (h: Handler): Handler =>
-  async (req) => {
-    try {
-      return await h(req);
-    } catch (e) {
-      return errorResponse(e);
-    }
-  };
 
 async function formOf(req: Request): Promise<FormData> {
   try {
@@ -43,7 +29,7 @@ function lineNumber(s: string | undefined): number | undefined {
   return Number(s);
 }
 
-export function apiRoutes(getCtx: Get, info: { demo: boolean; replay: boolean }) {
+export function apiRoutes(getCtx: () => ServerContext, info: { demo: boolean; replay: boolean }) {
   return {
     "/api/health": {
       GET: safe(async () => {

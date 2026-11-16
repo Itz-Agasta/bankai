@@ -21,3 +21,16 @@ export function errorResponse(e: unknown): Response {
 
 export const notFound = (): Response =>
   json({ error: { code: "NOT_FOUND", message: "no such route" } }, 404);
+
+export type Handler = (req: Request & { params: Record<string, string> }) => Promise<Response>;
+
+/** Every handler answers JSON; failures map to their status. */
+export const safe =
+  (h: Handler): Handler =>
+  async (req) => {
+    try {
+      return await h(req);
+    } catch (e) {
+      return errorResponse(e);
+    }
+  };
