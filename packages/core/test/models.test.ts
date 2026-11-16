@@ -123,6 +123,30 @@ describe("modelConfig", () => {
   });
 });
 
+describe("speech config", () => {
+  test("speech models default to Whisper turbo with large-v3 fallback", () => {
+    const c = modelConfig({});
+    expect(c.speech).toBe("whisper-large-v3-turbo");
+    expect(c.speechFallback).toBe("whisper-large-v3");
+    expect(modelConfig({ BANKAI_SPEECH_MODEL: "whisper-large-v3" }).speech).toBe(
+      "whisper-large-v3",
+    );
+  });
+
+  test("speech is wired only when a Groq key is set", () => {
+    expect(liveModels(modelConfig({})).speech).toBeUndefined();
+    expect(liveModels(modelConfig({ GROQ_API_KEY: "k" })).speech?.id).toBe(
+      "whisper-large-v3-turbo|whisper-large-v3",
+    );
+  });
+
+  test("an unpriced speech model is refused", () => {
+    expect(() =>
+      liveModels(modelConfig({ GROQ_API_KEY: "k", BANKAI_SPEECH_MODEL: "whisper-tiny" })),
+    ).toThrow("No price for model whisper-tiny");
+  });
+});
+
 describe("liveModels", () => {
   test("refuses a model it cannot price", () => {
     expect(() => liveModels(modelConfig({ BANKAI_CHECKER_MODEL: "someone/unpriced" }))).toThrow(

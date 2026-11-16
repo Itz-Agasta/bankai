@@ -42,3 +42,5 @@ await Bun.write(out, bytes);
 // $22 per 1M characters (groq.com/pricing, 2026-11-16).
 const usd = ((input.length * 22) / 1e6).toFixed(5);
 console.log(`${out}: ${bytes.length} bytes, ${input.length} chars, ~$${usd}`);
+
+export {};

@@ -17,9 +17,11 @@ export interface ModelConfig {
   vision: string;
   visionFallback: string;
   checker: string;
+  speech: string;
+  speechFallback: string;
   cacheDir: string;
   replayOnly: boolean;
-  keys: { gemini?: string; openrouter?: string };
+  keys: { gemini?: string; openrouter?: string; groq?: string };
 }
 
 /** Model ids are configuration (env), never hard-coded at call sites (D32). */
@@ -31,9 +33,15 @@ export function modelConfig(
     vision: env.BANKAI_VISION_MODEL || "gemini-3.8-flash",
     visionFallback: env.BANKAI_VISION_FALLBACK_MODEL || "gemini-3.5-flash-lite",
     checker: env.BANKAI_CHECKER_MODEL || "openai/gpt-6.1-terra",
+    speech: env.BANKAI_SPEECH_MODEL || "whisper-large-v3-turbo",
+    speechFallback: env.BANKAI_SPEECH_FALLBACK_MODEL || "whisper-large-v3",
     cacheDir: env.BANKAI_CACHE_DIR || defaults.cacheDir || ".bankai/cache",
     replayOnly: env.BANKAI_REPLAY === "1",
-    keys: { gemini: env.GEMINI_API_KEY, openrouter: env.OPENROUTER_API_KEY },
+    keys: {
+      gemini: env.GEMINI_API_KEY,
+      openrouter: env.OPENROUTER_API_KEY,
+      groq: env.GROQ_API_KEY,
+    },
   };
 }
 

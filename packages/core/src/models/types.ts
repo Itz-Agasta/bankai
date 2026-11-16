@@ -1,4 +1,4 @@
-import type { Field } from "@bankai/schemas";
+import type { Field, Word } from "@bankai/schemas";
 
 /** Pixel box on the image the model was given. */
 export interface BBox {
@@ -33,4 +33,25 @@ export interface VisionModel {
   read(img: Uint8Array): Promise<Metered<Fields>>;
   /** Which of `candidates` are visible in the photo; answers only from that list. */
   components?(img: Uint8Array, candidates: string[]): Promise<Metered<string[]>>;
+}
+
+export interface Segment {
+  start: number;
+  end: number;
+  /** Whisper's mean token log probability; null when the provider does not return it. */
+  avgLogprob: number | null;
+  noSpeechProb: number | null;
+}
+
+export interface Transcript {
+  words: Word[];
+  segments: Segment[];
+  language: string | null;
+  duration: number;
+}
+
+export interface TranscriptionModel {
+  id: string;
+  /** `prompt` primes Whisper with the project's tags and places. */
+  transcribe(audio: Uint8Array, prompt: string): Promise<Metered<Transcript>>;
 }

@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.121",
+    "@ai-sdk/groq": "^4.0.84",
     "@bankai/schemas": "workspace:*",
     "@openrouter/ai-sdk-provider": "^3.1.0",
     "ai": "^7.0.173",

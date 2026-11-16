@@ -47,3 +47,28 @@ export const NoteResult = z.object({
   latency_ms: NonNegative,
 });
 export type NoteResult = z.infer<typeof NoteResult>;
+
+/** One transcript word with its time in the audio, in seconds. */
+export const Word = z.object({
+  i: z.number().int().nonnegative(),
+  text: z.string(),
+  start: NonNegative,
+  end: NonNegative,
+});
+export type Word = z.infer<typeof Word>;
+
+/** A claim the model returned that the transcript did not support. */
+export const DroppedClaim = z.object({
+  word_start: z.number().int(),
+  word_end: z.number().int(),
+  type: ClaimType,
+  reason: z.string(),
+});
+export type DroppedClaim = z.infer<typeof DroppedClaim>;
+
+export const NoteRun = z.object({
+  result: NoteResult,
+  transcript: z.array(Word),
+  dropped: z.array(DroppedClaim),
+});
+export type NoteRun = z.infer<typeof NoteRun>;
