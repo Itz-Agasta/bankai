@@ -2,10 +2,10 @@ test:
     bun test
 
 check:
-    bunx oxlint && bunx oxfmt --write .
+    bunx oxlint && bunx oxfmt --write . && bunx knip
 
 check-ci:
-    bunx oxlint --deny-warnings && bunx oxfmt --check .
+    bunx oxlint --deny-warnings && bunx oxfmt --check . && bunx knip
 
 types:
     bunx tsc -b

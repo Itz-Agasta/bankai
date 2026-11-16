@@ -24,8 +24,8 @@ Bankai checks data center equipment on site. It reads photos and voice notes, li
 bun install
 just test        # unit tests
 just types       # type check
-just check       # lint and format (rewrites files)
-just check-ci    # what CI runs, read only
+just check       # lint, format (rewrites files) and knip
+just check-ci    # what CI runs, read only (lint, format, knip)
 just validate-data data/fixtures/mini
 just validate-eval
 ```

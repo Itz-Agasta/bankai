@@ -5,7 +5,7 @@ import { storeUpload } from "./http/uploads";
 import { allowedPath } from "./paths";
 
 /** Base64 length of core's audio size limit: refuse before decoding. */
-export const MAX_AUDIO_BASE64 = Math.ceil(MAX_AUDIO_BYTES / 3) * 4;
+const MAX_AUDIO_BASE64 = Math.ceil(MAX_AUDIO_BYTES / 3) * 4;
 
 const EXT = {
   "audio/wav": "wav",
