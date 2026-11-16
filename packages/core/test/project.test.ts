@@ -65,6 +65,13 @@ describe("loadProject rejects bad data", () => {
     expect(err.detail?.startsWith("equipment_schedule.csv:2:")).toBe(true);
   });
 
+  test("an equipment row on a drawing revision missing from the register is rejected", async () => {
+    const dir = await brokenCopy("equipment_schedule.csv", (t) => t.replace("M-301,B", "M-301,Z"));
+    const err = await loadError(dir);
+    expect(err.code).toBe("PROJECT_INVALID");
+    expect(err.detail).toStartWith("equipment_schedule.csv:5:");
+  });
+
   test("an activity whose low duration exceeds likely is rejected", async () => {
     const dir = await brokenCopy("schedule.json", (t) =>
       t.replace('"duration_low_days": 1', '"duration_low_days": 9'),

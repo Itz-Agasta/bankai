@@ -59,6 +59,20 @@ function checkDurations(activities: Activity[]): void {
   });
 }
 
+/** A row on an unregistered revision would silently drop out of byTag and read as "not in project". */
+function checkRevisions(equipment: EquipmentRow[], drawings: DrawingRev[]): void {
+  const known = new Set(drawings.map((d) => `${d.drawing}@${d.revision}`));
+  equipment.forEach((r, i) => {
+    if (!known.has(`${r.drawing}@${r.revision}`)) {
+      throw invalid(
+        "equipment_schedule.csv",
+        csvLine(i),
+        `${r.tag}: ${r.drawing} rev ${r.revision} not in drawings.csv`,
+      );
+    }
+  });
+}
+
 export async function loadProject(dir: string): Promise<Project> {
   const [equipment, drawings, poLines, submittals, activities, deliveries] = await Promise.all([
     loadCsv(dir, "equipment_schedule.csv", EquipmentRow, EQUIPMENT_NUMERIC),
@@ -69,6 +83,7 @@ export async function loadProject(dir: string): Promise<Project> {
     loadJson(dir, "deliveries.json", DeliveryLine),
   ]);
   checkDurations(activities);
+  checkRevisions(equipment, drawings);
   return indexProject(basename(dir), {
     equipment,
     drawings,
