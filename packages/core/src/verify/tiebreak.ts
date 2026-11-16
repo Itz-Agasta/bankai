@@ -27,29 +27,34 @@ export async function breakTie(
 ): Promise<TieBreak | null> {
   const top = candidates[0]?.score ?? 0;
   const tied = candidates.filter((c) => c.method !== "exact" && c.score >= top - AMBIGUOUS_MARGIN);
-  const crop = perception.crops[0];
+  // One plate only: with several, an answer could come from a different plate than the readings.
+  const crop = perception.crops.length === 1 ? perception.crops[0] : undefined;
   const { primary, checker } = models;
   if (tied.length < 2 || !crop || !primary.choose || !checker.choose) return null;
+  // A visible tag that matched nothing must not be overridden by maker and ratings (as in linking).
+  if (perception.observations.some((o) => o.field === "tag")) return null;
   const questions = tieQuestions(tied, project);
   if (questions.length === 0) return null; // identical twins: only the painted tag can tell
-  let a: Fields, b: Fields;
-  try {
-    const [p, c] = await Promise.all([
-      primary.choose(crop.img, questions),
-      checker.choose(crop.img, questions),
-    ]);
-    for (const [step, r] of [
-      ["tiebreak.primary", p],
-      ["tiebreak.checker", c],
-    ] as const) {
-      meter.record(r.cost.model, r.cost.ms, r.cost.usd);
-      tracer.step(step, crop.img, JSON.stringify(r.value), r.cost);
+  const settled = await Promise.allSettled([
+    primary.choose(crop.img, questions),
+    checker.choose(crop.img, questions),
+  ]);
+  const answers: Fields[] = [];
+  for (const [step, r] of [
+    ["tiebreak.primary", settled[0]],
+    ["tiebreak.checker", settled[1]],
+  ] as const) {
+    if (r.status === "rejected") {
+      tracer.step(step, crop.img, `unavailable: ${(r.reason as Error).message}`);
+      continue;
     }
-    [a, b] = [p.value, c.value];
-  } catch (e) {
-    tracer.step("tiebreak", crop.img, `unavailable: ${(e as Error).message}`);
-    return null;
+    // A paid call is metered even when the other one failed.
+    meter.record(r.value.cost.model, r.value.cost.ms, r.value.cost.usd);
+    tracer.step(step, crop.img, JSON.stringify(r.value.value), r.value.cost);
+    answers.push(r.value.value);
   }
+  if (answers.length < 2) return null;
+  const [a, b] = answers as [Fields, Fields];
   const agreed: Fields = {};
   for (const q of questions) {
     const v = a[q.field];

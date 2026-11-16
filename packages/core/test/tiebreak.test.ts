@@ -58,6 +58,29 @@ describe("resolveTie", () => {
     expect(resolveTie(near(o, sizes), { kva: "2500" }, sizes)).toBe("GEN-5");
   });
 
+  test("voltage compares every number, not just the first", () => {
+    const o = obs({ manufacturer: "Cummins", model: "C2000D6" });
+    const row = sizes.byTag.get("GEN-3")!;
+    const volts = indexProject("volts", {
+      ...sizes,
+      equipment: sizes.equipment.map((r) =>
+        r.tag === "GEN-5"
+          ? { ...r, kva: row.kva, voltage: "415/230" }
+          : r.tag === "GEN-3"
+            ? { ...r, voltage: "415/240" }
+            : r,
+      ),
+      poLines: sizes.poLines.map((l) =>
+        l.tag === "GEN-5"
+          ? { ...l, kva: 2000, voltage: "415/230" }
+          : l.tag === "GEN-3"
+            ? { ...l, voltage: "415/240" }
+            : l,
+      ),
+    });
+    expect(resolveTie(near(o, volts), { voltage: "415/240" }, volts)).toBe("GEN-3");
+  });
+
   test("no agreed value, or one that fits nobody, picks nothing", () => {
     const o = obs({ manufacturer: "Cummins", model: "C2000D6" });
     expect(resolveTie(near(o, sizes), {}, sizes)).toBeNull();
@@ -100,8 +123,38 @@ describe("verify with a tie-break", () => {
   });
 
   test("a value outside the options is ignored", async () => {
-    const { v } = await run(sizes, pair({ kva: "9999" }, { kva: "9999" }));
+    const { v } = await run(sizes, pair({ kva: "2500 kVA" }, { kva: "2500 kVA" }));
     expect(v.subject_tag).toBeNull();
+  });
+
+  test("a visible tag that matches no record is never overridden", async () => {
+    const tagged = {
+      primary: fakeVision("fake-p", {
+        "*": { plate: BOX, tags: ["GEN-9"], fields, choose: { kva: "2500" } },
+      }),
+      checker: fakeVision("fake-c", {
+        "*": { plate: BOX, tags: [], fields, choose: { kva: "2500" } },
+      }),
+    };
+    const { v } = await run(sizes, tagged);
+    expect(v.subject_tag).toBeNull();
+  });
+
+  test("two plates read: no tie-break, the answer could come from the wrong plate", async () => {
+    const tracer = memoryTracer("t");
+    const v = await verifyEquipment(
+      { photos: [PLATE, PLATE], location: "PAD-C" },
+      { project: sizes, models: pair({ kva: "2500" }, { kva: "2500" }), tracer },
+    );
+    expect(v.subject_tag).toBeNull();
+  });
+
+  test("a failing choose call leaves the tie open and still meters the other call", async () => {
+    const p = pair({ kva: "2500" }, {});
+    const broken: VisionModel = { ...p.checker, choose: () => Promise.reject(new Error("503")) };
+    const { v, trace } = await run(sizes, { primary: p.primary, checker: broken });
+    expect(v.subject_tag).toBeNull();
+    expect(trace.some((e) => e.step === "tiebreak.primary")).toBe(true);
   });
 
   test("identical twins never call the tie-break", async () => {

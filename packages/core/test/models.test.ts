@@ -191,3 +191,35 @@ describe("meter", () => {
     expect(m.total()).toEqual({ models: ["a", "b"], cost_usd: 0.012, latency_ms: 160 });
   });
 });
+
+describe("aiVision.choose", () => {
+  test("a field answered twice counts as unclear", async () => {
+    const { MockLanguageModelV4 } = await import("ai/test");
+    const { aiVision } = await import("../src/models/ai");
+    const model = new MockLanguageModelV4({
+      doGenerate: {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              answers: [
+                { field: "kva", value: "2000" },
+                { field: "kva", value: "2500" },
+              ],
+            }),
+          },
+        ],
+        finishReason: { unified: "stop", raw: "stop" },
+        usage: {
+          inputTokens: { total: 10, noCache: 10, cacheRead: 0, cacheWrite: 0 },
+          outputTokens: { total: 5, text: 5, reasoning: 0 },
+        },
+        warnings: [],
+      },
+    });
+    const r = await aiVision("gemini-3.8-flash", model).choose!(IMG, [
+      { field: "kva", options: ["2000", "2500"] },
+    ]);
+    expect(r.value).toEqual({});
+  });
+});

@@ -1,6 +1,7 @@
 import type { Field } from "@bankai/schemas";
 import type { Fields, TieQuestion } from "../models/types";
 import type { Project } from "../project/types";
+import { numbersIn } from "../readings";
 import { records, sameNumber, type Candidate, type Target } from "./match";
 import { ocrDistance } from "./ocr-distance";
 
@@ -15,6 +16,8 @@ function fits(t: Target, f: TieField, answer: string): boolean {
   if (v === null) return false;
   if (f === "model") return ocrDistance(answer, v) === 0;
   if (f === "manufacturer") return canon(answer) === canon(v);
+  // "415/240" and "415/230" differ: compare every number of a voltage, not just the first.
+  if (f === "voltage") return numbersIn(answer).join("/") === numbersIn(v).join("/");
   return sameNumber(answer, v);
 }
 

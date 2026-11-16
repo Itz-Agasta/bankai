@@ -96,7 +96,9 @@ export function aiVision(id: string, model: LanguageModel): VisionModel {
       const prompt = `${CHOOSE_PROMPT}\nFields: ${JSON.stringify(questions)}`;
       const r = await ask(prompt, schema, img);
       const fields: Fields = {};
+      const count = (f: string) => r.value.answers.filter((x) => x.field === f).length;
       for (const a of r.value.answers) {
+        if (count(a.field) > 1) continue; // two answers for one field: unclear, not a pick
         const q = questions.find((x) => x.field === a.field);
         if (q && a.value !== null && q.options.includes(a.value)) fields[q.field] = a.value;
       }

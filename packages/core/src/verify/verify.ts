@@ -121,7 +121,11 @@ export async function verifyEquipment(input: VerifyInput, deps: VerifyDeps): Pro
   tracer.step("rules", runId, checks.map((c) => `${c.name}:${c.result}`).join(" "));
 
   const conf = confidence({
-    agreementRate: agreementRate(observations, perception.dropped),
+    // A field the tie-break settled is no longer a disagreement.
+    agreementRate: agreementRate(
+      observations,
+      perception.dropped.filter((f) => !tie || !tie.observations.some((o) => o.id === `tb.${f}`)),
+    ),
     linkScore: link?.score ?? 0,
     // A tag read off the unit decides it (linkObservations); the twin's score gap is not doubt.
     margin: link?.method === "exact" || link?.method === "llm_tiebreak" ? 1 : (link?.margin ?? 0),
