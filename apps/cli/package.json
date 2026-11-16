@@ -1,0 +1,13 @@
+{
+  "name": "@bankai/cli",
+  "version": "0.1.0",
+  "private": true,
+  "bin": {
+    "bankai": "./src/main.ts"
+  },
+  "type": "module",
+  "dependencies": {
+    "@bankai/core": "workspace:*",
+    "@bankai/schemas": "workspace:*"
+  }
+}
