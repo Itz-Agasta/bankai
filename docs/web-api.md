@@ -78,4 +78,15 @@ git add data/replay
 
 ## Deploy
 
-The `Dockerfile` runs `bankai serve --demo` on port 8787. The host sets `BANKAI_PROJECT` (and `BANKAI_ALLOWED_ORIGINS` for the app's hostname).
+The `Dockerfile` builds in two stages: it installs from the lockfile and bundles the app into one file, then the runtime image (`oven/bun` alpine) gets only the bundle, `sharp` (native, so it stays a package) and `data/`. It runs `bankai serve --demo` as the non-root `bun` user, on `PORT` (default 8080).
+
+Cloud Run fits as is: it injects `PORT`, the server listens on all interfaces, and SIGTERM stops it cleanly (removing the demo copy). The demo copy lives in `/tmp`, which on Cloud Run is memory, so keep the project small. Set `BANKAI_PROJECT` and `BANKAI_ALLOWED_ORIGINS` (the app's hostname) on the service.
+
+`--allow-unauthenticated` makes every route public, including `/api/project` and the evidence records. That is fine for the demo, whose project is synthetic. Never deploy a real project this way: there is no auth, and CORS does not stop direct callers.
+
+Demo with the fixture project that ships in the image (switch to `data/projects/alpha` once it lands). Until a replay cache is committed to `data/replay` (see Demo mode), the deployed demo answers health, project, status and evidence only; verify, delivery and notes return 503:
+
+```bash
+gcloud run deploy bankai --source . --region <region> --allow-unauthenticated \
+  --set-env-vars BANKAI_PROJECT=data/fixtures/mini,BANKAI_ALLOWED_ORIGINS=<app host>
+```
