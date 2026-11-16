@@ -79,7 +79,7 @@ describe("ledger", () => {
     const dir = await tempDir();
     mkdirSync(join(dir, "audit.jsonl")); // a directory where the log should be
     const store = openStore(join(dir, "state.db"));
-    expect(() => store.saveUpdates("v1", [update("a"), update("b")])).toThrow();
+    expect(() => store.saveUpdates("v1", [update("a"), update("b")])).toThrow(/EISDIR/);
     expect(store.pendingUpdates()).toEqual([]);
   });
 
@@ -129,7 +129,7 @@ describe("ledger", () => {
     const { store, audit } = await setup();
     await rm(audit);
     mkdirSync(audit);
-    expect(() => store.approveUpdate("u1", "SUPT-01", AT)).toThrow();
+    expect(() => store.approveUpdate("u1", "SUPT-01", AT)).toThrow(/EISDIR/);
     expect(store.getUpdate("u1")).toMatchObject({ approval: "pending", approved_by: null });
   });
 

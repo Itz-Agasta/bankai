@@ -38,7 +38,7 @@ function findLine(project: Project, input: DeliveryInput): PoLine {
 async function seenInPhotos(
   photos: string[],
   po: PoLine,
-  models: VerifyDeps["models"],
+  { models, tracer }: Pick<VerifyDeps, "models" | "tracer">,
   costs: CallCost[],
 ): Promise<{ seen: string[]; cites: Citation[] }> {
   const ask = (m: VisionModel, img: Uint8Array) =>
@@ -52,6 +52,8 @@ async function seenInPhotos(
     const img = await loadImage(photo);
     const [a, b] = await Promise.all([ask(models.primary, img), ask(models.checker, img)]);
     costs.push(a.cost, b.cost);
+    tracer.step("components.primary", img, a.value.join(", ") || "none", a.cost);
+    tracer.step("components.checker", img, b.value.join(", ") || "none", b.cost);
     const agreed = a.value.filter((c) => b.value.includes(c));
     agreed.forEach((c) => seen.add(c));
     if (agreed.length) cites.push({ kind: "photo_region", ref: `${basename(photo)}#full` });
@@ -80,7 +82,7 @@ export async function checkDelivery(input: DeliveryInput, deps: VerifyDeps): Pro
 
   const costs: CallCost[] = [];
   const photo = input.photos?.length
-    ? await seenInPhotos(input.photos, po, deps.models, costs)
+    ? await seenInPhotos(input.photos, po, deps, costs)
     : { seen: [], cites: [] };
   const observed = [...new Set([...deliveries.map((d) => d.item), ...photo.seen])];
   const extra = [...deliveries.map(cite.deliveryLine), ...photo.cites];
