@@ -12,6 +12,7 @@ import type { Metered, VisionModel } from "./types";
  * costs us the model's answer.
  */
 export function withCache(m: VisionModel, opts: { dir: string; replayOnly: boolean }): VisionModel {
+  let warned = false;
   async function cached<T>(
     call: "locate" | "read",
     img: Uint8Array,
@@ -37,8 +38,11 @@ export function withCache(m: VisionModel, opts: { dir: string; replayOnly: boole
       const tmp = `${path}.${process.pid}.tmp`;
       await Bun.write(tmp, JSON.stringify(result.value));
       await rename(tmp, path);
-    } catch {
-      // Unwritable cache: keep the answer, skip caching it.
+    } catch (e) {
+      // Unwritable cache: keep the answer, say so once, so a later replay miss has a visible cause.
+      if (!warned)
+        console.warn(`bankai: cache write failed in ${opts.dir}: ${(e as Error).message}`);
+      warned = true;
     }
     return result;
   }

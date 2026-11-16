@@ -162,6 +162,26 @@ describe("loadImage", () => {
     await expect(loadImage(p)).rejects.toMatchObject({ code: "INPUT_TOO_LARGE" });
   });
 
+  test("rejects a header declaring more than 50 megapixels", async () => {
+    const png = new Uint8Array(await Bun.file(join(FIX, "blank.jpg")).bytes());
+    const small = await (await import("sharp")).default(png).png().toBuffer();
+    const big = new Uint8Array(small);
+    const view = new DataView(big.buffer);
+    view.setUint32(16, 10000); // IHDR width
+    view.setUint32(20, 10000); // IHDR height
+    view.setUint32(29, Bun.hash.crc32(big.subarray(12, 29)));
+    const p = join(await mkdtemp(join(tmpdir(), "bankai-img-")), "huge.png");
+    await writeFile(p, big);
+    await expect(loadImage(p)).rejects.toMatchObject({ code: "INPUT_TOO_LARGE" });
+  });
+
+  test("rejects a JPEG whose pixel data is truncated", async () => {
+    const bytes = await Bun.file(PLATE).bytes();
+    const p = join(await mkdtemp(join(tmpdir(), "bankai-img-")), "cut.jpg");
+    await writeFile(p, bytes.subarray(0, Math.floor(bytes.length / 2)));
+    await expect(loadImage(p)).rejects.toMatchObject({ code: "INPUT_UNSUPPORTED" });
+  });
+
   test("strips EXIF before anything sees the bytes", async () => {
     expect(hasExif(await loadImage(join(FIX, "gps.jpg")))).toBe(false);
   });
