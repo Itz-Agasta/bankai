@@ -12,9 +12,7 @@ beforeAll(async () => {
 
 const GEN3 = { manufacturer: "Cummins", model: "C2000D6", voltage: "415V", kva: "2000" };
 
-function run(
-  over: Partial<Omit<RuleContext, "observations">> & { fields?: Partial<Record<Field, string>> },
-) {
+function run(over: Partial<RuleContext> & { fields?: Partial<Record<Field, string>> }) {
   const { fields = GEN3, ...rest } = over;
   const ctx: RuleContext = {
     project: mini,
@@ -40,6 +38,24 @@ describe("location and revision", () => {
     expect(check("revision").reason).toContain("rev B, superseded on 2026-10-02");
   });
 
+  test("a superseded row on another drawing with the current letter still counts", () => {
+    const equipment = mini.equipment.map((r) =>
+      r.tag === "GEN-3" && r.revision === "B" ? { ...r, drawing: "E-101", revision: "C" } : r,
+    );
+    const drawings = [
+      ...mini.drawings,
+      {
+        drawing: "E-101",
+        revision: "C",
+        issued: "2026-06-01",
+        superseded_by: "A",
+        superseded_on: "2026-07-15",
+      },
+    ];
+    const project = { ...mini, equipment, drawings };
+    expect(run({ project, location: "PAD-A" })("revision").result).toBe("fail");
+  });
+
   test("loosely typed correct pad passes", () => {
     expect(run({ location: "pad b " })("location").result).toBe("pass");
   });
@@ -59,6 +75,25 @@ describe("location and revision", () => {
 });
 
 describe("spec", () => {
+  test("a kVA unit suffix is not a thousands multiplier", () => {
+    expect(run({ fields: { ...GEN3, kva: "1800 kVA" } })("spec").result).toBe("fail");
+  });
+
+  test("kV is a thousands multiplier", () => {
+    const check = run({
+      tag: "TX-1",
+      fields: { manufacturer: "Siemens", model: "GEAFOL 2500", voltage: "11kV" },
+    });
+    expect(check("spec").result).toBe("pass");
+  });
+
+  test("disagreeing readings of a field are not used", () => {
+    const fields = obs(GEN3);
+    fields.push({ ...fields[2]!, id: "o9", value: "480V" });
+    const check = run({ observations: fields });
+    expect(check("spec").citations).not.toContainEqual(fields[2]!.evidence);
+  });
+
   test("wrong voltage fails", () => {
     expect(run({ fields: { ...GEN3, voltage: "480V" } })("spec").result).toBe("fail");
   });
@@ -96,6 +131,30 @@ describe("substitution", () => {
     expect(check.citations).toContainEqual({ kind: "submittal", ref: "SUB-12" });
   });
 
+  test("an approved resubmittal wins over an earlier rejection", () => {
+    const project = {
+      ...mini,
+      submittals: [
+        ...mini.submittals,
+        {
+          id: "SUB-13",
+          tag: "CRAH-2",
+          manufacturer: "Stulz",
+          model: "CyberAir 3",
+          status: "approved" as const,
+          deviations: [],
+        },
+      ],
+    };
+    const check = run({
+      project,
+      tag: "CRAH-2",
+      fields: { manufacturer: "Stulz", model: "CyberAir 3" },
+    })("substitution");
+    expect(check.result).toBe("pass");
+    expect(check.citations).toContainEqual({ kind: "submittal", ref: "SUB-13" });
+  });
+
   test("the PO make and model pass", () => {
     expect(run({})("substitution").result).toBe("pass");
   });
@@ -106,6 +165,14 @@ describe("completeness", () => {
     const check = run({ observedComponents: ["generator", "day tank"] })("completeness");
     expect(check.result).toBe("fail");
     expect(check.reason).toContain("controls cabinet");
+  });
+
+  test("a PO line with no components is unknown", () => {
+    const poLines = mini.poLines.map((l) => (l.tag === "GEN-3" ? { ...l, components: [] } : l));
+    const project = { ...mini, poByTag: new Map(poLines.map((l) => [l.tag, l])) };
+    expect(run({ project, observedComponents: ["generator"] })("completeness").result).toBe(
+      "unknown",
+    );
   });
 
   test("nothing observed is unknown", () => {

@@ -1,15 +1,9 @@
 import type { Citation } from "@bankai/schemas";
 import { cite } from "../cite";
+import { firstNumber } from "../readings";
 import { check, observed, type Rule } from "./context";
 
 const KVA_TOLERANCE = 0.05;
-
-/** First number in a rating: "415/240V" gives 415, "11kV" gives 11000. */
-export function firstNumber(raw: string): number | null {
-  const m = /(\d+(?:\.\d+)?)\s*(k)?/i.exec(raw);
-  if (!m) return null;
-  return Number(m[1]) * (m[2] ? 1000 : 1);
-}
 
 export const spec: Rule = (ctx) => {
   const tag = ctx.tag!;

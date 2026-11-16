@@ -12,8 +12,8 @@ export const revision: Rule = (ctx) => {
   const where = normalizeLocation(ctx.location!);
   const current = ctx.project.byTag.get(ctx.tag!)!;
   for (const old of ctx.project.equipment) {
-    if (old.tag !== current.tag || old.location !== where || old.revision === current.revision)
-      continue;
+    // The current row sits elsewhere (location failed), so it never matches `where`.
+    if (old.tag !== current.tag || normalizeLocation(old.location) !== where) continue;
     const d = ctx.project.drawings.find(
       (r) => r.drawing === old.drawing && r.revision === old.revision,
     );

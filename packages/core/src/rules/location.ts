@@ -10,7 +10,8 @@ export const location: Rule = (ctx) => {
   const row = ctx.project.byTag.get(ctx.tag!);
   if (!row) return check("location", "unknown", "no_designed_location");
   const citations = [cite.equipmentRow(row.tag), cite.drawing(row.drawing, row.revision)];
-  if (row.location === where) return check("location", "pass", "at_designed_location", citations);
+  if (normalizeLocation(row.location) === where)
+    return check("location", "pass", "at_designed_location", citations);
   return check(
     "location",
     "fail",

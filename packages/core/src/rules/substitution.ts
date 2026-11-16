@@ -17,7 +17,9 @@ export const substitution: Rule = (ctx) => {
   const seen = [model.evidence, ...(maker ? [maker.evidence] : [])];
   if (matches(po)) return check("substitution", "pass", "matches_po", [cite.poLine(po), ...seen]);
 
-  const sub = ctx.project.submittals.find((s) => s.tag === tag && matches(s));
+  const subs = ctx.project.submittals.filter((s) => s.tag === tag && matches(s));
+  const sub =
+    subs.find((s) => s.status === "approved" || s.status === "approved_as_noted") ?? subs[0];
   const what = `${maker?.value ?? "?"} ${model.value} instead of ${po.manufacturer} ${po.model}`;
   if (sub && (sub.status === "approved" || sub.status === "approved_as_noted")) {
     return check("substitution", "pass", `${what}, approved in ${sub.id}`, [

@@ -1,6 +1,7 @@
 import type { Citation, Field, Link, Observation } from "@bankai/schemas";
 import { cite } from "../cite";
 import type { Project } from "../project/types";
+import { firstNumber, reading } from "../readings";
 import { normalizeTag } from "./normalize";
 import { ocrDistance } from "./ocr-distance";
 
@@ -39,15 +40,14 @@ function records(project: Project): Target[] {
   return out;
 }
 
-const number = (s: string) => Number.parseFloat(s.replace(/[^\d.]/g, ""));
-const sameNumber = (observed: string, expected: string | number | null) =>
-  expected !== null &&
-  Number.isFinite(number(observed)) &&
-  number(observed) === number(String(expected));
+const sameNumber = (observed: string, expected: string | number | null) => {
+  const got = firstNumber(observed);
+  return expected !== null && got !== null && got === firstNumber(String(expected));
+};
 
 function score(rec: Target, seen: Map<Field, Observation>): Candidate {
   const tag = seen.get("tag");
-  if (tag && normalizeTag(tag.value) === rec.tag) {
+  if (tag && normalizeTag(tag.value) === normalizeTag(rec.tag)) {
     return {
       tag: rec.tag,
       score: 1,
@@ -95,14 +95,20 @@ function score(rec: Target, seen: Map<Field, Observation>): Candidate {
   };
 }
 
-/** Candidates with any evidence, best first. */
+const exactFirst = (a: Candidate, b: Candidate) =>
+  Number(b.method === "exact") - Number(a.method === "exact");
+
+/** Candidates with any evidence, best first; a tag match outranks any score. */
 export function rankCandidates(obs: Observation[], project: Project): Candidate[] {
   const seen = new Map<Field, Observation>();
-  for (const o of obs) if (!seen.has(o.field)) seen.set(o.field, o);
+  for (const o of obs) {
+    const agreed = reading(obs, o.field);
+    if (agreed) seen.set(o.field, agreed);
+  }
   return records(project)
     .map((r) => score(r, seen))
     .filter((c) => c.score > 0)
-    .sort((a, b) => b.score - a.score || a.tag.localeCompare(b.tag));
+    .sort((a, b) => exactFirst(a, b) || b.score - a.score || a.tag.localeCompare(b.tag));
 }
 
 /** Link only a clear winner: score >= 0.6 and at least 0.15 ahead of the runner-up. */
@@ -114,7 +120,11 @@ export function linkObservations(
   const [top, next] = candidates;
   if (!top) return { links: [], candidates, ambiguous: false };
   const margin = Math.round((top.score - (next?.score ?? 0)) * 1e9) / 1e9;
-  const ambiguous = margin < AMBIGUOUS_MARGIN;
+  // A tag read off the unit decides it, unless a second record carries the same tag.
+  const ambiguous =
+    top.method === "exact" && next?.method !== "exact" ? false : margin < AMBIGUOUS_MARGIN;
+  // A visible tag that matches no record must not be overridden by maker and ratings.
+  if (top.method !== "exact" && reading(obs, "tag")) return { links: [], candidates, ambiguous };
   const links: Link[] =
     !ambiguous && top.score >= MIN_LINK_SCORE
       ? [

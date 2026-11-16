@@ -20,11 +20,13 @@ describe("normalize", () => {
     expect(normalizeTag("g-3")).toBe("GEN-3");
     expect(normalizeTag("gen 3")).toBe("GEN-3");
     expect(normalizeTag(" xfmr1 ")).toBe("TX-1");
+    expect(normalizeTag("Generator 2A-1")).toBe(normalizeTag("G-2A-1"));
   });
 
   test("locations", () => {
     expect(normalizeLocation("pad b ")).toBe("PAD-B");
     expect(normalizeLocation("Hall  1")).toBe("HALL-1");
+    expect(normalizeLocation("PAD B-")).toBe("PAD-B");
   });
 
   test("models", () => {
@@ -36,6 +38,13 @@ describe("normalize", () => {
 describe("ocrDistance", () => {
   test("OCR confusions are cheap", () => {
     expect(ocrDistance("C2OOOD6", "C2000D6")).toBeCloseTo(0.6, 9);
+  });
+
+  test("every confusable pair is cheap both ways", () => {
+    for (const [a, b] of ["O0", "I1", "L1", "S5", "B8", "Z2", "G6"]) {
+      expect(ocrDistance(`X${a}`, `X${b}`)).toBeCloseTo(0.2, 9);
+      expect(ocrDistance(`X${b}`, `X${a}`)).toBeCloseTo(0.2, 9);
+    }
   });
 
   test("other substitutions cost 1", () => {
@@ -76,8 +85,33 @@ describe("linkObservations", () => {
 
   test("a unit from another vendor links to nothing", () => {
     const r = linkObservations(obs({ manufacturer: "Caterpillar", model: "3516C" }), mini);
-    expect(r.candidates.every((c) => c.score <= 0.3)).toBe(true);
+    expect(r.candidates).toEqual([]);
     expect(r.links).toEqual([]);
+  });
+
+  test("a visible tag stays decisive when the twin's ratings also match", () => {
+    const r = linkObservations(
+      obs({ manufacturer: "Cummins", model: "C2000D6", voltage: "415", kva: "2000", tag: "GEN-3" }),
+      mini,
+    );
+    expect(r.ambiguous).toBe(false);
+    expect(r.links[0]?.record.ref).toBe("equipment_schedule.csv#GEN-3");
+  });
+
+  test("a visible tag not in the project blocks a ratings-only link", () => {
+    const r = linkObservations(
+      obs({ manufacturer: "Vertiv", model: "PX080", voltage: "415", tag: "CRAH-99" }),
+      mini,
+    );
+    expect(r.links).toEqual([]);
+  });
+
+  test("ratings are compared unit-aware", () => {
+    const r = linkObservations(
+      obs({ manufacturer: "Siemens", model: "GEAFOL 2500", voltage: "11kV" }),
+      mini,
+    );
+    expect(r.candidates[0]?.observation_ids).toContain("o2");
   });
 
   test("a tag only on a PO links to the PO line", () => {

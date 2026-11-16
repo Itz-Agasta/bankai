@@ -9,15 +9,16 @@ const collapse = (raw: string) =>
   raw
     .trim()
     .toUpperCase()
-    .replace(/[\s_-]+/g, "-");
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-|-$/g, "");
 
 /** "Generator 3", "G-3", "gen3" all give "GEN-3". */
 export function normalizeTag(raw: string): string {
   const s = collapse(raw);
-  const m = /^([A-Z]+)-?(\d+[A-Z]?)$/.exec(s);
+  const m = /^([A-Z]+)-?(\d.*)$/.exec(s);
   if (!m) return s;
-  const [, prefix, num] = m;
-  return `${TAG_ALIASES[prefix!] ?? prefix}-${num}`;
+  const [, prefix, rest] = m;
+  return `${TAG_ALIASES[prefix!] ?? prefix}-${rest}`;
 }
 
 /** "pad b " gives "PAD-B". */

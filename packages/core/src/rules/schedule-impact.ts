@@ -14,6 +14,12 @@ const invalid = (detail: string) =>
 /** Kahn's algorithm: activities in dependency order. */
 function topoOrder(activities: Activity[]): Activity[] {
   const byId = new Map(activities.map((a) => [a.id, a]));
+  if (byId.size !== activities.length) {
+    const dupes = activities.filter((a, i) => activities.findIndex((b) => b.id === a.id) !== i);
+    throw invalid(
+      `schedule.json: duplicate activity id ${[...new Set(dupes.map((a) => a.id))].join(", ")}`,
+    );
+  }
   const indegree = new Map(activities.map((a) => [a.id, a.predecessors.length]));
   const successors = new Map<string, string[]>();
   for (const a of activities) {
@@ -72,26 +78,35 @@ function downstream(activities: Activity[], start: Set<string>): Set<string> {
 /** How far a delay to this unit's activities pushes the last milestone, as a three-point range (D27). */
 export function scheduleImpact(ctx: RuleContext, delay: Range): Check {
   const acts = ctx.project.activities;
+  const baseline = forwardPass(acts); // validates the network before any early return
   const own = acts.filter((a) => a.tag !== null && a.tag === ctx.tag);
   if (own.length === 0) return check("schedule_impact", "unknown", "no_activity_for_tag");
-  if (delay.low === 0 && delay.likely === 0 && delay.high === 0) {
+  const points = [delay.low, delay.likely, delay.high];
+  if (
+    !points.every((d) => Number.isFinite(d) && d >= 0) ||
+    delay.low > delay.likely ||
+    delay.likely > delay.high
+  ) {
+    return check("schedule_impact", "unknown", "invalid_delay");
+  }
+  if (delay.high === 0)
     return check(
       "schedule_impact",
       "pass",
       "no_delay",
       own.map((a) => cite.activity(a.id)),
     );
-  }
-
-  const baseline = forwardPass(acts);
   const milestone = acts
     .filter((a) => a.milestone)
     .sort((a, b) => baseline.get(b.id)!.ef - baseline.get(a.id)!.ef)[0];
   if (!milestone) return check("schedule_impact", "unknown", "no_milestone");
   const base = baseline.get(milestone.id)!.ef;
 
+  const ownIds = new Set(own.map((a) => a.id));
+  const entries = own.filter((a) => !a.predecessors.some((p) => ownIds.has(p)));
   const slip = (d: Durations, days: number) => {
-    const delays = new Map(own.map((a) => [a.id, days]));
+    // Delay only the unit's first activities; the pass carries it down the chain once.
+    const delays = new Map(entries.map((a) => [a.id, days]));
     return Math.max(0, forwardPass(acts, d, delays).get(milestone.id)!.ef - base);
   };
   const range: Range = {
