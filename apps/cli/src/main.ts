@@ -4,6 +4,7 @@ import { Command } from "commander";
 import { evalCommand } from "./commands/eval";
 import { mcpCommand } from "./commands/mcp";
 import { noteCommand } from "./commands/note";
+import { serveCommand } from "./commands/serve";
 import { statusCommand } from "./commands/status";
 import { verifyCommand } from "./commands/verify";
 
@@ -61,6 +62,17 @@ program
   .option("--project <dir>", "project folder (default: $BANKAI_PROJECT)")
   .action(async (opts) => {
     const code = await mcpCommand(opts);
+    if (code !== undefined) process.exitCode = code;
+  });
+
+program
+  .command("serve")
+  .description("Serve the JSON API for the phone app over HTTP")
+  .option("--project <dir>", "project folder (default: $BANKAI_PROJECT)")
+  .option("--port <n>", "port (default: $PORT or 8787)")
+  .option("--demo", "replay-only demo on a throwaway copy of the project")
+  .action(async (opts) => {
+    const code = await serveCommand(opts);
     if (code !== undefined) process.exitCode = code;
   });
 
