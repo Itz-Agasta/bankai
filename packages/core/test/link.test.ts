@@ -20,7 +20,8 @@ describe("normalize", () => {
     expect(normalizeTag("g-3")).toBe("GEN-3");
     expect(normalizeTag("gen 3")).toBe("GEN-3");
     expect(normalizeTag(" xfmr1 ")).toBe("TX-1");
-    expect(normalizeTag("Generator 2A-1")).toBe(normalizeTag("G-2A-1"));
+    expect(normalizeTag("Generator 2A-1")).toBe("GEN-2A-1");
+    expect(normalizeTag("G-2A-1")).toBe("GEN-2A-1");
   });
 
   test("locations", () => {
@@ -112,6 +113,11 @@ describe("linkObservations", () => {
       mini,
     );
     expect(r.candidates[0]?.observation_ids).toContain("o2");
+  });
+
+  test("the same tag spelled two ways on two photos still links", () => {
+    const two = [...obs({ tag: "GEN 3" }), { ...obs({ tag: "GEN-3" })[0]!, id: "o9" }];
+    expect(linkObservations(two, mini).links[0]?.record.ref).toBe("equipment_schedule.csv#GEN-3");
   });
 
   test("a tag only on a PO links to the PO line", () => {

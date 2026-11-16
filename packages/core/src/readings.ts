@@ -1,4 +1,5 @@
 import type { Field, Observation } from "@bankai/schemas";
+import { normalizeTag } from "./link/normalize";
 
 const canon = (v: string) => v.toUpperCase().replace(/\s+/g, "");
 
@@ -9,7 +10,8 @@ const canon = (v: string) => v.toUpperCase().replace(/\s+/g, "");
 export function reading(observations: Observation[], field: Field): Observation | undefined {
   const all = observations.filter((o) => o.field === field);
   if (all.length === 0) return undefined;
-  return all.every((o) => canon(o.value) === canon(all[0]!.value)) ? all[0] : undefined;
+  const key = field === "tag" ? normalizeTag : canon;
+  return all.every((o) => key(o.value) === key(all[0]!.value)) ? all[0] : undefined;
 }
 
 /** First number in a rating: "415/240V" gives 415, "11kV" gives 11000, "1800 kVA" gives 1800. */
