@@ -149,7 +149,6 @@ export async function processNote(input: { audio: string }, deps: NoteDeps): Pro
   const updates: ProposedUpdate[] = [];
   let human: string | null = null;
   let conflict = false;
-  if (dropped.length) human = "unsupported_claims_dropped";
   const seen = new Set<string>();
   for (const c of grounded) {
     const key = claimKey(c);
@@ -178,6 +177,9 @@ export async function processNote(input: { audio: string }, deps: NoteDeps): Pro
   }
   tracer.step("rules", id, `${updates.length} proposals${human ? `, ${human}` : ""}`);
 
+  // Something the speaker said that we could not support must not read as all clear;
+  // a found conflict already sends the note to a person, with the dropped count beside it.
+  if (dropped.length && !conflict) human ??= "unsupported_claims_dropped";
   const status = human ? "needs_human" : conflict ? "flagged" : "confirmed";
   return finish(
     status,

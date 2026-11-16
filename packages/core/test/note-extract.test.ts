@@ -66,6 +66,14 @@ describe("aiExtractor", () => {
     expect(sent).toContain("A10 Set GEN-3");
   });
 
+  test("asks Gemini for low thinking", async () => {
+    const model = mockModel([]);
+    await aiExtractor("gemini-3.8-flash", model).extract(extractInput(words("Gen"), mini));
+    expect(model.doGenerateCalls[0]!.providerOptions).toEqual({
+      google: { thinkingConfig: { thinkingLevel: "low" } },
+    });
+  });
+
   test("returns the schema output and its cost", async () => {
     const r = await aiExtractor("gemini-3.8-flash", mockModel([CLAIM])).extract(
       extractInput(words("Gen", "three"), mini),

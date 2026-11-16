@@ -108,7 +108,10 @@ export function proposeForClaim(
         { kind: "action_item", ref: `actions.json#new-${key}` },
         "text",
         "",
-        `${c.owner_role ?? "unassigned"}: ${c.text}`,
+        // The model often opens the text with the owner already.
+        c.owner_role && c.text.startsWith(c.owner_role)
+          ? c.text
+          : `${c.owner_role ?? "unassigned"}: ${c.text}`,
       );
   }
 }

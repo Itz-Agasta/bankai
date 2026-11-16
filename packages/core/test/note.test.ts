@@ -231,6 +231,23 @@ describe("review fixes: processNote", () => {
     expect(checks.find((c) => c.name === "location")?.reason).toContain("belongs at PAD-B");
   });
 
+  test("a conflict stays flagged when another claim was dropped", async () => {
+    const claims = [
+      raw({ tag: "GEN-3", status_value: "set", location: "PAD-A", word_start: 0, word_end: 7 }),
+      raw({
+        type: "issue",
+        tag: "GEN-3",
+        component: "day tank",
+        issue_kind: "missing",
+        word_start: 10,
+        word_end: 15,
+      }),
+    ];
+    const r = await run(wav.n002, one(N002, claims));
+    expect(r.dropped).toHaveLength(1);
+    expect(r.result.status).toBe("flagged");
+  });
+
   test("a negated claim needs a human", async () => {
     const text = "gen three is not set yet";
     const claims = [raw({ tag: "GEN-3", status_value: "set", word_start: 0, word_end: 5 })];

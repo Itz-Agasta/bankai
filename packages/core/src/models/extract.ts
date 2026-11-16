@@ -69,6 +69,8 @@ export function aiExtractor(id: string, model: LanguageModel): ExtractModel {
         temperature: 0,
         timeout: CALL_TIMEOUT_MS,
         output: Output.object({ schema: ExtractOut }),
+        // Default thinking made one note take 40 s and $0.02 (2026-11-16); reading a transcript needs little. 3.8 Flash refuses "minimal".
+        providerOptions: { google: { thinkingConfig: { thinkingLevel: "low" } } },
         system: NOTE_PROMPT,
         prompt: render(input),
       });

@@ -149,6 +149,10 @@ describe("proposeForClaim", () => {
       target: { kind: "action_item", ref: "actions.json#new-1" },
       new: "ELEC-02: confirm cable delivery",
     });
+    const again = run(
+      claim({ type: "action_item", owner_role: "ELEC-02", text: "ELEC-02 must confirm cable" }),
+    );
+    expect(again.update?.new).toBe("ELEC-02 must confirm cable");
     const u = run(claim({ type: "action_item", text: "confirm cable delivery" }));
     expect(u.update?.new).toBe("unassigned: confirm cable delivery");
   });
