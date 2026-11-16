@@ -4,14 +4,12 @@ import {
   openStore,
   storePath,
   type Models,
-  type Project,
   type Store,
 } from "@bankai/core";
 import { join, resolve } from "node:path";
 
 export interface ServerContext {
   projectDir: string;
-  project: Project;
   store: Store;
   models: Models;
   /** Photo paths must resolve under one of these. */
@@ -30,14 +28,13 @@ export async function buildContext(opts: {
   photoRoots?: string[];
 }): Promise<ServerContext> {
   const projectDir = resolve(opts.projectDir);
-  const project = await loadProject(projectDir);
+  await loadProject(projectDir); // fail at startup, not on the first call
   const extra = (process.env.BANKAI_PHOTO_ROOTS ?? "").split(":").filter(Boolean);
   return {
     projectDir,
-    project,
     store: openStore(storePath(projectDir)),
     models: opts.models ?? (await modelsFromEnv()),
-    photoRoots: (opts.photoRoots ?? [projectDir, ...extra]).map((r) => resolve(r)),
+    photoRoots: (opts.photoRoots ?? [projectDir, ...extra]).map((r) => resolve(projectDir, r)),
     tmpDir: join(projectDir, ".bankai", "tmp"),
   };
 }
