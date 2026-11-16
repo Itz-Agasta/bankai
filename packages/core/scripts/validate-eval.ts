@@ -11,6 +11,13 @@ const ROOT = join(import.meta.dir, "../../..");
 const SET = process.argv[2] ?? "eval";
 const PROJECTS = process.argv[3] ?? "data/projects";
 const PHOTOS = join(ROOT, SET, "photos");
+// A typo in the set name must fail, not validate an empty dataset.
+for (const sub of ["photos", "labels", "scenarios"]) {
+  if (!existsSync(join(ROOT, SET, sub))) {
+    console.error(`${SET}/${sub}: folder missing (is the set path right?)`);
+    process.exit(1);
+  }
+}
 const errors: string[] = [];
 const rel = (p: string) => relative(ROOT, p);
 

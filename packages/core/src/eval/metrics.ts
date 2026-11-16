@@ -46,7 +46,12 @@ const ratio = (n: number, d: number) => (d === 0 ? null : n / d);
 export function summarize(
   cases: CaseResult[],
   fields: FieldResult[],
-  extra: { costUsd: number; models: string[]; noCrop: boolean },
+  extra: {
+    costUsd: number;
+    labelCosts: { photo: string; costUsd: number }[];
+    models: string[];
+    noCrop: boolean;
+  },
 ): EvalResult {
   const covered = cases.filter((c) => c.actual.status !== "needs_human");
   return {
@@ -64,6 +69,7 @@ export function summarize(
         cases.length,
       ) ?? 0,
     ),
+    labelCosts: extra.labelCosts,
     models: extra.models,
     noCrop: extra.noCrop,
   };

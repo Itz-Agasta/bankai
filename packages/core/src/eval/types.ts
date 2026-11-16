@@ -31,7 +31,9 @@ export interface EvalResult {
   selectiveAccuracy: number | null;
   coverage: number | null;
   fabricated: number;
+  /** Whole run: every case's verdict cost plus every label's perception cost. */
   costUsd: number;
+  labelCosts: { photo: string; costUsd: number }[];
   meanLatencyMs: number;
   models: string[];
   noCrop: boolean;

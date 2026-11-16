@@ -23,7 +23,7 @@ function plain(name: string, what: string): string {
 async function readAll<T>(dir: string, schema: z.ZodType<T>, required: boolean): Promise<T[]> {
   const all = await readdir(dir).catch((e: NodeJS.ErrnoException) => {
     if (e.code === "ENOENT" && !required) return [] as string[];
-    throw new Error(`no scenarios: cannot read ${dir} (${e.code})`);
+    throw new Error(`${required ? "no scenarios: " : ""}cannot read ${dir} (${e.code})`);
   });
   const names = all.filter((n) => n.endsWith(".json") && n !== "_template.json");
   if (required && names.length === 0) throw new Error(`no scenarios in ${dir}`);
@@ -74,6 +74,7 @@ export async function runEval(opts: {
   }
 
   const fields: FieldResult[] = [];
+  const labelCosts: { photo: string; costUsd: number }[] = [];
   for (const label of await readAll(join(opts.set, "labels"), PhotoLabel, false)) {
     const path = photo(label.photo);
     const meter = memoryMeter();
@@ -81,6 +82,7 @@ export async function runEval(opts: {
       noCrop: opts.noCrop,
     });
     costUsd += meter.total().cost_usd;
+    labelCosts.push({ photo: label.photo, costUsd: meter.total().cost_usd });
     for (const [field, expected] of Object.entries(label.fields) as [Field, string][]) {
       const actual = r.observations.find((o) => o.field === field)?.value ?? null;
       fields.push({
@@ -93,7 +95,12 @@ export async function runEval(opts: {
     }
   }
 
-  return summarize(cases, fields, { costUsd, models: [...models], noCrop: opts.noCrop ?? false });
+  return summarize(cases, fields, {
+    costUsd,
+    labelCosts,
+    models: [...models],
+    noCrop: opts.noCrop ?? false,
+  });
 }
 
 interface FakeEntry {

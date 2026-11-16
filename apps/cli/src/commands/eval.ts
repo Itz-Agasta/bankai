@@ -48,6 +48,8 @@ export async function evalCommand(opts: EvalOptions): Promise<number> {
       }),
     ),
     ...result.fields.map((f) => JSON.stringify({ type: "field", ...f })),
+    // Case costs (actual.cost_usd) plus these label costs add up to the report's total.
+    ...result.labelCosts.map((l) => JSON.stringify({ type: "label_cost", ...l })),
   ];
   await Bun.write(join(opts.out, "results.jsonl"), `${lines.join("\n")}\n`);
   const report = renderReport(result, { set: opts.set });
