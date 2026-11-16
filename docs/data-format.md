@@ -88,7 +88,7 @@ Each is a JSON array of rows.
 |---|---|
 | `photo` | File name inside `eval/photos/`, no folders |
 | `equipment_type` | `generator`, `transformer`, `panel`, `ups`, `ahu`, `chiller`, `pump`, ... |
-| `fields` | Any of `manufacturer`, `model`, `serial`, `tag`, `voltage`, `kva`, `kw`, `phase`, `frequency`, as printed. Ratings (`voltage`, `kva`, `kw`, `phase`, `frequency`) are the number only, no unit: `415`, `415/240`, `2000`. `just validate-eval` rejects `415 V`. Use `"unreadable"` when you cannot read it. Leave a field out when it is not on the plate. |
+| `fields` | Any of `manufacturer`, `model`, `serial`, `tag`, `voltage`, `kva`, `kw`, `phase`, `frequency`, as printed. Ratings (`voltage`, `kva`, `kw`, `phase`, `frequency`) are the number only: no unit and no thousands comma (`415`, `415/240`, `1500` for a plate printed `1,500 kVA`). `just validate-eval` rejects `415 V` and `1,500`. Use `"unreadable"` when you cannot read it. Leave a field out when it is not on the plate. |
 | `hard` | `true` for the deliberate glare, shadow or blur shot |
 | `people_checked` | Must be `true`: you checked the photo has no people |
 
