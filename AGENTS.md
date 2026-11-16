@@ -37,8 +37,6 @@ Bun 1.4.4 and `just` required.
 - **No real people** in photos or audio: no faces, no names, no screens with names. People appear only as role IDs (`DRV-17`, `SUPT-01`).
 - **Strip EXIF** from every photo: `just strip-exif eval/photos`. CI fails otherwise.
 - **Never guess** a label. `"unreadable"` is a correct answer.
-- Secrets go in `.env` (copy `.env.example`), never in the repo.
-- No em dashes in prose or commit messages.
 
 ## Skills
 
