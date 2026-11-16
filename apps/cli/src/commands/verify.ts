@@ -3,6 +3,7 @@ import {
   loadProject,
   modelsFromEnv,
   openStore,
+  proposeForVerify,
   storePath,
   verifyEquipment,
 } from "@bankai/core";
@@ -38,6 +39,11 @@ export async function verifyCommand(photos: string[], opts: VerifyOptions): Prom
       console.error(
         `warning: verdict not saved to ${storePath(opts.project)}: ${(e as Error).message}`,
       );
+    }
+    try {
+      store.saveUpdates(verdict.id, proposeForVerify(verdict, opts.location ?? null, project));
+    } catch (e) {
+      console.error(`warning: proposed updates not saved: ${(e as Error).message}`);
     }
     console.log(opts.json ? JSON.stringify(verdict, null, 2) : formatVerdict(verdict));
     return 0;

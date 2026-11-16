@@ -6,7 +6,9 @@ import {
   type Models,
   type Store,
 } from "@bankai/core";
+import type { SkillsExtension } from "@modelcontextprotocol/server/ext/skills";
 import { join, resolve } from "node:path";
+import { bankaiSkills } from "./skills";
 
 export interface ServerContext {
   projectDir: string;
@@ -16,6 +18,7 @@ export interface ServerContext {
   photoRoots: string[];
   /** Where base64 photos are written before reading. */
   tmpDir: string;
+  skills: SkillsExtension;
 }
 
 /**
@@ -33,8 +36,11 @@ export async function buildContext(opts: {
   return {
     projectDir,
     store: openStore(storePath(projectDir)),
-    models: opts.models ?? (await modelsFromEnv()),
+    // Hosts often start servers from `/`: keep the response cache with the project.
+    models:
+      opts.models ?? (await modelsFromEnv({ cacheDir: join(projectDir, ".bankai", "cache") })),
     photoRoots: (opts.photoRoots ?? [projectDir, ...extra]).map((r) => resolve(projectDir, r)),
     tmpDir: join(projectDir, ".bankai", "tmp"),
+    skills: await bankaiSkills(),
   };
 }

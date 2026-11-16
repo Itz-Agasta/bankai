@@ -19,6 +19,7 @@
       },
       "dependencies": {
         "@bankai/core": "workspace:*",
+        "@bankai/mcp": "workspace:*",
         "@bankai/schemas": "workspace:*",
         "commander": "^15.1.0",
       },

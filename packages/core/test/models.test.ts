@@ -115,6 +115,14 @@ describe("loadUserEnv", () => {
   });
 });
 
+describe("modelConfig", () => {
+  test("a caller's cache dir is the default; BANKAI_CACHE_DIR still wins", () => {
+    expect(modelConfig({}, { cacheDir: "/p/.bankai/cache" }).cacheDir).toBe("/p/.bankai/cache");
+    expect(modelConfig({ BANKAI_CACHE_DIR: "/x" }, { cacheDir: "/p" }).cacheDir).toBe("/x");
+    expect(modelConfig({}).cacheDir).toBe(".bankai/cache");
+  });
+});
+
 describe("liveModels", () => {
   test("refuses a model it cannot price", () => {
     expect(() => liveModels(modelConfig({ BANKAI_CHECKER_MODEL: "someone/unpriced" }))).toThrow(
