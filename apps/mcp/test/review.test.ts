@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { buildContext } from "../src/context";
 import { MAX_BASE64, resolvePhotos } from "../src/photos";
 import { createServer } from "../src/server";
-import { cleanup, connect, fakeModels, miniProject, PLATE } from "./helpers";
+import { cleanup, connect, fakeModels, miniProject, PLATE, track } from "./helpers";
 
 afterAll(cleanup);
 
@@ -18,7 +18,7 @@ describe("photo roots", () => {
   test("a symlink is read through the real path that was checked", async () => {
     const project = await miniProject();
     symlinkSync(join(project, "plate.jpg"), join(project, "link.jpg"));
-    const ctx = await buildContext({ projectDir: project, models: fakeModels() });
+    const ctx = track(await buildContext({ projectDir: project, models: fakeModels() }));
     expect(await resolvePhotos([{ path: "link.jpg" }], ctx)).toEqual([
       realpathSync(join(project, "plate.jpg")),
     ]);
@@ -38,7 +38,7 @@ describe("photo roots", () => {
     const project = await miniProject();
     process.env.BANKAI_PHOTO_ROOTS = "photos";
     try {
-      const ctx = await buildContext({ projectDir: project, models: fakeModels() });
+      const ctx = track(await buildContext({ projectDir: project, models: fakeModels() }));
       expect(ctx.photoRoots).toContain(join(project, "photos"));
     } finally {
       delete process.env.BANKAI_PHOTO_ROOTS;
@@ -52,6 +52,7 @@ describe("photo roots", () => {
       arguments: { photos: [{ base64: "A".repeat(MAX_BASE64 + 4), mediaType: "image/jpeg" }] },
     });
     expect(r.isError).toBe(true);
+    expect(text(r)).toMatch(/base64|too big/i);
   });
 });
 
@@ -95,7 +96,7 @@ describe("tools", () => {
 
 async function pendingUpdate(caps: Record<string, unknown>, onPrompt?: (m: string) => void) {
   const project = await miniProject();
-  const ctx = await buildContext({ projectDir: project, models: fakeModels() });
+  const ctx = track(await buildContext({ projectDir: project, models: fakeModels() }));
   const client = new Client({ name: "t", version: "0" }, { capabilities: caps });
   if (onPrompt)
     client.setRequestHandler("elicitation/create", async (req) => {

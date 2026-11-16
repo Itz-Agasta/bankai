@@ -37,7 +37,7 @@ describe("bankai mcp over stdio", () => {
         ...(process.env as Record<string, string>),
         BANKAI_FAKE_MODELS: await fakeScript(project),
       },
-      stderr: "ignore",
+      stderr: "inherit",
     });
     const client = new Client({ name: "e2e", version: "0" });
     await client.connect(transport);
@@ -66,5 +66,6 @@ describe("bankai mcp over stdio", () => {
     const [err, code] = await Promise.all([new Response(proc.stderr).text(), proc.exited]);
     expect(code).toBe(2);
     expect(err.trim().split("\n")).toHaveLength(1);
+    expect(err).toMatch(/--project|BANKAI_PROJECT/);
   });
 });

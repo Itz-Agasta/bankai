@@ -27,6 +27,12 @@ export function fakeModels(components: string[] = []) {
 
 const temps: string[] = [];
 const open: { close(): Promise<void> | void }[] = [];
+/** Close this context's store at cleanup. */
+export function track(ctx: ServerContext): ServerContext {
+  open.push(ctx.store);
+  return ctx;
+}
+
 export async function cleanup() {
   for (const c of open.splice(0)) await c.close();
   await Promise.all(temps.map((d) => rm(d, { recursive: true, force: true })));

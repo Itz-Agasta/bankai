@@ -27,4 +27,4 @@ A check marked `unknown` was not judged. Do not present it as a pass.
 - Quote citations exactly. Never invent a vendor, model number, PO, drawing or record that is not in a result.
 - Proposed updates are proposals until `apply_update` approves them. Do not tell anyone a record has changed before that.
 - Photos must not show people. Use role ids, never names.
-- An error result is one line, `CODE: message`. `INPUT_UNSUPPORTED` usually means a bad photo or a path outside the project folder; `NOT_FOUND` means the PO, ticket or id is not in this project; `APPROVAL_REQUIRED` means the person did not approve.
+- An error result is one line, `CODE: message`. `INPUT_UNSUPPORTED` usually means a bad photo or a path outside the project folder; `NOT_FOUND` means the PO, ticket or id is not in this project; `APPROVAL_REQUIRED` means the person did not approve; `INPUT_TOO_LARGE` means a photo over 20 MB or 50 megapixels (send a smaller one); `PERCEPTION_UNAVAILABLE` means the vision models could not be reached (try again later, or hand it to a person); `PROJECT_INVALID` means the project files are broken (tell the site lead).

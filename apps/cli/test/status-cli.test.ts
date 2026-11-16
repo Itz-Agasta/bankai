@@ -61,7 +61,9 @@ test("a flagged verify shows up in status from a separate process", async () => 
 
 test("a confirmed verify at a location leaves one pending update in status", async () => {
   const { project, fake } = await setup();
-  await bankai(["verify", PLATE, "--project", project, "--location", "PAD-B"], fake);
+  expect(
+    (await bankai(["verify", PLATE, "--project", project, "--location", "PAD-B"], fake)).code,
+  ).toBe(0);
   const status = await bankai(["status", "--project", project, "--json"], fake);
   const { pending_updates } = JSON.parse(status.out);
   expect(pending_updates).toHaveLength(1);
