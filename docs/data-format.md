@@ -127,3 +127,21 @@ Never guess a value. `"unreadable"` is a correct label.
 | `expected.failing_checks` | Any of `identity`, `spec`, `substitution`, `location`, `revision`, `completeness`, `schedule_impact` |
 | `expected.candidates` | Optional: tags Bankai should list when it cannot pick one |
 | `kind` | `correct`, `wrong_location`, `superseded_revision`, `spec_mismatch`, `partial_shipment`, `unapproved_substitution`, `unreadable`, `not_in_project` |
+
+## Voice notes
+
+Synthetic voices only (Track 02). Use the `generate-voice-note` skill. Three files share one id, for example `n004-tx1-delivered`:
+
+- `eval/voice/<id>.txt`: the script the TTS voice reads, at most 200 characters. The eval checks claims against this text, so a claim naming something the script never says counts as fabricated.
+- `eval/audio/<id>.wav`: the audio, made with `bun packages/core/scripts/tts.ts`.
+- `eval/voice/<id>.json`: the expected answer.
+
+| Key | Meaning |
+|---|---|
+| `id` | Same as the file name |
+| `project` | Folder name under `data/projects/` |
+| `audio` | File name inside `eval/audio/`, no folders |
+| `expected.status` | `confirmed`, `flagged` (a claim conflicts with the records) or `needs_human` (an unknown tag, a calendar date with no day count, a unit that was not named) |
+| `expected.claims` | One entry per fact: `type` (`status`, `date_change`, `issue`, `decision`, `action_item`), optional `tag`, optional `activity` id, optional `value` that the proposed update (or the claim text) must contain, such as `set at PAD-B` or `3` |
+
+Name people only by role ID (`ELEC-02`). A made-up first name is allowed only to test that Bankai removes it.

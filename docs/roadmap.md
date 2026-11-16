@@ -31,7 +31,7 @@ Dates are IST. Feature freeze Dec 3, 23:00. Submit Dec 6, 12:00. Own tasks come 
 - [ ] Rules: revision, completeness, substitution
 - [ ] Retake requests
 - [ ] Calibrator and conformal threshold
-- [ ] MCP server: 5 tools with output schemas
+- [x] MCP server: 5 tools with output schemas
 - [ ] **Nov 25: photo pipeline done**
 - [ ] Nameplate detector boxes labelled and trained (if spot check says crops help)
 - [ ] Voice: transcript with timestamps, claims, grounding, proposed updates
