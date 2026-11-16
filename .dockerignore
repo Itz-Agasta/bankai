@@ -1,0 +1,11 @@
+node_modules
+.bankai
+**/.bankai
+eval/out
+.env
+.env.*
+notes
+.claude
+.superpowers
+.git
+README.md

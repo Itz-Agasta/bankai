@@ -33,6 +33,10 @@ Results are compact JSON. Evidence comes on demand. Every result validates again
 
 `bankai verify | delivery | note | explain | apply | init | eval`. Built with `bun build --compile` into a single binary. `bankai init <dir>` loads a project in the documented format.
 
+### HTTP API
+
+`bankai serve` runs a JSON API for the phone app plus MCP over HTTP at `/mcp`, both on the same core and store. `--demo` runs replay only on a throwaway copy of the project. Contract: `docs/web-api.md`.
+
 ### Phone web app
 
 React mobile web app: capture photos or audio, pick a room (or scan a door QR; no GPS), see the result card, open evidence, approve or reject proposed updates, request a retake.
