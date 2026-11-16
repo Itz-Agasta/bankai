@@ -173,6 +173,10 @@ describe("tags", () => {
 });
 
 describe("loadImage", () => {
+  test("a photo without metadata comes back byte for byte", async () => {
+    expect(await loadImage(PLATE)).toEqual(await Bun.file(PLATE).bytes());
+  });
+
   test("rejects an empty file", async () => {
     const p = join(await mkdtemp(join(tmpdir(), "bankai-img-")), "empty.jpg");
     await writeFile(p, "");

@@ -1,6 +1,7 @@
 import {
   audioMediaType,
   BankaiFailure,
+  cleanImage,
   MAX_AUDIO_BYTES,
   MAX_IMAGE_BYTES,
   sha256Hex,
@@ -29,6 +30,9 @@ function imageExt(b: Uint8Array): string | null {
   if (at(b, 0, "RIFF") && at(b, 8, "WEBP")) return "webp";
   return null;
 }
+
+/** Uploads are served back to the app, so a photo is checked and stored without GPS, device or time. */
+export const cleanPhoto = (bytes: Uint8Array) => cleanImage(bytes, "photo");
 
 /**
  * Store bytes under the tmp folder as `<sha256>.<ext>`. The name is the content: an existing
@@ -82,7 +86,9 @@ export async function saveUploads(
         "INPUT_UNSUPPORTED",
         kind === "photo" ? "photo must be jpg, png or webp" : "audio format not supported",
       );
-    out.push(await storeUpload(ctx.tmpDir, bytes, ext));
+    out.push(
+      await storeUpload(ctx.tmpDir, kind === "photo" ? await cleanPhoto(bytes) : bytes, ext),
+    );
   }
   return out;
 }

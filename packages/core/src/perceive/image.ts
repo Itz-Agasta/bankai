@@ -1,7 +1,7 @@
 import sharp from "sharp";
 import { BankaiFailure } from "../errors";
 import type { BBox } from "../models/types";
-import { stripMetadata } from "./exif";
+import { hasMetadata, stripMetadata } from "./exif";
 
 export const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 const MAX_PIXELS = 50_000_000;
@@ -14,8 +14,21 @@ export async function loadImage(path: string): Promise<Uint8Array> {
   if (file.size > MAX_IMAGE_BYTES) {
     throw new BankaiFailure("INPUT_TOO_LARGE", "photo over 20 MB", `${path}: ${file.size} bytes`);
   }
-  if (file.size === 0) throw new BankaiFailure("INPUT_UNSUPPORTED", "photo is empty", path);
-  const bytes = await file.bytes();
+  return cleanImage(await file.bytes(), path);
+}
+
+/**
+ * Check a photo from its header (size, pixels, format), then drop any metadata. A photo
+ * without metadata comes back unchanged: re-encoding again would only blur small print.
+ */
+export async function cleanImage(bytes: Uint8Array, label: string): Promise<Uint8Array> {
+  if (bytes.length === 0) throw new BankaiFailure("INPUT_UNSUPPORTED", "photo is empty", label);
+  if (bytes.length > MAX_IMAGE_BYTES)
+    throw new BankaiFailure(
+      "INPUT_TOO_LARGE",
+      "photo over 20 MB",
+      `${label}: ${bytes.length} bytes`,
+    );
   const meta = await sharp(bytes)
     .metadata()
     .catch(() => undefined);
@@ -24,24 +37,32 @@ export async function loadImage(path: string): Promise<Uint8Array> {
     throw new BankaiFailure(
       "INPUT_TOO_LARGE",
       "photo over 50 megapixels",
-      `${path}: ${meta.width}x${meta.height}`,
+      `${label}: ${meta.width}x${meta.height}`,
     );
   }
   if (!format || !FORMATS.has(format)) {
     throw new BankaiFailure(
       "INPUT_UNSUPPORTED",
       "photo must be JPEG, PNG or WebP",
-      `${path}: ${format ?? "unreadable"}`,
+      `${label}: ${format ?? "unreadable"}`,
     );
   }
-  // The header can parse while the pixel data is corrupt; that surfaces on re-encode.
-  return stripMetadata(bytes).catch((e: Error) => {
+  // The header can parse while the pixel data is corrupt; that surfaces on decode.
+  const decodeFailed = (e: Error) => {
     throw new BankaiFailure(
       "INPUT_UNSUPPORTED",
       "photo could not be decoded",
-      `${path}: ${e.message}`,
+      `${label}: ${e.message}`,
     );
-  });
+  };
+  if (!hasMetadata(bytes)) {
+    await sharp(bytes).stats().catch(decodeFailed);
+    return bytes;
+  }
+  const out = await stripMetadata(bytes).catch(decodeFailed);
+  if (out.length > MAX_IMAGE_BYTES)
+    throw new BankaiFailure("INPUT_TOO_LARGE", "photo over 20 MB", `${label}: ${out.length} bytes`);
+  return out;
 }
 
 /** Crop a box plus padding on each side, clamped to the image. */
