@@ -16,3 +16,4 @@ export * from "./note";
 export * from "./eval";
 export { openStore, storePath } from "./store";
 export type { AuditEvent, OpenItem, Store } from "./store";
+export { resolveCitation } from "./cite-resolve";

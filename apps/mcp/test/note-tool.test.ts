@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, test } from "bun:test";
 import { fakeExtractor, fakeTranscriber } from "@bankai/core";
 import { NoteRun } from "@bankai/schemas";
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { extractScript, N001, transcript } from "../../../packages/core/test/fixtures/notes";
 import { cleanup, connect } from "./helpers";
@@ -93,6 +93,17 @@ describe("process_site_note", () => {
     });
     expect(r.isError).toBe(true);
     expect(text(r)).toStartWith("PERCEPTION_UNAVAILABLE");
+  });
+
+  test("no speech model keeps no base64 audio", async () => {
+    const { client, ctx } = await connect();
+    const base64 = Buffer.from(WAV).toString("base64");
+    const r = await client.callTool({
+      name: "process_site_note",
+      arguments: { audio: { base64, mediaType: "audio/wav" } },
+    });
+    expect(text(r)).toStartWith("PERCEPTION_UNAVAILABLE");
+    expect(existsSync(ctx.tmpDir) ? readdirSync(ctx.tmpDir) : []).toEqual([]);
   });
 });
 

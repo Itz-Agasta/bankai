@@ -8,6 +8,7 @@ import {
   type McpServer,
 } from "@modelcontextprotocol/server";
 import { z } from "zod";
+import { approve } from "../actions";
 import type { ServerContext } from "../context";
 import { fail, ok } from "../results";
 
@@ -55,7 +56,7 @@ export function registerApply(server: McpServer, ctx: ServerContext): void {
         // A bare `elicitation: {}` is the 2025 shape and means form.
         const e = caps?.elicitation as { form?: unknown; url?: unknown } | undefined;
         if (!e || (e.form === undefined && e.url !== undefined))
-          return ok(ctx.store.approveUpdate(update_id, approved_by, at));
+          return ok(approve(ctx, update_id, approved_by));
 
         const answer = inputResponse(extra.mcpReq.inputResponses, "confirm");
         if (answer.kind === "missing")
@@ -76,7 +77,7 @@ export function registerApply(server: McpServer, ctx: ServerContext): void {
           answer.action === "accept" &&
           answer.content?.approve === true
         )
-          return ok(ctx.store.approveUpdate(update_id, approved_by, at));
+          return ok(approve(ctx, update_id, approved_by));
         ctx.store.declineUpdate(update_id, approved_by, at);
         throw new BankaiFailure("APPROVAL_REQUIRED", `${approved_by} did not approve ${update_id}`);
       } catch (e) {

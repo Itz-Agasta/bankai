@@ -7,6 +7,7 @@ import { dbTracer, readTrace } from "./trace";
 import {
   approveUpdate,
   declineUpdate,
+  rejectUpdate,
   getUpdate,
   pendingUpdates,
   saveUpdates,
@@ -39,6 +40,7 @@ export interface Store {
   pendingUpdates(): ProposedUpdate[];
   approveUpdate(id: string, by: string, at: string): ProposedUpdate;
   declineUpdate(id: string, by: string, at: string): void;
+  rejectUpdate(id: string, by: string, at: string): ProposedUpdate;
   close(): void;
 }
 
@@ -68,6 +70,7 @@ export function openStore(path: string): Store {
     pendingUpdates: () => pendingUpdates(db),
     approveUpdate: (id, by, at) => approveUpdate(db, id, by, at, audit),
     declineUpdate: (id, by, at) => declineUpdate(db, id, by, at, audit),
+    rejectUpdate: (id, by, at) => rejectUpdate(db, id, by, at, audit),
     close: () => db.close(),
   };
 }

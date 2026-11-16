@@ -256,3 +256,48 @@ describe("cubic fixes: note re-runs", () => {
     }
   });
 });
+
+describe("rejectUpdate", () => {
+  const upd = {
+    id: "upd_r",
+    target: { kind: "equipment_schedule_row" as const, ref: "equipment_schedule.csv#GEN-3" },
+    field: "install_status",
+    old: "",
+    new: "set at PAD-B",
+    evidence: [{ kind: "audio_span" as const, ref: "a@0-1" }],
+    confidence: 1,
+    approval: "pending" as const,
+    approved_by: null,
+    at: null,
+  };
+
+  test("rejects a pending update, logs it, and approving it after is refused", async () => {
+    const path = await dbPath();
+    const store = openStore(path);
+    try {
+      store.saveUpdates("v1", [upd]);
+      const r = store.rejectUpdate("upd_r", "SUPT-01", "t2");
+      expect(r).toMatchObject({ approval: "rejected", approved_by: "SUPT-01", at: "t2" });
+      expect(store.getUpdate("upd_r")?.approval).toBe("rejected");
+      expect(store.pendingUpdates()).toEqual([]);
+      expect(() => store.approveUpdate("upd_r", "SUPT-01", "t3")).toThrow("was rejected");
+      const audit = await Bun.file(join(path, "..", "audit.jsonl")).text();
+      expect(audit).toContain('"action":"rejected"');
+    } finally {
+      store.close();
+    }
+  });
+
+  test("rejecting an approved update is refused; rejecting twice returns the first", async () => {
+    const store = openStore(await dbPath());
+    try {
+      store.saveUpdates("v1", [upd, { ...upd, id: "upd_s" }]);
+      store.approveUpdate("upd_r", "SUPT-01", "t2");
+      expect(() => store.rejectUpdate("upd_r", "SUPT-01", "t3")).toThrow("already approved");
+      const first = store.rejectUpdate("upd_s", "SUPT-01", "t2");
+      expect(store.rejectUpdate("upd_s", "PM-2", "t4")).toEqual(first);
+    } finally {
+      store.close();
+    }
+  });
+});

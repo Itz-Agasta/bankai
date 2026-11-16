@@ -1,8 +1,7 @@
-import { MAX_AUDIO_BYTES, sha256Hex } from "@bankai/core";
-import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { MAX_AUDIO_BYTES } from "@bankai/core";
 import { z } from "zod";
 import type { ServerContext } from "./context";
+import { storeUpload } from "./http/uploads";
 import { allowedPath } from "./paths";
 
 /** Base64 length of core's audio size limit: refuse before decoding. */
@@ -37,9 +36,5 @@ export type AudioInput = z.infer<typeof AudioInput>;
 /** A checked path, or the base64 bytes written under the project's tmp folder. */
 export async function resolveAudio(input: AudioInput, ctx: ServerContext): Promise<string> {
   if ("path" in input) return allowedPath(input.path, ctx, "audio");
-  const bytes = Buffer.from(input.base64, "base64");
-  await mkdir(ctx.tmpDir, { recursive: true });
-  const p = join(ctx.tmpDir, `${sha256Hex(bytes)}.${EXT[input.mediaType]}`);
-  await writeFile(p, bytes);
-  return p;
+  return storeUpload(ctx.tmpDir, Buffer.from(input.base64, "base64"), EXT[input.mediaType]);
 }
