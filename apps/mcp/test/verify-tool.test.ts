@@ -1,8 +1,9 @@
 import { afterAll, describe, expect, test } from "bun:test";
 import { VerifyResult } from "@bankai/schemas";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { cleanup, connect, PLATE } from "./helpers";
+import { hasMetadata } from "../../../packages/core/src/perceive/exif";
+import { cleanup, connect, PLATE, ROOT } from "./helpers";
 
 afterAll(cleanup);
 
@@ -43,6 +44,19 @@ describe("verify_equipment", () => {
     });
     expect(r.isError).toBeFalsy();
     expect(VerifyResult.parse(r.structuredContent).verdict.status).toBe("confirmed");
+  });
+
+  test("a base64 photo is stored without its GPS metadata", async () => {
+    const { client, ctx } = await connect();
+    const base64 = readFileSync(join(ROOT, "packages/core/test/fixtures/gps.jpg")).toString(
+      "base64",
+    );
+    await client.callTool({
+      name: "verify_equipment",
+      arguments: { photos: [{ base64, mediaType: "image/jpeg" }] },
+    });
+    const [file] = readdirSync(ctx.tmpDir);
+    expect(hasMetadata(readFileSync(join(ctx.tmpDir, file!)))).toBe(false);
   });
 
   test("a path outside the allowed roots is refused without reading it", async () => {

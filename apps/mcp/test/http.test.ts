@@ -4,7 +4,8 @@ import { NoteRun, VerifyResult } from "@bankai/schemas";
 import { chmodSync, existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { extractScript, N001, transcript } from "../../../packages/core/test/fixtures/notes";
-import { cleanup, PLATE } from "./helpers";
+import { hasMetadata } from "../../../packages/core/src/perceive/exif";
+import { cleanup, PLATE, ROOT } from "./helpers";
 import { form, startTest, stopAll } from "./http-helpers";
 
 afterAll(async () => {
@@ -54,6 +55,31 @@ describe("HTTP API", () => {
     chmodSync(join(s.ctx().tmpDir, name), 0o444);
     const r = await post(s.at("/api/verify"), form({ photos: plate() }));
     expect(r.status).toBe(200);
+  });
+
+  test("an uploaded photo is stored without its GPS metadata", async () => {
+    const s = await startTest();
+    const gps = Bun.file(join(ROOT, "packages/core/test/fixtures/gps.jpg"));
+    expect(hasMetadata(await gps.bytes())).toBe(true);
+    await post(s.at("/api/verify"), form({ photos: gps }));
+    const files = readdirSync(s.ctx().tmpDir);
+    expect(files).toHaveLength(1);
+    expect(hasMetadata(await Bun.file(join(s.ctx().tmpDir, files[0]!)).bytes())).toBe(false);
+  });
+
+  test("a huge-pixel photo with metadata is refused before it is stored", async () => {
+    const s = await startTest();
+    // sharp belongs to core, not this package.
+    const sharp = (await import(Bun.resolveSync("sharp", join(ROOT, "packages/core")))).default;
+    const bomb = await sharp({
+      create: { width: 8000, height: 8000, channels: 3, background: "#fff" },
+    })
+      .withExif({ IFD0: { Make: "x" } })
+      .png()
+      .toBuffer();
+    const r = await post(s.at("/api/verify"), form({ photos: new Blob([bomb]) }));
+    expect(r.status).toBe(413);
+    expect(existsSync(s.ctx().tmpDir) ? readdirSync(s.ctx().tmpDir) : []).toEqual([]);
   });
 
   test("a photos field that is text is 400", async () => {
