@@ -6,7 +6,7 @@ import type { VisionModel } from "./types";
 export type Models = { primary: VisionModel; checker: VisionModel };
 
 /** Live models from env, or BANKAI_FAKE_MODELS=<script.json> ({ primary, checker } fakeVision scripts) for tests. */
-export async function modelsFromEnv(): Promise<Models> {
+export async function modelsFromEnv(defaults: { cacheDir?: string } = {}): Promise<Models> {
   await loadUserEnv(); // process env still wins; the file only fills gaps
   const fake = process.env.BANKAI_FAKE_MODELS;
   if (fake) {
@@ -16,5 +16,5 @@ export async function modelsFromEnv(): Promise<Models> {
       checker: fakeVision("fake-checker", script.checker),
     };
   }
-  return liveModels(modelConfig());
+  return liveModels(modelConfig(process.env, defaults));
 }

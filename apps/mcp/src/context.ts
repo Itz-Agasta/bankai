@@ -39,7 +39,9 @@ export async function buildContext(opts: {
     projectDir,
     project,
     store: openStore(storePath(projectDir)),
-    models: opts.models ?? (await modelsFromEnv()),
+    // Hosts often start servers from `/`: keep the response cache with the project.
+    models:
+      opts.models ?? (await modelsFromEnv({ cacheDir: join(projectDir, ".bankai", "cache") })),
     photoRoots: (opts.photoRoots ?? [projectDir, ...extra]).map((r) => resolve(r)),
     tmpDir: join(projectDir, ".bankai", "tmp"),
     skills: await bankaiSkills(),

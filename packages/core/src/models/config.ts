@@ -23,12 +23,15 @@ export interface ModelConfig {
 }
 
 /** Model ids are configuration (env), never hard-coded at call sites (D32). */
-export function modelConfig(env: Record<string, string | undefined> = process.env): ModelConfig {
+export function modelConfig(
+  env: Record<string, string | undefined> = process.env,
+  defaults: { cacheDir?: string } = {},
+): ModelConfig {
   return {
     vision: env.BANKAI_VISION_MODEL || "gemini-3.8-flash",
     visionFallback: env.BANKAI_VISION_FALLBACK_MODEL || "gemini-3.5-flash-lite",
     checker: env.BANKAI_CHECKER_MODEL || "openai/gpt-6.1-terra",
-    cacheDir: env.BANKAI_CACHE_DIR || ".bankai/cache",
+    cacheDir: env.BANKAI_CACHE_DIR || defaults.cacheDir || ".bankai/cache",
     replayOnly: env.BANKAI_REPLAY === "1",
     keys: { gemini: env.GEMINI_API_KEY, openrouter: env.OPENROUTER_API_KEY },
   };
