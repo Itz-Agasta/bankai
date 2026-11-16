@@ -7,7 +7,7 @@ description: Write one synthetic site walk note (script, TTS audio, scenario) fo
 
 A voice note is one exam question for `process_site_note`: an engineer's short spoken update, and the claims Bankai should pull out of it.
 
-Track 02 privacy rule: **synthetic voices only.** Never record yourself or anyone else. Never put a real person's name in a script, except the one deliberate test below.
+Track 02 privacy rule: **synthetic voices only.** Never record yourself or anyone else. Never put a real person's name in a script. The only exception is one made-up first name, to test that Bankai removes it (step 2).
 
 ## Steps
 

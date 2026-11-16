@@ -55,6 +55,7 @@ export function proposeForClaim(
     },
   });
   const po = c.tag ? p.poByTag.get(c.tag) : undefined;
+  const quote = c.span.quote ?? c.text;
 
   switch (c.type) {
     case "status": {
@@ -64,8 +65,8 @@ export function proposeForClaim(
       }
       const row = c.tag ? p.byTag.get(c.tag) : undefined;
       if (!row || !c.status_value) return none("unknown_record");
-      if (c.location === null)
-        return draft(cite.equipmentRow(row.tag), "install_status", "", c.status_value);
+      // Without a place the drawings cannot confirm the install: keep the cited claim, propose nothing.
+      if (c.location === null) return none(null);
       const where = normalizeLocation(c.location);
       const ctx = {
         project: p,
@@ -101,17 +102,15 @@ export function proposeForClaim(
       const what = [c.component, c.issue_kind ?? "issue"].filter(Boolean).join(" ");
       return draft(cite.poLine(po), "issues", "", what);
     }
+    // The ledger gets the words actually spoken, never the model's paraphrase.
     case "decision":
-      return draft({ kind: "decision", ref: `decisions.json#new-${key}` }, "text", "", c.text);
+      return draft(cite.decision(`new-${key}`), "text", "", quote);
     case "action_item":
       return draft(
-        { kind: "action_item", ref: `actions.json#new-${key}` },
+        cite.action(`new-${key}`),
         "text",
         "",
-        // The model often opens the text with the owner already.
-        c.owner_role && c.text.startsWith(c.owner_role)
-          ? c.text
-          : `${c.owner_role ?? "unassigned"}: ${c.text}`,
+        c.owner_role ? quote : `unassigned: ${quote}`,
       );
   }
 }

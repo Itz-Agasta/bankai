@@ -23,7 +23,7 @@ const ONES = [
   "nineteen",
 ];
 const TENS = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
-const MAX_CHARS = 800; // Whisper reads at most 224 prompt tokens
+const MAX_CHARS = 800; // rough proxy for Whisper's 224-token prompt limit, not a token count
 
 const say = (n: number) =>
   n < 20
@@ -42,11 +42,13 @@ export const spokenTag = (tag: string) =>
 
 /** Prime Whisper with the project's own words: tags (written and spoken) and places. */
 export function whisperPrompt(v: Vocab): string {
-  const parts = [...v.tags, ...v.tags.map(spokenTag), ...v.locations, ...v.components];
+  const parts = [
+    ...new Set([...v.tags, ...v.tags.map(spokenTag), ...v.locations, ...v.components]),
+  ];
   let out = "";
   for (const p of parts) {
     const next = out ? `${out}, ${p}` : p;
-    if (next.length > MAX_CHARS) break;
+    if (next.length > MAX_CHARS) continue; // a shorter later entry may still fit
     out = next;
   }
   return out;

@@ -279,3 +279,57 @@ describe("live fix: incidental activity", () => {
     expect(dropped(r)).toBe("activity_not_in_span");
   });
 });
+
+describe("cubic fixes: grounding", () => {
+  test("a spoken date outside the span drops the claim", () => {
+    const w = words("set", "slips", "to", "friday");
+    const ok = g(claim({ type: "date_change", spoken_date: "Friday", word_end: 3 }), w);
+    expect(dropped(ok)).toBeNull();
+    const bad = g(claim({ type: "date_change", spoken_date: "Friday", word_end: 1 }), w);
+    expect(dropped(bad)).toBe("date_not_in_span");
+  });
+
+  test("an issue kind that was not said is cleared", () => {
+    const w = words("the", "controls", "cabinet", "door", "is", "loose");
+    const r = g(
+      claim({ type: "issue", component: "controls cabinet", issue_kind: "damaged", word_end: 5 }),
+      w,
+    );
+    expect("claim" in r && r.claim.issue_kind).toBeNull();
+    const w2 = words("controls", "cabinet", "is", "missing");
+    const r2 = g(
+      claim({ type: "issue", component: "controls cabinet", issue_kind: "missing", word_end: 3 }),
+      w2,
+    );
+    expect("claim" in r2 && r2.claim.issue_kind).toBe("missing");
+  });
+
+  test("a day late is one day", () => {
+    const w = words("terminate", "gen", "three", "is", "a", "day", "late");
+    expect(dropped(g(claim({ type: "date_change", delay_days: 1, word_end: 6 }), w))).toBeNull();
+  });
+
+  test("an activity must be said as a phrase", () => {
+    const w = words("test", "the", "load", "bank", "is", "delayed", "three", "days");
+    const r = g(claim({ type: "date_change", activity_id: "A30", delay_days: 3, word_end: 7 }), w);
+    expect(dropped(r)).toBe("activity_not_in_span");
+  });
+
+  test("foldTokens ignores Object.prototype names", () => {
+    expect(foldSpoken(["constructor", "toString"])).toEqual(["constructor", "tostring"]);
+  });
+});
+
+describe("cubic fixes: names", () => {
+  test("a calendar word used as a name before a speech verb is found", () => {
+    expect([...findNames(words("then", "may", "said", "ok"), vocab)]).toEqual(["may"]);
+  });
+
+  test("possessive and hyphenated names are redacted", () => {
+    const w = words("check", "Ravi's", "note,", "and", "Mary-Ann", "agreed");
+    const names = findNames(w, vocab);
+    const r = redactNames(w, names);
+    expect(r[1]!.text).toBe("[name]");
+    expect(r[4]!.text).toBe("[name]");
+  });
+});

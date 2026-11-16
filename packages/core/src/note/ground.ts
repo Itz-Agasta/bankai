@@ -90,6 +90,18 @@ const NEGATORS = new Set([
   "wont",
 ]);
 const NEGATION_REACH = 3;
+const ISSUE_WORDS = {
+  missing: [
+    "missing",
+    "not delivered",
+    "short",
+    "absent",
+    "never arrived",
+    "not here",
+    "didn't come",
+  ],
+  damaged: ["damaged", "broken", "dented", "cracked", "bent", "scratched", "crushed", "leaking"],
+};
 const CALENDAR = [
   "monday",
   "tuesday",
@@ -154,7 +166,7 @@ const negated = (tokens: Token[], at: number) =>
 export function hasDelay(tokens: Token[], days: number): boolean {
   return tokens.some((x, k) => {
     const unit = tokens[k + 1]?.t ?? "";
-    if (unit.startsWith("day")) return x.t === String(days);
+    if (unit.startsWith("day")) return (x.t === "a" ? "1" : x.t) === String(days);
     if (unit.startsWith("week")) return (x.t === "a" ? 1 : Number(x.t)) * 7 === days;
     return false;
   });
@@ -162,8 +174,7 @@ export function hasDelay(tokens: Token[], days: number): boolean {
 
 export function activitySpoken(tokens: Token[], a: Vocab["activities"][number]): boolean {
   if (a.tag && spokenAs(tokens, a.tag, normalizeTag)) return true;
-  const have = new Set(tokens.map((x) => x.t));
-  return foldSpoken(a.name.split(/\s+/)).every((x) => have.has(x));
+  return hasPhrase(tokens, a.name);
 }
 
 function roleSpoken(tokens: Token[], role: string): boolean {
@@ -205,6 +216,7 @@ export function ground(c: RawClaim, words: Word[], vocab: Vocab, audio: string):
     }
   }
   if (c.delay_days !== null && !hasDelay(tokens, c.delay_days)) return drop("number_not_in_span");
+  if (c.spoken_date !== null && !hasPhrase(tokens, c.spoken_date)) return drop("date_not_in_span");
   if (c.component !== null && !hasPhrase(tokens, c.component)) return drop("component_not_in_span");
   let doubt: GroundedClaim["doubt"] = null;
   if (c.type === "status") {
@@ -221,6 +233,11 @@ export function ground(c: RawClaim, words: Word[], vocab: Vocab, audio: string):
     (c.location !== null && named(vocab.locations, normalizeLocation, 3) > 1)
   )
     doubt = "ambiguous_span";
+  // The model's issue kind lands in the PO update: keep it only when its words were said.
+  const kindSaid =
+    c.issue_kind === null || c.issue_kind === "other"
+      ? true
+      : ISSUE_WORDS[c.issue_kind].some((v) => hasPhrase(tokens, v));
   const owner =
     c.owner_role !== null &&
     ActorId.safeParse(c.owner_role).success &&
@@ -235,6 +252,7 @@ export function ground(c: RawClaim, words: Word[], vocab: Vocab, audio: string):
       ...c,
       owner_role: owner,
       activity_id: activity,
+      issue_kind: kindSaid ? c.issue_kind : null,
       exact,
       doubt,
       span: {
@@ -247,15 +265,18 @@ export function ground(c: RawClaim, words: Word[], vocab: Vocab, audio: string):
 }
 
 const letters = (s: string) => s.replace(/^[^A-Za-z]+|[^A-Za-z]+$/g, "");
+const NAME_SHAPE = /^[A-Za-z]+(-[A-Za-z]+)*$/;
+
+/** How a name is compared everywhere: edge punctuation and a possessive 's dropped, lower case. */
+export const nameKey = (s: string) => letters(letters(s).replace(/'s$/i, "")).toLowerCase();
 
 /**
- * People's names in a transcript: a word that is not project vocabulary or a calendar word,
- * either right before a speech verb ("ravi said", any case) or capitalized mid-sentence
+ * People's names in a transcript: a word that is not project vocabulary, either right before a
+ * speech verb ("ravi said", any case; calendar words too, "may said") or capitalized mid-sentence
  * (Whisper capitalizes proper nouns when it punctuates). The extractor flags the rest.
  */
 export function findNames(words: Word[], vocab: Vocab): Set<string> {
-  const allow = new Set([
-    ...CALENDAR,
+  const known = new Set([
     "i",
     "generator",
     "transformer",
@@ -263,26 +284,28 @@ export function findNames(words: Word[], vocab: Vocab): Set<string> {
       .concat(vocab.activities.map((a) => a.name))
       .flatMap((s) => s.toLowerCase().split(/[^a-z0-9]+/)),
   ]);
+  const calendar = new Set(CALENDAR);
   const names = new Set<string>();
   words.forEach((w, k) => {
-    const core = letters(w.text);
-    const lc = core.toLowerCase();
-    if (!/^[a-z]+$/i.test(core) || allow.has(lc) || NOT_NAMES.has(lc)) return;
+    const core = letters(letters(w.text).replace(/'s$/i, ""));
+    const key = core.toLowerCase();
+    if (!NAME_SHAPE.test(core) || known.has(key) || NOT_NAMES.has(key)) return;
     // Whisper may write the whole note in lower case: "<x> said" counts whatever the case.
     const beforeSpeech = SPEECH_VERBS.has(cleanWord(words[k + 1]?.text ?? ""));
     const opensSentence = k === 0 || /[.!?]$/.test(words[k - 1]!.text);
-    const midCapital = /^[A-Z][a-z]+$/.test(core) && !opensSentence;
-    if (beforeSpeech || midCapital) names.add(lc);
+    const midCapital =
+      /^[A-Z][a-z]+(-[A-Za-z]+)*$/.test(core) && !opensSentence && !calendar.has(key);
+    if (beforeSpeech || midCapital) names.add(key);
   });
   return names;
 }
 
 export const redactNames = (words: Word[], names: Set<string>): Word[] =>
-  words.map((w) => (names.has(letters(w.text).toLowerCase()) ? { ...w, text: "[name]" } : w));
+  words.map((w) => (names.has(nameKey(w.text)) ? { ...w, text: "[name]" } : w));
 
 export const scrubNames = (text: string, names: Set<string>): string =>
   text
-    .replace(/\b[A-Za-z]+\b/g, (m) => (names.has(m.toLowerCase()) ? "" : m))
+    .replace(/[A-Za-z]+(?:[-'][A-Za-z]+)*/g, (m) => (names.has(nameKey(m)) ? "" : m))
     .replace(/\s{2,}/g, " ")
     .replace(/\s+([,.;:])/g, "$1")
     .trim();

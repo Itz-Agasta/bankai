@@ -32,7 +32,7 @@ export async function noteCommand(audio: string, opts: NoteOptions): Promise<num
       );
     const run = await processNote(
       { audio },
-      { project, models: { speech, extract }, tracer: (id) => store.tracer(id) },
+      { project, models: { speech, extract }, tracer: (id) => store.restartTrace(id) },
     );
     try {
       store.saveNote(run.result, new Date().toISOString());

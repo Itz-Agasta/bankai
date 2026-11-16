@@ -1,6 +1,6 @@
 ---
 name: bankai
-description: Verify data center equipment on site against the project's records. Use when a site engineer sends photos of equipment that arrived or was installed, asks whether a delivery is complete, wants a record update approved, or asks why Bankai reached a verdict.
+description: Verify data center equipment on site against the project's records. Use when a site engineer sends photos of equipment that arrived or was installed, asks whether a delivery is complete, sends a spoken site walk note, wants a record update approved, or asks why Bankai reached a verdict.
 ---
 
 # Bankai
@@ -29,7 +29,7 @@ A check marked `unknown` was not judged. Do not present it as a pass.
 
 - Show each claim with its time span and quote, then its proposed update if there is one.
 - Ask the person to approve each update separately with `apply_update`. Never approve a batch on their behalf.
-- `needs_human` on a note means at least one claim could not be settled: an unknown tag, a calendar date with no number of days, or a unit that was not named. Say which, and hand it to the site lead.
+- `needs_human` on a note means it could not be settled: no speech or a model outage; a claim the recording did not support (see `dropped`); an unknown tag, activity or place; a calendar date with no number of days; a unit that was not named; a span that names several units; a negated statement ("not set yet"); or low confidence. Say which, and hand it to the site lead.
 - `flagged` means a claim conflicts with the records (for example a unit set on a pad from a superseded drawing). Read the failing check to the person.
 - Claims in `dropped` were not supported by the recording. Never repeat them as facts.
 - Speakers' names are removed from the transcript and show as `[name]`. Do not try to fill them in.

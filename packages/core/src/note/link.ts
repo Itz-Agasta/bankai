@@ -25,7 +25,9 @@ export function linkClaim(c: GroundedClaim, p: Project): ClaimLink {
   }
   let activity: string | null = null;
   if (c.activity_id !== null) {
-    if (p.activityById.has(c.activity_id)) activity = c.activity_id;
+    const a = p.activityById.get(c.activity_id);
+    // An activity that belongs to another unit than the one named: a person decides.
+    if (a && (c.tag === null || a.tag === null || a.tag === c.tag)) activity = c.activity_id;
     else unknown = true;
   } else if (c.tag !== null) {
     const own = p.activities.filter((a) => a.tag === c.tag);

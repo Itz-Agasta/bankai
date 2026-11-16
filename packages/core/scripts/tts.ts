@@ -17,6 +17,10 @@ if (!key) {
   console.error("GROQ_API_KEY is not set");
   process.exit(2);
 }
+if (!(await Bun.file(script).exists())) {
+  console.error(`${script}: not found`);
+  process.exit(2);
+}
 const input = (await Bun.file(script).text()).trim();
 if (input.length > MAX_CHARS) {
   console.error(`${script}: ${input.length} characters, Orpheus takes at most ${MAX_CHARS}`);

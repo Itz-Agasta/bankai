@@ -39,7 +39,7 @@ export interface NotesResult {
 const ratio = (n: number, d: number) => (d === 0 ? null : n / d);
 const refOf = (c: Claim, kind: string) => c.links.find((l) => l.kind === kind)?.ref;
 const tagOf = (c: Claim) => refOf(c, "equipment_schedule_row")?.split("#")[1];
-/** Claim and update share their number: clm_<note>_<n> and upd_<note>_<n>. */
+/** Claim and update share their content key: clm_<note>_<key> and upd_<note>_<key>. */
 const updateOf = (c: Claim, us: ProposedUpdate[]) =>
   us.find((u) => u.id.split("_").at(-1) === c.id.split("_").at(-1));
 
@@ -110,7 +110,7 @@ export async function runNotes(opts: {
     const s = NoteScenario.parse(await Bun.file(join(dir, f)).json());
     const audio = join(opts.set, "audio", opts.plain(s.audio, "audio"));
     const project = await opts.project(s.project);
-    const script = await Bun.file(join(dir, `${s.id}.txt`)).text();
+    const script = await Bun.file(join(dir, `${opts.plain(s.id, "note id")}.txt`)).text();
     const { result } = await processNote(
       { audio },
       { project, models: opts.models(audio), tracer: memoryTracer },

@@ -109,8 +109,10 @@ for (const file of await listFiles(join(ROOT, SET, "voice"))) {
   }
   const s = r.data;
   if (basename(file, ".json") !== s.id) errors.push(`${rel(file)}: name the file ${s.id}.json`);
-  if (!existsSync(join(ROOT, SET, "voice", `${s.id}.txt`)))
-    errors.push(`${rel(file)}: script ${SET}/voice/${s.id}.txt not found`);
+  const script = join(ROOT, SET, "voice", `${s.id}.txt`);
+  if (!existsSync(script)) errors.push(`${rel(file)}: script ${SET}/voice/${s.id}.txt not found`);
+  else if ((await Bun.file(script).text()).trim().length > 200)
+    errors.push(`${rel(script)}: over 200 characters, the TTS limit`);
   if (bareName(file, "audio", s.audio) && !existsSync(join(ROOT, SET, "audio", s.audio)))
     errors.push(`${rel(file)}: audio ${SET}/audio/${s.audio} not found`);
   if (bareName(file, "project", s.project) && !existsSync(join(ROOT, PROJECTS, s.project)))

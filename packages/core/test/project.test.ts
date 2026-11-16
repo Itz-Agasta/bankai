@@ -192,4 +192,11 @@ describe("loadProject rejects bad data", () => {
     expect(err.code).toBe("PROJECT_INVALID");
     expect(err.detail).toStartWith("actions.json:1: owner_role:");
   });
+
+  test("duplicate activity ids are rejected", async () => {
+    const dir = await brokenCopy("schedule.json", (t) => t.replace('"id": "A20"', '"id": "A10"'));
+    const err = await loadError(dir);
+    expect(err.code).toBe("PROJECT_INVALID");
+    expect(err.detail).toContain("A10");
+  });
 });

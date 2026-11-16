@@ -15,7 +15,15 @@ import type { Segment, Transcript, TranscriptionModel } from "../models/types";
 import type { Project } from "../project/types";
 import { loadAudio } from "./audio";
 import { extractInput } from "./extract";
-import { findNames, ground, redactNames, scrubNames, vocabOf, type GroundedClaim } from "./ground";
+import {
+  findNames,
+  ground,
+  nameKey,
+  redactNames,
+  scrubNames,
+  vocabOf,
+  type GroundedClaim,
+} from "./ground";
 import { linkClaim, type ClaimLink } from "./link";
 import { proposeForClaim } from "./propose";
 import { whisperPrompt } from "./whisper-prompt";
@@ -53,6 +61,8 @@ const claimKey = (c: GroundedClaim) =>
   sha256Hex(
     c.type,
     c.span.ref,
+    // Decisions and actions carry their fact in the text alone.
+    c.type === "decision" || c.type === "action_item" ? c.text.toLowerCase() : "",
     JSON.stringify([
       c.tag,
       c.activity_id,
@@ -127,7 +137,7 @@ export async function processNote(input: { audio: string }, deps: NoteDeps): Pro
     );
     raw = r.value.claims;
     for (const i of r.value.names) {
-      const w = words[i]?.text.replace(/[^A-Za-z]/g, "").toLowerCase();
+      const w = words[i] && nameKey(words[i].text);
       if (w) names.add(w);
     }
     words = redactNames(words, names);

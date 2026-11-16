@@ -34,10 +34,9 @@ export function registerNote(server: McpServer, ctx: ServerContext): void {
         const path = await resolveAudio(audio, ctx);
         const run = await processNote(
           { audio: path },
-          { project, models: { speech, extract }, tracer: (id) => ctx.store.tracer(id) },
+          { project, models: { speech, extract }, tracer: (id) => ctx.store.restartTrace(id) },
         );
         ctx.store.saveNote(run.result, new Date().toISOString());
-        ctx.store.saveUpdates(run.result.id, run.result.updates);
         return ok(run);
       } catch (e) {
         return fail(e);

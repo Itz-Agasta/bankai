@@ -46,13 +46,16 @@ export function foldTokens(words: string[]): Token[] {
   const out: Token[] = [];
   for (let k = 0; k < raw.length; k++) {
     const t = raw[k]!;
-    const tens = TENS[t];
-    const next = ONES[raw[k + 1] ?? ""];
+    // Own keys only: "constructor" must not read Object.prototype.
+    const own = (m: Record<string, number>, key: string) =>
+      Object.hasOwn(m, key) ? m[key] : undefined;
+    const tens = own(TENS, t);
+    const next = own(ONES, raw[k + 1] ?? "");
     if (tens !== undefined && next !== undefined && next > 0 && next < 10) {
       out.push({ t: String(tens + next), folded: true });
       k++;
     } else if (tens !== undefined) out.push({ t: String(tens), folded: true });
-    else if (ONES[t] !== undefined) out.push({ t: String(ONES[t]), folded: true });
+    else if (own(ONES, t) !== undefined) out.push({ t: String(ONES[t]), folded: true });
     else out.push({ t, folded: false });
   }
   return out;

@@ -137,3 +137,13 @@ describe("schemas", () => {
     expect(NoteResult.safeParse(note).success).toBe(false);
   });
 });
+
+describe("cubic fixes: dropped claims", () => {
+  test("a dropped claim may carry a malformed span", async () => {
+    const { DroppedClaim } = await import("../src/update");
+    expect(
+      DroppedClaim.safeParse({ word_start: 1.5, word_end: 2, type: "status", reason: "bad_span" })
+        .success,
+    ).toBe(true);
+  });
+});

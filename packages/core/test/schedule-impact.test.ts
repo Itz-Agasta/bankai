@@ -17,6 +17,17 @@ const ctx = (tag: string | null) => ({
   observedComponents: [],
 });
 
+describe("impactOf with a recorded delay", () => {
+  test("a further delay counts from the already delayed schedule", async () => {
+    const { impactOf } = await import("../src/rules/schedule-impact");
+    const acts = mini.activities.map((a) => (a.id === "A10" ? { ...a, delay_days: 2 } : a));
+    const own = acts.filter((a) => a.id === "A30");
+    const c = impactOf(acts, own, { low: 3, likely: 3, high: 3, unit: "days" });
+    expect(c.range?.likely).toBe(3);
+    expect(c.reason).toContain("Energization slips 3 days");
+  });
+});
+
 describe("forwardPass", () => {
   test("existing delay_days shift the baseline", () => {
     const acts: Activity[] = [

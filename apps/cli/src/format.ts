@@ -58,8 +58,16 @@ const span = (ref: string) => ref.slice(ref.lastIndexOf("@") + 1);
 export function formatNote(run: NoteRun): string {
   const r = run.result;
   const lines = [`${STATUS[r.status]}  ${safe(r.id)}  confidence ${r.confidence}`];
-  for (const c of r.claims)
+  for (const c of r.claims) {
     lines.push(safe(`  [${span(c.span.ref)}] ${c.type} ${c.text} (${c.confidence})`));
+    // Why a note is flagged: each check that did not pass, with its sources.
+    for (const k of c.checks.filter((x) => x.result !== "pass")) {
+      const refs = k.citations.map((x) => x.ref).join(", ");
+      lines.push(
+        safe(`      ${MARK[k.result]}  ${k.name} ${k.reason}${refs ? `  [${refs}]` : ""}`),
+      );
+    }
+  }
   if (r.updates.length) lines.push("  proposed updates (need approval):");
   for (const u of r.updates)
     lines.push(safe(`    ${u.id}  ${u.field} on ${u.target.ref}: '${u.old}' -> '${u.new}'`));

@@ -31,7 +31,8 @@ export function liveModels(cfg: ModelConfig): Models {
   // Replay (D30) answers from the committed cache, so it needs no key.
   if (cfg.keys.groq || cfg.replayOnly) {
     for (const id of [cfg.speech, cfg.speechFallback]) {
-      if (SPEECH_PRICES[id] === undefined)
+      // Replay answers cost nothing, so only a live Groq run needs a price.
+      if (cfg.keys.groq && SPEECH_PRICES[id] === undefined)
         throw new Error(`No price for model ${id}: add it to SPEECH_PRICES in models/speech.ts`);
     }
     const groq = createGroq({ apiKey: cfg.keys.groq });

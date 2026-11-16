@@ -25,7 +25,10 @@ export interface Store {
   openItems(): OpenItem[];
   resolve(verdictId: string, by: string, at: string): void;
   tracer(runId: string): Tracer;
+  /** A tracer for a run id used before (a re-processed note): the old trail is cleared first. */
+  restartTrace(runId: string): Tracer;
   trace(runId: string): TraceEvent[];
+  /** Saves the note and its proposals together; see store/notes.ts for re-run rules. */
   saveNote(n: NoteResult, at: string): void;
   getNote(id: string): NoteResult | null;
   /** `sourceId` is the verdict or note that proposed the updates. */
@@ -52,8 +55,12 @@ export function openStore(path: string): Store {
     openItems: () => openItems(db),
     resolve: (id, by, at) => resolve(db, id, by, at),
     tracer: (runId) => dbTracer(db, runId),
+    restartTrace: (runId) => {
+      db.query(`DELETE FROM trace WHERE run_id = $run`).run({ run: runId });
+      return dbTracer(db, runId);
+    },
     trace: (runId) => readTrace(db, runId),
-    saveNote: (n, at) => saveNote(db, n, at),
+    saveNote: (n, at) => saveNote(db, n, at, audit),
     getNote: (id) => getNote(db, id),
     saveUpdates: (vid, us) => saveUpdates(db, vid, us, audit),
     getUpdate: (id) => getUpdate(db, id),

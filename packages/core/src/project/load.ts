@@ -67,9 +67,13 @@ async function loadJson<T>(dir: string, file: string, schema: z.ZodType<T>): Pro
   return parseRows(file, rows, schema, jsonRow);
 }
 
-/** D27: best <= likely <= worst. */
+/** D27: best <= likely <= worst. Ids are unique, so a note's activity link means one thing. */
 function checkDurations(activities: Activity[]): void {
+  const seen = new Set<string>();
   activities.forEach((a, i) => {
+    if (seen.has(a.id))
+      throw invalid("schedule.json", jsonRow(i), `${a.id}: duplicate activity id`);
+    seen.add(a.id);
     if (a.duration_low_days > a.duration_days || a.duration_days > a.duration_high_days) {
       throw invalid(
         "schedule.json",

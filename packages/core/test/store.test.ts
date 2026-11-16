@@ -202,3 +202,57 @@ describe("notes in the store", () => {
     }
   });
 });
+
+describe("cubic fixes: note re-runs", () => {
+  const note = (updates: { id: string; new: string }[]) => ({
+    id: "note_x",
+    status: "confirmed" as const,
+    confidence: 1,
+    models: [],
+    cost_usd: 0,
+    latency_ms: 0,
+    claims: [],
+    updates: updates.map((u) => ({
+      id: u.id,
+      target: { kind: "equipment_schedule_row" as const, ref: "equipment_schedule.csv#GEN-3" },
+      field: "install_status",
+      old: "",
+      new: u.new,
+      evidence: [{ kind: "audio_span" as const, ref: "a@0-1" }],
+      confidence: 1,
+      approval: "pending" as const,
+      approved_by: null,
+      at: null,
+    })),
+  });
+
+  test("a re-run drops stale pending proposals, keeps approvals, and the note shows them", async () => {
+    const store = openStore(await dbPath());
+    try {
+      store.saveNote(
+        note([
+          { id: "upd_a", new: "set at PAD-B" },
+          { id: "upd_b", new: "stale" },
+        ]),
+        "t1",
+      );
+      store.approveUpdate("upd_a", "SUPT-01", "t2");
+      store.saveNote(note([{ id: "upd_a", new: "set at PAD-B" }]), "t3");
+      expect(store.getUpdate("upd_b")).toBeNull();
+      expect(store.getNote("note_x")?.updates[0]?.approval).toBe("approved");
+    } finally {
+      store.close();
+    }
+  });
+
+  test("restartTrace clears a note's old trail", async () => {
+    const store = openStore(await dbPath());
+    try {
+      store.tracer("note_x").step("transcribe", "a", "old");
+      store.restartTrace("note_x").step("transcribe", "a", "new");
+      expect(store.trace("note_x").map((e) => e.summary)).toEqual(["new"]);
+    } finally {
+      store.close();
+    }
+  });
+});

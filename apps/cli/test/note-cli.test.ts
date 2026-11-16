@@ -64,8 +64,12 @@ describe("bankai note", () => {
   });
 
   test("bankai status lists the pending note proposal", async () => {
-    await bankai(["note", audio, "--project", project]);
-    const r = await bankai(["status", "--project", project]);
+    const fresh = join(project, "..", "fresh");
+    await cp(join(ROOT, "data/fixtures/mini"), fresh, { recursive: true });
+    await writeFile(join(fresh, "n001.wav"), WAV);
+    const n = await bankai(["note", join(fresh, "n001.wav"), "--project", fresh]);
+    expect(n.code).toBe(0);
+    const r = await bankai(["status", "--project", fresh]);
     expect(r.out).toContain("set at PAD-B");
   });
 

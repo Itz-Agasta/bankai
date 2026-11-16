@@ -1,5 +1,4 @@
 import { beforeAll, describe, expect, test } from "bun:test";
-import type { RawClaim } from "../src/models/extract";
 import type { GroundedClaim } from "../src/note/ground";
 import { linkClaim } from "../src/note/link";
 import { proposeForClaim } from "../src/note/propose";
@@ -13,7 +12,7 @@ beforeAll(async () => {
 
 const SPAN = { kind: "audio_span" as const, ref: "n.wav@0.0-2.0", quote: "q" };
 
-const claim = (over: Partial<RawClaim>): GroundedClaim => ({
+const claim = (over: Partial<GroundedClaim>): GroundedClaim => ({
   type: "status",
   word_start: 0,
   word_end: 3,
@@ -135,26 +134,40 @@ describe("proposeForClaim", () => {
     });
   });
 
-  test("decisions and actions propose new rows", () => {
-    const d = run(claim({ type: "decision", text: "use the alternate cable route" }));
+  test("decisions and actions propose the spoken words, not the model's paraphrase", () => {
+    const said = { ...SPAN, quote: "action for ELEC-02 confirm cable delivery" };
+    const d = run(
+      claim({
+        type: "decision",
+        text: "a paraphrase",
+        span: { ...SPAN, quote: "we use the alternate route" },
+      }),
+    );
     expect(d.update).toMatchObject({
       target: { kind: "decision", ref: "decisions.json#new-1" },
       field: "text",
-      new: "use the alternate cable route",
+      new: "we use the alternate route",
     });
-    const a = run(
-      claim({ type: "action_item", owner_role: "ELEC-02", text: "confirm cable delivery" }),
-    );
+    const a = run(claim({ type: "action_item", owner_role: "ELEC-02", text: "x", span: said }));
     expect(a.update).toMatchObject({
       target: { kind: "action_item", ref: "actions.json#new-1" },
-      new: "ELEC-02: confirm cable delivery",
+      new: "action for ELEC-02 confirm cable delivery",
     });
-    const again = run(
-      claim({ type: "action_item", owner_role: "ELEC-02", text: "ELEC-02 must confirm cable" }),
+    const u = run(
+      claim({ type: "action_item", text: "x", span: { ...SPAN, quote: "someone confirm cable" } }),
     );
-    expect(again.update?.new).toBe("ELEC-02 must confirm cable");
-    const u = run(claim({ type: "action_item", text: "confirm cable delivery" }));
-    expect(u.update?.new).toBe("unassigned: confirm cable delivery");
+    expect(u.update?.new).toBe("unassigned: someone confirm cable");
+  });
+
+  test("a status with no location proposes nothing", () => {
+    const r = run(claim({ tag: "GEN-3", status_value: "set" }));
+    expect(r.update).toBeNull();
+    expect(r.needsHuman).toBeNull();
+  });
+
+  test("an activity of another unit is unknown", () => {
+    const l = linkClaim(claim({ type: "date_change", tag: "GEN-4", activity_id: "A10" }), mini);
+    expect(l.unknown).toBe(true);
   });
 
   test("an unknown tag needs a human and proposes nothing", () => {

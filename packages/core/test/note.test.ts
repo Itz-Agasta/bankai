@@ -65,7 +65,7 @@ describe("processNote", () => {
     expect(r.result.claims.map((c) => c.type)).toEqual(["date_change", "action_item", "issue"]);
     expect(r.result.updates.map((u) => [u.field, u.new])).toEqual([
       ["delay_days", "3"],
-      ["text", "ELEC-02: confirm cable delivery by Friday"],
+      ["text", "Action for ELEC-02: confirm cable delivery by Friday."],
     ]);
     expect(JSON.stringify(r)).not.toContain("Ravi");
   });
@@ -105,8 +105,10 @@ describe("processNote", () => {
   });
 
   test("no words: needs_human and the extractor is not called", async () => {
-    const never: ExtractModel = { id: "never", extract: throwing("extract should not run") };
+    let called = false;
+    const never: ExtractModel = { id: "never", extract: () => ((called = true), throwing("x")()) };
     const r = await run(wav.silent, { extract: never });
+    expect(called).toBe(false);
     expect(r.result.status).toBe("needs_human");
     expect(r.result.claims).toEqual([]);
     expect(r.transcript).toEqual([]);
@@ -254,5 +256,40 @@ describe("review fixes: processNote", () => {
     const r = await run(wav.n001, one(text, claims));
     expect(r.result.status).toBe("needs_human");
     expect(r.result.updates).toEqual([]);
+  });
+});
+
+describe("cubic fixes: processNote", () => {
+  test("two decisions in one span are both kept", async () => {
+    const text = "we decided two things today";
+    const d = (t: string) => ({
+      type: "decision",
+      word_start: 0,
+      word_end: 4,
+      tag: null,
+      activity_id: null,
+      status_value: null,
+      location: null,
+      delay_days: null,
+      spoken_date: null,
+      component: null,
+      issue_kind: null,
+      owner_role: null,
+      text: t,
+    });
+    const r = await run(wav.n001, {
+      speech: fakeTranscriber("s", { "*": transcript(text) }),
+      extract: fakeExtractor("e", { "*": [d("use route B"), d("move the crane")] } as never),
+    });
+    expect(r.result.claims).toHaveLength(2);
+  });
+
+  test("a hyphenated name the model flags is redacted", async () => {
+    const text = "ask Mary-Ann about the door";
+    const r = await run(wav.n001, {
+      speech: fakeTranscriber("s", { "*": transcript(text) }),
+      extract: fakeExtractor("e", { "*": { claims: [], names: [1] } } as never),
+    });
+    expect(JSON.stringify(r)).not.toContain("Mary");
   });
 });

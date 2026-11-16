@@ -57,11 +57,16 @@ export function renderReport(r: EvalResult, meta: { set?: string; at?: string } 
 function notesSection(r: EvalResult): string[] {
   const n = r.notes;
   if (!n) return [];
-  const wrong = n.cases.filter((c) => !c.statusCorrect || c.matched < c.expected.claims.length);
+  const wrong = n.cases.filter(
+    (c) =>
+      !c.statusCorrect ||
+      c.matched < c.expected.claims.length ||
+      c.matched < c.actual.claims.length,
+  );
   return [
     "## Site notes",
     "",
-    `${n.cases.length} notes (synthetic TTS voices) | Models: ${n.models.join(", ") || "none"}`,
+    `${n.cases.length} notes | Models: ${n.models.join(", ") || "none"}`,
     "",
     "| Metric | Value |",
     "|---|---|",

@@ -61,8 +61,9 @@ export type Word = z.infer<typeof Word>;
 
 /** A claim the model returned that the transcript did not support. */
 export const DroppedClaim = z.object({
-  word_start: z.number().int(),
-  word_end: z.number().int(),
+  // Not int: a malformed model span is exactly what gets reported here.
+  word_start: z.number(),
+  word_end: z.number(),
   type: ClaimType,
   reason: z.string(),
 });
