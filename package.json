@@ -1,0 +1,15 @@
+{
+  "name": "bankai",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "^1.4.4",
+    "oxfmt": "^0.78.0",
+    "oxlint": "^1.93.0",
+    "typescript": "^7.0.2"
+  }
+}

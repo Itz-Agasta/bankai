@@ -10,3 +10,5 @@ dist/
 eval/out/
 __pycache__/
 .venv/
+.cache/
+.bankai/

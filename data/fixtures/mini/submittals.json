@@ -1,0 +1,34 @@
+[
+  {
+    "id": "SUB-07",
+    "tag": "GEN-3",
+    "manufacturer": "Cummins",
+    "model": "C2000D6",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-07",
+    "tag": "GEN-4",
+    "manufacturer": "Cummins",
+    "model": "C2000D6",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-11",
+    "tag": "CRAH-2",
+    "manufacturer": "Vertiv",
+    "model": "PX080",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-12",
+    "tag": "CRAH-2",
+    "manufacturer": "Stulz",
+    "model": "CyberAir 3",
+    "status": "rejected",
+    "deviations": []
+  }
+]
