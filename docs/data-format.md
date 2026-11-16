@@ -3,7 +3,7 @@
 The exact shape of every file Bankai reads. CI rejects anything that does not match. Check locally before you push:
 
 ```bash
-just validate-data data/projects/alpha   # project files
+just validate-data data/fixtures/mini    # project files (use data/projects/alpha once it exists)
 just validate-eval                       # labels, scenarios, photos
 ```
 
@@ -78,7 +78,7 @@ Each is a JSON array of rows.
 
 ## Photos
 
-`eval/photos/`, JPEG or PNG only. No people, no faces, no screens with names. Run `just strip-exif eval/photos` before every commit; CI fails on any photo with EXIF. Name files `<tag or unit>-<view>.jpg`, lower case, for example `gen-3-plate-front.jpg`.
+`eval/photos/`, JPEG or PNG only. No people, no faces, no screens with names. Run `just strip-exif eval/photos` before every commit; it rewrites only photos that still carry EXIF, XMP or IPTC. CI fails on any photo with that metadata. Name files `<tag or unit>-<view>.<jpg|jpeg|png>`, lower case, for example `gen-3-plate-front.jpg`.
 
 ## Photo labels
 
@@ -86,9 +86,9 @@ Each is a JSON array of rows.
 
 | Key | Meaning |
 |---|---|
-| `photo` | File name inside `eval/photos/` |
+| `photo` | File name inside `eval/photos/`, no folders |
 | `equipment_type` | `generator`, `transformer`, `panel`, `ups`, `ahu`, `chiller`, `pump`, ... |
-| `fields` | Any of `manufacturer`, `model`, `serial`, `tag`, `voltage`, `kva`, `kw`, `phase`, `frequency`, exactly as printed. Use `"unreadable"` when you cannot read it. Leave a field out when it is not on the plate. |
+| `fields` | Any of `manufacturer`, `model`, `serial`, `tag`, `voltage`, `kva`, `kw`, `phase`, `frequency`, exactly as printed, without the unit suffix (`415`, not `415 V`). Use `"unreadable"` when you cannot read it. Leave a field out when it is not on the plate. |
 | `hard` | `true` for the deliberate glare, shadow or blur shot |
 | `people_checked` | Must be `true`: you checked the photo has no people |
 

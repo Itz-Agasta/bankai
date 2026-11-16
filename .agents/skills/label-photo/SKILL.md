@@ -11,9 +11,9 @@ One label file per photo. The label is the answer key Bankai is scored against, 
 
 1. Confirm the photo is in `eval/photos/` as `.jpg`, `.jpeg` or `.png`. If not, ask for it. Never accept HEIC; ask the person to export JPEG.
 2. Look at the photo. If any person, face or screen with a name is visible, stop and tell the person to retake it. Do not label it.
-3. Run `just strip-exif eval/photos`.
-4. Copy `eval/labels/_template.json` to `eval/labels/<photo name without extension>.json`.
-5. Fill each field exactly as printed on the plate: same spelling, same units removed (`415`, not `415 V`).
+3. Run `just strip-exif eval/photos`. It only rewrites photos that still carry metadata, so clean photos are left untouched.
+4. Copy `eval/labels/_template.json` to `eval/labels/<photo name without extension>.json`. Every value in it is a sample: set `photo` to the file name, set `equipment_type`, and replace or remove every field. No sample value may survive.
+5. Fill each field exactly as printed on the plate: same spelling and characters, without the unit suffix (`415`, not `415 V`; `415/240`, not `415/240 V`).
    - Cannot read it with confidence: write `"unreadable"`. Never guess, never "fix" a typo on the plate.
    - Not on the plate at all: remove the key.
    - Ask the person to confirm any field you are unsure about. Their eyes on the real plate beat your read.

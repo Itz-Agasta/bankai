@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { ActorId } from "./citation";
 
+const IsoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "expected YYYY-MM-DD");
+
 export const EquipmentRow = z.object({
   tag: z.string(),
   type: z.string(),
@@ -20,9 +22,9 @@ export type EquipmentRow = z.infer<typeof EquipmentRow>;
 export const DrawingRev = z.object({
   drawing: z.string(),
   revision: z.string(),
-  issued: z.string(),
+  issued: IsoDate,
   superseded_by: z.nullable(z.string()),
-  superseded_on: z.nullable(z.string()),
+  superseded_on: z.nullable(IsoDate),
 });
 export type DrawingRev = z.infer<typeof DrawingRev>;
 

@@ -121,6 +121,9 @@ function checkDrawings(drawings: DrawingRev[], lines: number[]): void {
     }
     current.add(d.drawing);
   });
+  for (const d of new Set(drawings.map((r) => r.drawing))) {
+    if (!current.has(d)) throw invalid("drawings.csv", 0, `${d}: no current revision`);
+  }
 }
 
 export async function loadProject(dir: string): Promise<Project> {

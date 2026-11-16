@@ -23,5 +23,5 @@ jobs:
       - run: just test
       - run: just validate-data data/fixtures/mini
       - run: just validate-eval
-      - if: hashFiles('data/projects/alpha/equipment_schedule.csv') != ''
+      - if: hashFiles('data/projects/alpha/**') != ''
         run: just validate-data data/projects/alpha

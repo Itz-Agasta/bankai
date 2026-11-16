@@ -9,7 +9,7 @@ A scenario is one exam question: given these photos and this location, against t
 
 ## Steps
 
-1. Pick the `kind` that is most under-represented: count files in `eval/scenarios/` by `kind`. Aim for an even mix of `correct`, `wrong_location`, `superseded_revision`, `spec_mismatch`, `partial_shipment`, `unapproved_substitution`, `unreadable`, `not_in_project`.
+1. Pick the `kind` that is most under-represented: count files in `eval/scenarios/` by `kind`, leaving out `_template.json`. Aim for an even mix of `correct`, `wrong_location`, `superseded_revision`, `spec_mismatch`, `partial_shipment`, `unapproved_substitution`, `unreadable`, `not_in_project`.
 2. Pick photos that already have labels in `eval/labels/`. If the scenario needs a new photo, use the `label-photo` skill first.
 3. Read the project files in `data/projects/<project>/` and work out the right answer from them, not from what you expect Bankai to do:
    - `correct`: tag, ratings and location all match the current revision. Status `confirmed`, no failing checks.
@@ -22,7 +22,7 @@ A scenario is one exam question: given these photos and this location, against t
    - `not_in_project`: unit matches no record. Status `flagged` or `needs_human`, `subject_tag` null. Bankai must never invent a match.
    - Two identical units and nothing tells them apart: status `needs_human`, list both in `expected.candidates`.
 4. If the project data does not contain the trap you need (an old revision row, a missing delivery line, a rejected submittal), add it to the project files first and run `just validate-data data/projects/<project>`.
-5. Copy `eval/scenarios/_template.json` to `eval/scenarios/<id>.json`. Use the next free number: `s042-<short-description>`. The `id` must equal the file name.
+5. Copy `eval/scenarios/_template.json` to `eval/scenarios/<id>.json`. Number it one past the highest existing `sNNN` in `eval/scenarios/` (start at `s001`): `sNNN-<short-description>`. The `id` must equal the file name.
 6. Run `just validate-eval`. Fix every line it prints until it says `OK`.
 7. Commit on a branch (`data/<short-name>`), push, and open a PR with `gh pr create`. In the body, say in one line why the expected answer is right, citing the project rows.
 

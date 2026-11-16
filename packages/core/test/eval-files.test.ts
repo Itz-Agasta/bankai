@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { PhotoLabel, Scenario } from "@bankai/schemas";
 import { join } from "node:path";
-import { hasExif, stripMetadata } from "../src/perceive/exif";
+import { hasExif, hasMetadata, stripMetadata } from "../src/perceive/exif";
 
 const ROOT = join(import.meta.dir, "../../..");
 const readJson = async (p: string) => JSON.parse(await Bun.file(join(ROOT, p)).text());
@@ -20,6 +20,11 @@ describe("eval file schemas", () => {
     expect(Scenario.safeParse(await readJson("eval/scenarios/_template.json")).success).toBe(true);
   });
 
+  test("a scenario with an empty location string is rejected", async () => {
+    const scenario = await readJson("eval/scenarios/_template.json");
+    expect(Scenario.safeParse({ ...scenario, location: "" }).success).toBe(false);
+  });
+
   test("a scenario with an unknown kind is rejected", async () => {
     const scenario = await readJson("eval/scenarios/_template.json");
     expect(Scenario.safeParse({ ...scenario, kind: "vibes" }).success).toBe(false);
@@ -35,6 +40,19 @@ describe("EXIF", () => {
   test("stripMetadata removes it", async () => {
     const bytes = await Bun.file(join(import.meta.dir, "fixtures/gps.jpg")).bytes();
     expect(hasExif(await stripMetadata(bytes))).toBe(false);
+  });
+
+  test("skips 0xFF fill bytes before a marker", () => {
+    const exif = [0xff, 0xff, 0xff, 0xe1, 0, 8, 0x45, 0x78, 0x69, 0x66, 0, 0];
+    expect(hasExif(new Uint8Array([0xff, 0xd8, ...exif, 0xff, 0xd9]))).toBe(true);
+  });
+
+  test("hasMetadata catches XMP in a JPEG", () => {
+    const ns = [..."http://ns.adobe.com/xap/1.0/\0"].map((c) => c.charCodeAt(0));
+    const app1 = [0xff, 0xe1, 0, ns.length + 2, ...ns];
+    const bytes = new Uint8Array([0xff, 0xd8, ...app1, 0xff, 0xd9]);
+    expect(hasExif(bytes)).toBe(false);
+    expect(hasMetadata(bytes)).toBe(true);
   });
 
   test("detects an eXIf chunk in a PNG", () => {

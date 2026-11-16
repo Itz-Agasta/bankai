@@ -125,6 +125,24 @@ describe("loadProject rejects bad data", () => {
     expect(err.detail).toStartWith("deliveries.json:1: qty:");
   });
 
+  test("a drawing with no current revision is rejected", async () => {
+    const dir = await brokenCopy("drawings.csv", (t) =>
+      t.replace(
+        "M-301,B,2026-09-01,,",
+        "M-301,B,2026-09-01,C,2026-10-01\nM-301,C,2026-10-01,B,2026-10-05",
+      ),
+    );
+    const err = await loadError(dir);
+    expect(err.code).toBe("PROJECT_INVALID");
+    expect(err.detail).toContain("M-301: no current revision");
+  });
+
+  test("an issued date not in YYYY-MM-DD is rejected", async () => {
+    const dir = await brokenCopy("drawings.csv", (t) => t.replace("2026-07-15", "15/07/2026"));
+    const err = await loadError(dir);
+    expect(err.detail).toStartWith("drawings.csv:4: issued:");
+  });
+
   test("an activity whose low duration exceeds likely is rejected", async () => {
     const dir = await brokenCopy("schedule.json", (t) =>
       t.replace('"duration_low_days": 1', '"duration_low_days": 9'),

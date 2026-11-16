@@ -28,12 +28,12 @@ export const Scenario = z.object({
   id: z.string().min(1),
   project: z.string().min(1),
   photos: z.array(z.string().min(1)).min(1),
-  location: z.nullable(z.string()),
+  location: z.nullable(z.string().min(1)),
   expected: z.object({
     status: Status,
-    subject_tag: z.nullable(z.string()),
+    subject_tag: z.nullable(z.string().min(1)),
     failing_checks: z.array(CheckName),
-    candidates: z.array(z.string()).optional(),
+    candidates: z.array(z.string().min(1)).optional(),
   }),
   kind: ScenarioKind,
 });
