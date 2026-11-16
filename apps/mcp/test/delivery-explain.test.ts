@@ -12,7 +12,12 @@ describe("check_delivery and explain", () => {
   test("tools are listed in order", async () => {
     const { client } = await connect();
     const { tools } = await client.listTools();
-    expect(tools.map((t) => t.name)).toEqual(["verify_equipment", "check_delivery", "explain"]);
+    expect(tools.map((t) => t.name)).toEqual([
+      "verify_equipment",
+      "check_delivery",
+      "apply_update",
+      "explain",
+    ]);
     const byName = Object.fromEntries(tools.map((t) => [t.name, t]));
     expect(byName.check_delivery!.annotations).toMatchObject({
       readOnlyHint: true,
