@@ -1,4 +1,4 @@
-import type { Citation, PoLine } from "@bankai/schemas";
+import type { Citation, DeliveryLine, PoLine } from "@bankai/schemas";
 
 /** One ref format per source kind, shared by linking and every rule. */
 export const cite = {
@@ -13,4 +13,8 @@ export const cite = {
   }),
   submittal: (id: string): Citation => ({ kind: "submittal", ref: id }),
   activity: (id: string): Citation => ({ kind: "schedule_activity", ref: id }),
+  deliveryLine: (d: DeliveryLine): Citation => ({
+    kind: "delivery_line",
+    ref: `${d.ticket}#L${d.line}`,
+  }),
 };

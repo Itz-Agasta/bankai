@@ -16,12 +16,13 @@ function counting(inner: VisionModel) {
     id: inner.id,
     locate: (img) => (calls.n++, inner.locate(img)),
     read: (img) => (calls.n++, inner.read(img)),
+    components: (img, c) => (calls.n++, inner.components!(img, c)),
   };
   return { m, calls };
 }
 
 const fake = fakeVision("fake-a", {
-  "*": { plate: null, tags: ["GEN-3"], fields: { model: "C2000D6" } },
+  "*": { plate: null, tags: ["GEN-3"], fields: { model: "C2000D6" }, components: ["day tank"] },
 });
 const broken: VisionModel = {
   id: "broken",
@@ -53,6 +54,25 @@ describe("withCache", () => {
       code: "PERCEPTION_UNAVAILABLE",
       message: "not in replay cache",
     });
+    expect(calls.n).toBe(0);
+  });
+});
+
+describe("withCache components", () => {
+  test("candidate order does not change the cache key", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "bankai-cache-"));
+    const { m, calls } = counting(fake);
+    const c = withCache(m, { dir, replayOnly: false });
+    expect((await c.components!(IMG, ["day tank", "generator"])).value).toEqual(["day tank"]);
+    await c.components!(IMG, ["generator", "day tank"]);
+    expect(calls.n).toBe(1);
+  });
+
+  test("no candidates answers empty without a model or cache entry", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "bankai-cache-"));
+    const { m, calls } = counting(fake);
+    const c = withCache(m, { dir, replayOnly: true });
+    expect((await c.components!(IMG, [])).value).toEqual([]);
     expect(calls.n).toBe(0);
   });
 });
@@ -107,6 +127,12 @@ describe("withFallback", () => {
   test("the fallback answers when the primary throws", async () => {
     const r = await withFallback(broken, fake).read(IMG);
     expect(r.value.model).toBe("C2000D6");
+  });
+
+  test("components falls back when the primary throws", async () => {
+    const down: VisionModel = { ...broken, components: () => Promise.reject(new Error("503")) };
+    const r = await withFallback(down, fake).components!(IMG, ["day tank"]);
+    expect(r.value).toEqual(["day tank"]);
   });
 
   test("both failing is PERCEPTION_UNAVAILABLE", async () => {

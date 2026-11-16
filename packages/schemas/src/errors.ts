@@ -6,6 +6,8 @@ export const BankaiError = z.object({
     "INPUT_TOO_LARGE",
     "PROJECT_INVALID",
     "PERCEPTION_UNAVAILABLE",
+    "NOT_FOUND",
+    "APPROVAL_REQUIRED",
   ]),
   message: z.string(),
   detail: z.string().optional(),
