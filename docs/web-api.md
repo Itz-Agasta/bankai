@@ -84,7 +84,7 @@ Cloud Run fits as is: it injects `PORT`, the server listens on all interfaces, a
 
 `--allow-unauthenticated` makes every route public, including `/api/project` and the evidence records. That is fine for the demo, whose project is synthetic. Never deploy a real project this way: there is no auth, and CORS does not stop direct callers.
 
-Demo with the fixture project that ships in the image (switch to `data/projects/alpha` once it lands):
+Demo with the fixture project that ships in the image (switch to `data/projects/alpha` once it lands). Until a replay cache is committed to `data/replay` (see Demo mode), the deployed demo answers health, project, status and evidence only; verify, delivery and notes return 503:
 
 ```bash
 gcloud run deploy bankai --source . --region <region> --allow-unauthenticated \
