@@ -31,4 +31,6 @@ export interface VisionModel {
   id: string;
   locate(img: Uint8Array): Promise<Metered<Located>>;
   read(img: Uint8Array): Promise<Metered<Fields>>;
+  /** Which of `candidates` are visible in the photo; answers only from that list. */
+  components?(img: Uint8Array, candidates: string[]): Promise<Metered<string[]>>;
 }

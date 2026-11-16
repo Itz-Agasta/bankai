@@ -4,3 +4,4 @@ export { citeOrDrop, dropUncited } from "./drop-uncited";
 export { decideStatus } from "./status";
 export { verifyEquipment } from "./verify";
 export type { VerifyDeps, VerifyInput } from "./verify";
+export { proposeForDelivery, proposeForVerify } from "./proposals";

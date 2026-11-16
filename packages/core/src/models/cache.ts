@@ -13,11 +13,7 @@ import type { Metered, VisionModel } from "./types";
  */
 export function withCache(m: VisionModel, opts: { dir: string; replayOnly: boolean }): VisionModel {
   let warned = false;
-  async function cached<T>(
-    call: "locate" | "read",
-    img: Uint8Array,
-    run: () => Promise<Metered<T>>,
-  ) {
+  async function cached<T>(call: string, img: Uint8Array, run: () => Promise<Metered<T>>) {
     const path = join(opts.dir, `${sha256Hex(PROMPT_VERSION, m.id, call, img)}.json`);
     const started = performance.now();
     const hit = await Bun.file(path)
@@ -50,6 +46,12 @@ export function withCache(m: VisionModel, opts: { dir: string; replayOnly: boole
     id: m.id,
     locate: (img) => cached("locate", img, () => m.locate(img)),
     read: (img) => cached("read", img, () => m.read(img)),
+    components: m.components
+      ? (img, candidates) =>
+          cached(`components:${JSON.stringify([...candidates].sort())}`, img, () =>
+            m.components!(img, candidates),
+          )
+      : undefined,
   };
 }
 
@@ -83,5 +85,15 @@ export function withFallback(primary: VisionModel, fallback: VisionModel): Visio
         () => primary.read(img),
         () => fallback.read(img),
       ),
+    components: (img, candidates) => {
+      const ask = async (m: VisionModel) => {
+        if (!m.components) throw new Error("no components call");
+        return m.components(img, candidates);
+      };
+      return either(
+        () => ask(primary),
+        () => ask(fallback),
+      );
+    },
   };
 }
