@@ -62,6 +62,8 @@ export const Activity = z.object({
   duration_high_days: z.number().nonnegative(),
   predecessors: z.array(z.string()),
   milestone: z.boolean(),
+  /** Days this activity's start is already pushed back; the loader fills 0 when absent. */
+  delay_days: z.number().nonnegative().optional(),
 });
 export type Activity = z.infer<typeof Activity>;
 
@@ -75,3 +77,23 @@ export const DeliveryLine = z.object({
   driver_id: ActorId,
 });
 export type DeliveryLine = z.infer<typeof DeliveryLine>;
+
+export const Decision = z.object({
+  id: z.string(),
+  text: z.string(),
+  tag: z.nullable(z.string()),
+  activity: z.nullable(z.string()),
+  decided_by_role: z.nullable(ActorId),
+  date: z.nullable(IsoDate),
+});
+export type Decision = z.infer<typeof Decision>;
+
+export const ActionItem = z.object({
+  id: z.string(),
+  text: z.string(),
+  owner_role: z.nullable(ActorId),
+  tag: z.nullable(z.string()),
+  activity: z.nullable(z.string()),
+  due: z.nullable(IsoDate),
+});
+export type ActionItem = z.infer<typeof ActionItem>;

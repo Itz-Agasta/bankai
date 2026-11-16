@@ -151,4 +151,45 @@ describe("loadProject rejects bad data", () => {
     expect(err.code).toBe("PROJECT_INVALID");
     expect(err.detail).toContain("schedule.json:1:");
   });
+
+  test("optional decisions and actions load as empty", async () => {
+    const dir = await brokenCopy("schedule.json", (t) => t);
+    await rm(join(dir, "decisions.json"), { force: true });
+    await rm(join(dir, "actions.json"), { force: true });
+    const p = await loadProject(dir);
+    expect(p.decisions).toEqual([]);
+    expect(p.actions).toEqual([]);
+  });
+
+  test("delay_days defaults to 0", async () => {
+    const p = await loadProject(MINI);
+    expect(p.activityById.get("A10")?.delay_days).toBe(0);
+  });
+
+  test("a negative delay_days is rejected", async () => {
+    const dir = await brokenCopy("schedule.json", (t) =>
+      t.replace('"milestone": false', '"milestone": false, "delay_days": -1'),
+    );
+    const err = await loadError(dir);
+    expect(err.code).toBe("PROJECT_INVALID");
+    expect(err.detail).toStartWith("schedule.json:1: delay_days:");
+  });
+
+  test("an action owner that is a name is rejected", async () => {
+    const dir = await brokenCopy("actions.json", () =>
+      JSON.stringify([
+        {
+          id: "AI-1",
+          text: "check cable",
+          owner_role: "Ravi",
+          tag: null,
+          activity: null,
+          due: null,
+        },
+      ]),
+    );
+    const err = await loadError(dir);
+    expect(err.code).toBe("PROJECT_INVALID");
+    expect(err.detail).toStartWith("actions.json:1: owner_role:");
+  });
 });

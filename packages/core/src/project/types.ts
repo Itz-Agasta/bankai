@@ -1,5 +1,7 @@
 import type {
+  ActionItem,
   Activity,
+  Decision,
   DeliveryLine,
   DrawingRev,
   EquipmentRow,
@@ -14,6 +16,8 @@ export interface ProjectData {
   submittals: Submittal[];
   activities: Activity[];
   deliveries: DeliveryLine[];
+  decisions: Decision[];
+  actions: ActionItem[];
 }
 
 export interface Project extends ProjectData {
@@ -21,6 +25,7 @@ export interface Project extends ProjectData {
   /** Rows on the current revision of their drawing only. */
   byTag: Map<string, EquipmentRow>;
   poByTag: Map<string, PoLine>;
+  activityById: Map<string, Activity>;
   currentRevision(drawing: string): DrawingRev | undefined;
   /** Every location any revision places equipment at. */
   locations: Set<string>;

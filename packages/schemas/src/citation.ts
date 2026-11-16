@@ -9,6 +9,8 @@ export const CitationKind = z.enum([
   "delivery_line",
   "photo_region",
   "audio_span",
+  "decision",
+  "action_item",
 ]);
 export type CitationKind = z.infer<typeof CitationKind>;
 

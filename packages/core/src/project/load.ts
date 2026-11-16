@@ -1,5 +1,7 @@
 import {
+  ActionItem,
   Activity,
+  Decision,
   DeliveryLine,
   DrawingRev,
   EquipmentRow,
@@ -45,6 +47,12 @@ async function loadCsv<T>(
     (i) => lines[i] ?? 0,
   );
   return { rows, lines };
+}
+
+/** A file a project may leave out: missing means no rows. */
+async function loadJsonOptional<T>(dir: string, file: string, schema: z.ZodType<T>): Promise<T[]> {
+  if (!(await Bun.file(join(dir, file)).exists())) return [];
+  return loadJson(dir, file, schema);
 }
 
 async function loadJson<T>(dir: string, file: string, schema: z.ZodType<T>): Promise<T[]> {
@@ -127,14 +135,18 @@ function checkDrawings(drawings: DrawingRev[], lines: number[]): void {
 }
 
 export async function loadProject(dir: string): Promise<Project> {
-  const [equipment, drawings, poLines, submittals, activities, deliveries] = await Promise.all([
-    loadCsv(dir, "equipment_schedule.csv", EquipmentRow, EQUIPMENT_NUMERIC),
-    loadCsv(dir, "drawings.csv", DrawingRev),
-    loadJson(dir, "purchase_orders.json", PoLine),
-    loadJson(dir, "submittals.json", Submittal),
-    loadJson(dir, "schedule.json", Activity),
-    loadJson(dir, "deliveries.json", DeliveryLine),
-  ]);
+  const [equipment, drawings, poLines, submittals, scheduled, deliveries, decisions, actions] =
+    await Promise.all([
+      loadCsv(dir, "equipment_schedule.csv", EquipmentRow, EQUIPMENT_NUMERIC),
+      loadCsv(dir, "drawings.csv", DrawingRev),
+      loadJson(dir, "purchase_orders.json", PoLine),
+      loadJson(dir, "submittals.json", Submittal),
+      loadJson(dir, "schedule.json", Activity),
+      loadJson(dir, "deliveries.json", DeliveryLine),
+      loadJsonOptional(dir, "decisions.json", Decision),
+      loadJsonOptional(dir, "actions.json", ActionItem),
+    ]);
+  const activities = scheduled.map((a) => ({ ...a, delay_days: a.delay_days ?? 0 }));
   checkDurations(activities);
   checkDrawings(drawings.rows, drawings.lines);
   checkRevisions(equipment.rows, equipment.lines, drawings.rows);
@@ -145,5 +157,7 @@ export async function loadProject(dir: string): Promise<Project> {
     submittals,
     activities,
     deliveries,
+    decisions,
+    actions,
   });
 }

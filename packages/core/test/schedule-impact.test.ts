@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, test } from "bun:test";
 import type { Activity } from "@bankai/schemas";
 import type { Project } from "../src/project/types";
-import { forwardPass, scheduleImpact } from "../src/rules/schedule-impact";
+import { delaysOf, forwardPass, scheduleImpact } from "../src/rules/schedule-impact";
 import { loadMini } from "./helpers";
 
 let mini: Project;
@@ -18,6 +18,33 @@ const ctx = (tag: string | null) => ({
 });
 
 describe("forwardPass", () => {
+  test("existing delay_days shift the baseline", () => {
+    const acts: Activity[] = [
+      {
+        id: "A10",
+        name: "Set",
+        tag: null,
+        duration_days: 2,
+        duration_low_days: 2,
+        duration_high_days: 2,
+        predecessors: [],
+        milestone: false,
+        delay_days: 2,
+      },
+      {
+        id: "A20",
+        name: "Energize",
+        tag: null,
+        duration_days: 3,
+        duration_low_days: 3,
+        duration_high_days: 3,
+        predecessors: ["A10"],
+        milestone: true,
+      },
+    ];
+    expect(forwardPass(acts, "likely", delaysOf(acts)).get("A20")?.ef).toBe(7);
+  });
+
   test("energization finishes on day 7 likely, 5 low, 11 high", () => {
     expect(forwardPass(mini.activities).get("A40")?.ef).toBe(7);
     expect(forwardPass(mini.activities, "low").get("A40")?.ef).toBe(5);

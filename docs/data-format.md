@@ -9,7 +9,7 @@ just validate-eval                       # labels, scenarios, photos
 
 ## Project files
 
-One folder per project under `data/projects/<name>/`. Six files, all required. Empty starters live in `data/templates/`. A small complete example is `data/fixtures/mini/`.
+One folder per project under `data/projects/<name>/`. Six files are required; `decisions.json` and `actions.json` are optional. Empty starters live in `data/templates/`. A small complete example is `data/fixtures/mini/`.
 
 Write tags, locations and drawing numbers in upper case with a hyphen: `GEN-3`, `PAD-B`, `E-201`.
 
@@ -69,6 +69,24 @@ Each is a JSON array of rows.
 { "id": "A10", "name": "Set GEN-3", "tag": "GEN-3", "duration_days": 2, "duration_low_days": 1,
   "duration_high_days": 3, "predecessors": [], "milestone": false }
 ```
+
+Optional `delay_days` (default 0) records days an activity's start is already pushed back. Schedule impact counts it.
+
+`decisions.json` (optional), one row per site decision. `decided_by_role` is a role ID, never a name:
+
+```json
+{ "id": "D-1", "text": "Use the alternate cable route", "tag": "GEN-3", "activity": "A20",
+  "decided_by_role": "PM-01", "date": "2026-11-20" }
+```
+
+`actions.json` (optional), one row per action item. `owner_role` is a role ID or null:
+
+```json
+{ "id": "AI-1", "text": "Confirm cable delivery", "owner_role": "ELEC-02", "tag": null,
+  "activity": "A30", "due": "2026-11-21" }
+```
+
+A missing `decisions.json` or `actions.json` means no rows. `tag`, `activity`, `decided_by_role` and `date` (or `due`) may be null.
 
 `deliveries.json`, one row per ticket line. `driver_id` is a role ID like `DRV-17`, never a name:
 
