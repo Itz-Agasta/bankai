@@ -45,14 +45,19 @@ export interface MergedField {
  * Two readings in, trusted fields out: agreement keeps the value, a lone reading
  * survives only if plausible, disagreement or an implausible value drops it.
  */
-export function mergeReadings(primary: Fields, checker: Fields): MergedField[] {
+export function mergeReadings(
+  primary: Fields,
+  checker: Fields,
+): { kept: MergedField[]; dropped: Field[] } {
   const out: MergedField[] = [];
+  const dropped: Field[] = [];
   for (const field of FIELDS) {
     const p = clean(primary[field]);
     const c = clean(checker[field]);
     const value = p && c ? (agree(field, p, c) ? p : null) : (p ?? c);
     if (value && validateField(field, value))
       out.push({ field, value, votes: { primary: p, checker: c } });
+    else if (p || c) dropped.push(field);
   }
-  return out;
+  return { kept: out, dropped };
 }

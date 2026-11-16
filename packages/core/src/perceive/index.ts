@@ -24,6 +24,8 @@ export interface Perception {
   observations: Observation[];
   retake: RetakeRequest | null;
   noNameplate: boolean;
+  /** Fields a model read that were discarded (disagreement or implausible), for confidence. */
+  dropped: Field[];
 }
 
 /** Locate, crop, read with two model families, merge. The models perceive; nothing here decides. */
@@ -35,6 +37,7 @@ export async function perceivePhoto(
 ): Promise<Perception> {
   const observations: Observation[] = [];
   let anything = false;
+  const dropped: Field[] = [];
 
   for (const [i, path] of paths.entries()) {
     const img = await loadImage(path);
@@ -72,7 +75,8 @@ export async function perceivePhoto(
       meter.record(r.cost.model, r.cost.ms, r.cost.usd);
       tracer.step(step, crop, `${Object.keys(r.value).length} fields`, r.cost);
     }
-    const merged = mergeReadings(p.value, c.value);
+    const { kept: merged, dropped: lost } = mergeReadings(p.value, c.value);
+    dropped.push(...lost);
     tracer.step("merge", crop, merged.map((m) => m.field).join(",") || "none");
     for (const m of merged) {
       observations.push({
@@ -92,5 +96,5 @@ export async function perceivePhoto(
     anything && missing.length > 0
       ? { region: "nameplate", why: `${missing.join(", ")} unreadable` }
       : null;
-  return { observations, retake, noNameplate: !anything };
+  return { observations, retake, noNameplate: !anything, dropped };
 }

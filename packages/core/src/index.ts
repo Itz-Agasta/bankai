@@ -10,3 +10,4 @@ export type { Project } from "./project/types";
 export * from "./models";
 export { loadImage, perceivePhoto, validateField } from "./perceive";
 export type { Perception } from "./perceive";
+export * from "./verify";
