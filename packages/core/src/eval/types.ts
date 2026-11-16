@@ -25,10 +25,11 @@ export interface FieldResult {
 export interface EvalResult {
   cases: CaseResult[];
   fields: FieldResult[];
-  fieldAccuracy: number;
-  verdictAccuracy: number;
-  selectiveAccuracy: number;
-  coverage: number;
+  /** null when there was nothing to measure (no labels, no answered cases). */
+  fieldAccuracy: number | null;
+  verdictAccuracy: number | null;
+  selectiveAccuracy: number | null;
+  coverage: number | null;
   fabricated: number;
   costUsd: number;
   meanLatencyMs: number;

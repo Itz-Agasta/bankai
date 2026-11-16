@@ -34,15 +34,21 @@ export async function evalCommand(opts: EvalOptions): Promise<number> {
   });
 
   await mkdir(opts.out, { recursive: true });
-  const lines = result.cases.map((c) =>
-    JSON.stringify({
-      id: c.id,
-      kind: c.kind,
-      correct: c.correct,
-      expected: c.expected,
-      actual: c.actual,
-    }),
-  );
+  // One record per case and per labelled field, so every number in the report traces to a row.
+  const lines = [
+    ...result.cases.map((c) =>
+      JSON.stringify({
+        type: "case",
+        id: c.id,
+        kind: c.kind,
+        correct: c.correct,
+        fabricated: c.fabricated,
+        expected: c.expected,
+        actual: c.actual,
+      }),
+    ),
+    ...result.fields.map((f) => JSON.stringify({ type: "field", ...f })),
+  ];
   await Bun.write(join(opts.out, "results.jsonl"), `${lines.join("\n")}\n`);
   const report = renderReport(result, { set: opts.set });
   await Bun.write(join(opts.out, "EVAL_REPORT.md"), report);

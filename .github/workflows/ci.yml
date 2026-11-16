@@ -23,6 +23,7 @@ jobs:
       - run: just test
       - run: just validate-data data/fixtures/mini
       - run: just validate-eval
+      - run: just validate-eval eval/fixtures data/fixtures
       - run: bun apps/cli/src/main.ts eval --set eval/fixtures --projects data/fixtures --fake --out eval/out
       - if: hashFiles('data/projects/alpha/**') != ''
         run: just validate-data data/projects/alpha

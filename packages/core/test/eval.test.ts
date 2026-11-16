@@ -1,17 +1,91 @@
-import { describe, expect, test } from "bun:test";
-import { cp, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { afterAll, describe, expect, test } from "bun:test";
+import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { fakeModelsFor, renderReport, runEval } from "../src/eval";
+import { fakeModelsFor, fieldMatches, renderReport, runEval } from "../src/eval";
+import { firstNumber } from "../src/readings";
 
 const ROOT = join(import.meta.dir, "../../..");
 const SET = join(ROOT, "eval/fixtures");
 const PROJECTS = join(ROOT, "data/fixtures");
 
+const temps: string[] = [];
+afterAll(() => Promise.all(temps.map((d) => rm(d, { recursive: true, force: true }))));
+async function copySet() {
+  const set = await mkdtemp(join(tmpdir(), "bankai-eval-"));
+  temps.push(set);
+  await cp(SET, set, { recursive: true });
+  return set;
+}
+
 const evaluate = async (set = SET) =>
   runEval({ set, projectRoot: PROJECTS, models: await fakeModelsFor(set) });
 
+describe("eval inputs", () => {
+  test("a photo reference cannot leave the set", async () => {
+    const set = await copySet();
+    const file = join(set, "scenarios/s001-gen3-correct.json");
+    await writeFile(
+      file,
+      (await readFile(file, "utf8")).replace('"gen-3-plate.jpg"', '"../../secret.jpg"'),
+    );
+    await expect(evaluate(set)).rejects.toThrow("plain file name");
+  });
+
+  test("a missing set is an error, not an empty report", async () => {
+    const models = await fakeModelsFor(SET);
+    await expect(
+      runEval({ set: join(SET, "nope"), projectRoot: PROJECTS, models }),
+    ).rejects.toThrow("no scenarios");
+  });
+
+  test("fake models refuse multi-photo scenarios", async () => {
+    const set = await copySet();
+    const file = join(set, "scenarios/s001-gen3-correct.json");
+    await writeFile(
+      file,
+      (await readFile(file, "utf8")).replace(
+        '["gen-3-plate.jpg"]',
+        '["gen-3-plate.jpg", "cat-plate.jpg"]',
+      ),
+    );
+    await expect(evaluate(set)).rejects.toThrow("one photo");
+  });
+
+  test("an unreadable label scores abstention as right and a value as wrong", async () => {
+    const set = await copySet();
+    const file = join(set, "labels/cat-plate.json");
+    await writeFile(
+      file,
+      (await readFile(file, "utf8")).replace('"serial": "SBK00921"', '"serial": "unreadable"'),
+    );
+    const r = await evaluate(set);
+    expect(r.fields.find((f) => f.photo === "cat-plate.jpg" && f.field === "serial")?.correct).toBe(
+      false,
+    );
+  });
+});
+
+describe("number handling", () => {
+  test("thousands commas are one number", () => {
+    expect(firstNumber("2,250 kVA")).toBe(2250);
+    expect(fieldMatches("kva", "2250", "2,250 kVA")).toBe(true);
+  });
+
+  test("tags compare the way the linker does", () => {
+    expect(fieldMatches("tag", "GEN-3", "Generator 3")).toBe(true);
+  });
+});
+
 describe("runEval on the fixture set", () => {
+  test("nothing to measure reads as n/a, not 0%", async () => {
+    const set = await copySet();
+    await rm(join(set, "labels"), { recursive: true });
+    const r = await evaluate(set);
+    expect(r.fieldAccuracy).toBeNull();
+    expect(renderReport(r)).toContain("| Field accuracy | n/a |");
+  });
+
   test("scores every case right and fabricates nothing", async () => {
     const r = await evaluate();
     expect(r.cases).toHaveLength(3);
@@ -27,8 +101,7 @@ describe("runEval on the fixture set", () => {
   });
 
   test("a wrong expectation lowers verdict accuracy to 2 of 3", async () => {
-    const set = await mkdtemp(join(tmpdir(), "bankai-eval-"));
-    await cp(SET, set, { recursive: true });
+    const set = await copySet();
     const file = join(set, "scenarios/s002-gen3-wrong-pad.json");
     await writeFile(
       file,
@@ -39,7 +112,8 @@ describe("runEval on the fixture set", () => {
 
   test("the report shows the headline metrics and per-kind accuracy", async () => {
     const md = renderReport(await evaluate());
-    expect(md).toContain("Verdict accuracy");
+    expect(md).toContain("| Verdict accuracy | 100.0% |");
+    expect(md).toContain("| Coverage (not handed to a human) | 66.7% |");
     expect(md).toContain("Fabricated");
     expect(md).toContain("not_in_project");
   });

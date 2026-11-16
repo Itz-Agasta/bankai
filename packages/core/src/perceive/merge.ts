@@ -1,6 +1,6 @@
 import type { Field } from "@bankai/schemas";
 import type { Fields } from "../models/types";
-import { firstNumber } from "../readings";
+import { firstNumber, numbersIn } from "../readings";
 import { validateField } from "./validators";
 
 const RATINGS = new Set<Field>(["voltage", "kva", "kw", "phase", "frequency"]);
@@ -24,7 +24,7 @@ const clean = (v: string | undefined | null) => {
   return t && /[a-z0-9]/i.test(t) && !SENTINELS.has(t.toLowerCase()) ? t : null;
 };
 
-const numbers = (s: string) => s.match(/\d+(?:\.\d+)?/g)?.map(Number) ?? [];
+const numbers = numbersIn;
 
 function agree(field: Field, a: string, b: string): boolean {
   // A dual voltage like 415/240 must match on every number, not just the first.

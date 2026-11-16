@@ -1,6 +1,7 @@
 import type { Field, Scenario, Verdict } from "@bankai/schemas";
 import type { Project } from "../project/types";
-import { firstNumber } from "../readings";
+import { normalizeModel, normalizeTag } from "../link/normalize";
+import { firstNumber, numbersIn } from "../readings";
 import type { CaseResult, EvalResult, FieldResult } from "./types";
 
 const RATINGS = new Set<Field>(["voltage", "kva", "kw", "phase", "frequency"]);
@@ -27,20 +28,20 @@ export function caseFabricated(s: Scenario, v: Verdict, project: Project): boole
 
 /** Exact match after normalizing case and spacing; ratings compare every number ("415/240"). */
 export function fieldMatches(field: Field, expected: string, actual: string | null): boolean {
+  // An "unreadable" label is answered right only by abstaining; any value there is invented.
+  if (expected === "unreadable") return actual === null;
   if (actual === null) return false;
   if (RATINGS.has(field)) {
-    const nums = (s: string) =>
-      s
-        .match(/\d+(?:\.\d+)?/g)
-        ?.map(Number)
-        .join("/") ?? "";
+    const nums = (s: string) => numbersIn(s).join("/");
     return firstNumber(actual) !== null && nums(actual) === nums(expected);
   }
-  const canon = (s: string) => s.toUpperCase().replace(/[\s\-/.]+/g, "");
-  return canon(actual) === canon(expected);
+  // Same normalization the linker uses, so a reading it accepts is not scored wrong.
+  const norm = field === "tag" ? normalizeTag : normalizeModel;
+  return norm(actual) === norm(expected);
 }
 
-const ratio = (n: number, d: number) => (d === 0 ? 0 : n / d);
+/** Nothing to measure is "not measured", never a measured 0%. */
+const ratio = (n: number, d: number) => (d === 0 ? null : n / d);
 
 export function summarize(
   cases: CaseResult[],
@@ -61,7 +62,7 @@ export function summarize(
       ratio(
         cases.reduce((s, c) => s + c.actual.latency_ms, 0),
         cases.length,
-      ),
+      ) ?? 0,
     ),
     models: extra.models,
     noCrop: extra.noCrop,

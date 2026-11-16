@@ -1,6 +1,6 @@
 import type { EvalResult } from "./types";
 
-const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
+const pct = (x: number | null) => (x === null ? "n/a" : `${(x * 100).toFixed(1)}%`);
 
 /** EVAL_REPORT.md: only what the run measured (honest numbers rule). */
 export function renderReport(r: EvalResult, meta: { set?: string; at?: string } = {}): string {
