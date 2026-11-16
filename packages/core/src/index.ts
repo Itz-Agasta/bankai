@@ -12,6 +12,7 @@ export { loadImage, MAX_IMAGE_BYTES, perceivePhoto, validateField } from "./perc
 export type { Perception } from "./perceive";
 export * from "./verify";
 export * from "./delivery";
+export * from "./note";
 export * from "./eval";
 export { openStore, storePath } from "./store";
 export type { AuditEvent, OpenItem, Store } from "./store";

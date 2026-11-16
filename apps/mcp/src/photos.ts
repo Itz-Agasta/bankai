@@ -1,9 +1,9 @@
-import { BankaiFailure, MAX_IMAGE_BYTES, sha256Hex } from "@bankai/core";
-import { existsSync, realpathSync } from "node:fs";
+import { MAX_IMAGE_BYTES, sha256Hex } from "@bankai/core";
 import { mkdir, writeFile } from "node:fs/promises";
-import { join, resolve, sep } from "node:path";
+import { join } from "node:path";
 import { z } from "zod";
 import type { ServerContext } from "./context";
+import { allowedPath } from "./paths";
 
 /** Base64 length of core's image size limit: refuse before decoding. */
 export const MAX_BASE64 = Math.ceil(MAX_IMAGE_BYTES / 3) * 4;
@@ -21,21 +21,12 @@ export type PhotoInput = z.infer<typeof PhotoInput>;
 
 const EXT = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" } as const;
 
-const real = (p: string) => (existsSync(p) ? realpathSync(p) : p);
-const under = (p: string, root: string) =>
-  p === root || p.startsWith(root.endsWith(sep) ? root : root + sep);
-
 /** Paths are checked against the roots, symlinks resolved, before anything reads them. */
 export async function resolvePhotos(inputs: PhotoInput[], ctx: ServerContext): Promise<string[]> {
-  const roots = ctx.photoRoots.map(real);
   const out: string[] = [];
   for (const input of inputs) {
     if ("path" in input) {
-      // Read the path that was checked, so a symlink cannot be swapped in between.
-      const p = real(resolve(ctx.projectDir, input.path));
-      if (!roots.some((r) => under(p, r)))
-        throw new BankaiFailure("INPUT_UNSUPPORTED", `photo must be under ${roots.join(", ")}`);
-      out.push(p);
+      out.push(allowedPath(input.path, ctx, "photo"));
     } else {
       const bytes = Buffer.from(input.base64, "base64");
       await mkdir(ctx.tmpDir, { recursive: true });

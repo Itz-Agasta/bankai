@@ -45,6 +45,11 @@ function topoOrder(activities: Activity[]): Activity[] {
   return order;
 }
 
+/** Delays already recorded on the schedule, by activity id. */
+export function delaysOf(activities: Activity[]): Map<string, number> {
+  return new Map(activities.filter((a) => a.delay_days).map((a) => [a.id, a.delay_days!]));
+}
+
 /** Earliest start and finish in days from project start. `delays` pushes an activity's start back. */
 export function forwardPass(
   activities: Activity[],
@@ -78,9 +83,16 @@ function downstream(activities: Activity[], start: Set<string>): Set<string> {
 /** How far a delay to this unit's activities pushes the last milestone, as a three-point range (D27). */
 export function scheduleImpact(ctx: RuleContext, delay: Range): Check {
   const acts = ctx.project.activities;
-  const baseline = forwardPass(acts); // validates the network before any early return
+  forwardPass(acts); // validates the network before any early return
   const own = acts.filter((a) => a.tag !== null && a.tag === ctx.tag);
   if (own.length === 0) return check("schedule_impact", "unknown", "no_activity_for_tag");
+  return impactOf(acts, own, delay);
+}
+
+/** How far delaying `own` (their first activities) pushes the last milestone. */
+export function impactOf(acts: Activity[], own: Activity[], delay: Range): Check {
+  const recorded = delaysOf(acts);
+  const baseline = forwardPass(acts, "likely", recorded);
   const points = [delay.low, delay.likely, delay.high];
   if (
     !points.every((d) => Number.isFinite(d) && d >= 0) ||
@@ -106,7 +118,8 @@ export function scheduleImpact(ctx: RuleContext, delay: Range): Check {
   const entries = own.filter((a) => !a.predecessors.some((p) => ownIds.has(p)));
   const slip = (d: Durations, days: number) => {
     // Delay only the unit's first activities; the pass carries it down the chain once.
-    const delays = new Map(entries.map((a) => [a.id, days]));
+    const delays = new Map(recorded);
+    for (const a of entries) delays.set(a.id, (recorded.get(a.id) ?? 0) + days);
     return Math.max(0, forwardPass(acts, d, delays).get(milestone.id)!.ef - base);
   };
   const range: Range = {

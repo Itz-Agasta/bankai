@@ -1,12 +1,18 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createGroq } from "@ai-sdk/groq";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { aiVision } from "./ai";
 import { withCache, withFallback } from "./cache";
+import { aiExtractor, withExtractCache, withExtractFallback } from "./extract";
 import { PRICES, type ModelConfig } from "./config";
-import type { VisionModel } from "./types";
+import type { Models } from "./env";
+import { aiTranscriber, SPEECH_PRICES, withSpeechCache, withSpeechFallback } from "./speech";
 
-/** Primary (Gemini with a cheaper Gemini fallback) and a checker from another family, both cached. */
-export function liveModels(cfg: ModelConfig): { primary: VisionModel; checker: VisionModel } {
+/**
+ * Primary (Gemini with a cheaper Gemini fallback) and a checker from another family, both cached.
+ * Speech (Groq Whisper) only when a Groq key is set: photo-only setups need no Groq account.
+ */
+export function liveModels(cfg: ModelConfig): Models {
   const google = createGoogleGenerativeAI({ apiKey: cfg.keys.gemini });
   const openrouter = createOpenRouter({ apiKey: cfg.keys.openrouter });
   const cache = { dir: cfg.cacheDir, replayOnly: cfg.replayOnly };
@@ -16,8 +22,23 @@ export function liveModels(cfg: ModelConfig): { primary: VisionModel; checker: V
       throw new Error(`No price for model ${id}: add it to PRICES in models/config.ts`);
   }
   const vision = (id: string) => withCache(aiVision(id, google(id)), cache);
-  return {
+  const extract = (id: string) => withExtractCache(aiExtractor(id, google(id)), cache);
+  const models: Models = {
     primary: withFallback(vision(cfg.vision), vision(cfg.visionFallback)),
     checker: withCache(aiVision(cfg.checker, openrouter(cfg.checker)), cache),
+    extract: withExtractFallback(extract(cfg.vision), extract(cfg.visionFallback)),
   };
+  // Replay (D30) answers from the committed cache, so it needs no key.
+  if (cfg.keys.groq || cfg.replayOnly) {
+    for (const id of [cfg.speech, cfg.speechFallback]) {
+      // Replay answers cost nothing, so only a live Groq run needs a price.
+      if (cfg.keys.groq && SPEECH_PRICES[id] === undefined)
+        throw new Error(`No price for model ${id}: add it to SPEECH_PRICES in models/speech.ts`);
+    }
+    const groq = createGroq({ apiKey: cfg.keys.groq });
+    const speech = (id: string) =>
+      withSpeechCache(aiTranscriber(id, groq.transcription(id)), cache);
+    models.speech = withSpeechFallback(speech(cfg.speech), speech(cfg.speechFallback));
+  }
+  return models;
 }

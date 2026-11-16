@@ -5,16 +5,24 @@ import { PROMPT_VERSION } from "../perceive/prompts";
 import { sha256Hex } from "./hash";
 import type { Metered, VisionModel } from "./types";
 
+export interface CacheOpts {
+  dir: string;
+  replayOnly: boolean;
+}
+
 /**
- * Disk cache keyed by prompt version, model id, call and image bytes. In replay
+ * Disk cache keyed by prompt version, model id, call and input bytes. In replay
  * mode (D30) it never calls the model, so a demo runs with no keys. Outside
  * replay the cache is best effort: a broken entry or a failed write never
  * costs us the model's answer.
  */
-export function withCache(m: VisionModel, opts: { dir: string; replayOnly: boolean }): VisionModel {
+export function cacheFor(modelId: string, opts: CacheOpts) {
   let warned = false;
-  async function cached<T>(call: string, img: Uint8Array, run: () => Promise<Metered<T>>) {
-    const path = join(opts.dir, `${sha256Hex(PROMPT_VERSION, m.id, call, img)}.json`);
+  return async function cached<T>(
+    key: (string | Uint8Array)[],
+    run: () => Promise<Metered<T>>,
+  ): Promise<Metered<T>> {
+    const path = join(opts.dir, `${sha256Hex(PROMPT_VERSION, modelId, ...key)}.json`);
     const started = performance.now();
     const hit = await Bun.file(path)
       .json()
@@ -23,11 +31,15 @@ export function withCache(m: VisionModel, opts: { dir: string; replayOnly: boole
       // A cache hit costs nothing; latency is the disk read.
       return {
         value: hit as T,
-        cost: { model: m.id, ms: Math.round(performance.now() - started), usd: 0 },
+        cost: { model: modelId, ms: Math.round(performance.now() - started), usd: 0 },
       };
     }
     if (opts.replayOnly)
-      throw new BankaiFailure("PERCEPTION_UNAVAILABLE", "not in replay cache", `${m.id} ${call}`);
+      throw new BankaiFailure(
+        "PERCEPTION_UNAVAILABLE",
+        "not in replay cache",
+        `${modelId} ${String(key[0])}`,
+      );
     const result = await run();
     try {
       await mkdir(opts.dir, { recursive: true });
@@ -41,7 +53,32 @@ export function withCache(m: VisionModel, opts: { dir: string; replayOnly: boole
       warned = true;
     }
     return result;
+  };
+}
+
+/** Try a, then b; both failing is PERCEPTION_UNAVAILABLE naming both errors. */
+export async function eitherOf<T>(
+  what: string,
+  ids: [string, string],
+  a: () => Promise<T>,
+  b: () => Promise<T>,
+): Promise<T> {
+  try {
+    return await a();
+  } catch (first) {
+    try {
+      return await b();
+    } catch (second) {
+      const detail = `${ids[0]}: ${(first as Error).message}; ${ids[1]}: ${(second as Error).message}`;
+      throw new BankaiFailure("PERCEPTION_UNAVAILABLE", `${what} unavailable`, detail);
+    }
   }
+}
+
+export function withCache(m: VisionModel, opts: CacheOpts): VisionModel {
+  const c = cacheFor(m.id, opts);
+  const cached = <T>(call: string, img: Uint8Array, run: () => Promise<Metered<T>>) =>
+    c([call, img], run);
   return {
     id: m.id,
     locate: (img) => cached("locate", img, () => m.locate(img)),
@@ -62,18 +99,8 @@ export function withCache(m: VisionModel, opts: { dir: string; replayOnly: boole
  * answer is stored and labelled under the fallback's own id.
  */
 export function withFallback(primary: VisionModel, fallback: VisionModel): VisionModel {
-  async function either<T>(a: () => Promise<T>, b: () => Promise<T>): Promise<T> {
-    try {
-      return await a();
-    } catch (first) {
-      try {
-        return await b();
-      } catch (second) {
-        const detail = `${primary.id}: ${(first as Error).message}; ${fallback.id}: ${(second as Error).message}`;
-        throw new BankaiFailure("PERCEPTION_UNAVAILABLE", "vision models unavailable", detail);
-      }
-    }
-  }
+  const either = <T>(a: () => Promise<T>, b: () => Promise<T>) =>
+    eitherOf("vision models", [primary.id, fallback.id], a, b);
   return {
     id: `${primary.id}|${fallback.id}`,
     locate: (img) =>

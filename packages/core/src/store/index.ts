@@ -1,7 +1,8 @@
-import type { ProposedUpdate, TraceEvent, Verdict } from "@bankai/schemas";
+import type { NoteResult, ProposedUpdate, TraceEvent, Verdict } from "@bankai/schemas";
 import { dirname, join } from "node:path";
 import type { Tracer } from "../models/meter";
 import { openDb } from "./db";
+import { getNote, saveNote } from "./notes";
 import { dbTracer, readTrace } from "./trace";
 import {
   approveUpdate,
@@ -24,10 +25,16 @@ export interface Store {
   openItems(): OpenItem[];
   resolve(verdictId: string, by: string, at: string): void;
   tracer(runId: string): Tracer;
+  /** A tracer for a run id used before (a re-processed note): the old trail is cleared first. */
+  restartTrace(runId: string): Tracer;
   trace(runId: string): TraceEvent[];
-  saveUpdates(verdictId: string, us: ProposedUpdate[]): void;
+  /** Saves the note and its proposals together; see store/notes.ts for re-run rules. */
+  saveNote(n: NoteResult, at: string): void;
+  getNote(id: string): NoteResult | null;
+  /** `sourceId` is the verdict or note that proposed the updates. */
+  saveUpdates(sourceId: string, us: ProposedUpdate[]): void;
   getUpdate(id: string): ProposedUpdate | null;
-  /** The verdict that proposed this update. */
+  /** The verdict or note that proposed this update. */
   verdictOfUpdate(id: string): string | null;
   pendingUpdates(): ProposedUpdate[];
   approveUpdate(id: string, by: string, at: string): ProposedUpdate;
@@ -48,7 +55,13 @@ export function openStore(path: string): Store {
     openItems: () => openItems(db),
     resolve: (id, by, at) => resolve(db, id, by, at),
     tracer: (runId) => dbTracer(db, runId),
+    restartTrace: (runId) => {
+      db.query(`DELETE FROM trace WHERE run_id = $run`).run({ run: runId });
+      return dbTracer(db, runId);
+    },
     trace: (runId) => readTrace(db, runId),
+    saveNote: (n, at) => saveNote(db, n, at, audit),
+    getNote: (id) => getNote(db, id),
     saveUpdates: (vid, us) => saveUpdates(db, vid, us, audit),
     getUpdate: (id) => getUpdate(db, id),
     verdictOfUpdate: (id) => verdictOfUpdate(db, id),

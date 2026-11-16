@@ -72,5 +72,6 @@ export function summarize(
     labelCosts: extra.labelCosts,
     models: extra.models,
     noCrop: extra.noCrop,
+    notes: null,
   };
 }

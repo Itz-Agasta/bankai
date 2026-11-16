@@ -9,7 +9,7 @@ The AI perceives, rules decide, a human approves. Models never write records. Ru
 ## Pipeline
 
 1. **Perceive: photos.** Gemini finds the nameplate, crops it, and re-reads at full resolution. A second model family (via OpenRouter) reads the same crop. Field agreement is trusted; disagreement triggers a targeted third read or a retake request. Validators check voltage sets, plausible ratings, and serial formats. Failing fields become `unknown`, never guessed. Missing required fields become `retake_request { region, why }`.
-2. **Perceive: audio.** Groq Whisper transcribes with word timestamps, prompted with project tags. A large language model (LLM) extracts typed claims (`status`, `date_change`, `issue`, `decision`, `action_item`) pinned to time spans. Grounding drops any claim whose key terms are missing from the transcript inside that span.
+2. **Perceive: audio.** Groq Whisper transcribes with word timestamps, prompted with project tags. A large language model (LLM) extracts typed claims (`status`, `date_change`, `issue`, `decision`, `action_item`) pinned to time spans. Grounding drops any claim whose key terms (tag, place, day count, date, component, status verb, and the activity of a delay) are not spoken inside that span. Incidental fields the model filled but nobody said (an activity on a non-delay claim, an issue kind, an owner) are cleared instead, and the claim is kept. Names the rules can spot (a word before "said", a capitalized word mid-sentence) are replaced with `[name]` before the LLM sees the transcript; the LLM flags any others, and every flagged name becomes `[name]` in the returned transcript and quotes, and is removed from claim text. A name the rules miss does reach the extraction model.
 3. **Link.** Normalize tags (`GEN 3`, `G-3`, `Generator 3` become `GEN-3`). Match exact keys first (serial, tag), then OCR-aware fuzzy distance for model numbers (O/0, I/1, S/5, B/8, Z/2 cost less; other substitutions cost more). Score candidates, keep top-1 vs top-2 margin. An LLM tie-break runs only on thin margin and must pick a listed candidate or “none”.
 4. **Decide.** Pure rules: identity, spec, substitution, location, revision, completeness, schedule impact. Schedule impact is a range from three-point durations (best / likely / worst), not a single guess.
 5. **Calibrate.** Features (model agreement, validators, link score and margin, rule certainty) feed a logistic calibrator and a conformal threshold at target risk 5% among answered cases. Output status: `confirmed`, `flagged`, or `needs_human`.
@@ -23,7 +23,7 @@ The AI perceives, rules decide, a human approves. Models never write records. Ru
 |---|---|
 | `verify_equipment(photos[], location?)` | Verdict |
 | `check_delivery(photos[], po_id, ticket_lines?)` | Verdict (completeness focus) |
-| `process_site_note(audio)` | NoteResult: claims and proposed updates, each with confidence, models, cost, latency |
+| `process_site_note(audio)` | NoteRun: NoteResult (claims and proposed updates, each with confidence; models, cost, latency), the redacted transcript, and claims dropped by grounding |
 | `apply_update(update_id)` | The only write; needs human approval |
 | `explain(verdict_id \| update_id)` | Full evidence trail and trace |
 

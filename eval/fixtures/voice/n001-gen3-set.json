@@ -1,0 +1,15 @@
+{
+  "id": "n001-gen3-set",
+  "project": "mini",
+  "audio": "n001-gen3-set.wav",
+  "expected": {
+    "status": "confirmed",
+    "claims": [
+      {
+        "type": "status",
+        "tag": "GEN-3",
+        "value": "set at PAD-B"
+      }
+    ]
+  }
+}

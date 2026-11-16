@@ -15,6 +15,7 @@ describe("check_delivery and explain", () => {
     expect(tools.map((t) => t.name)).toEqual([
       "verify_equipment",
       "check_delivery",
+      "process_site_note",
       "apply_update",
       "explain",
     ]);

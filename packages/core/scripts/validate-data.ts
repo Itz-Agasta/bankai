@@ -15,7 +15,9 @@ try {
     p.poLines.length +
     p.submittals.length +
     p.activities.length +
-    p.deliveries.length;
+    p.deliveries.length +
+    p.decisions.length +
+    p.actions.length;
   console.log(`OK ${rows} rows`);
 } catch (e) {
   if (!(e instanceof BankaiFailure)) throw e;

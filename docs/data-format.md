@@ -9,7 +9,7 @@ just validate-eval                       # labels, scenarios, photos
 
 ## Project files
 
-One folder per project under `data/projects/<name>/`. Six files, all required. Empty starters live in `data/templates/`. A small complete example is `data/fixtures/mini/`.
+One folder per project under `data/projects/<name>/`. Six files are required; `decisions.json` and `actions.json` are optional. Empty starters live in `data/templates/`. A small complete example is `data/fixtures/mini/`.
 
 Write tags, locations and drawing numbers in upper case with a hyphen: `GEN-3`, `PAD-B`, `E-201`.
 
@@ -70,6 +70,24 @@ Each is a JSON array of rows.
   "duration_high_days": 3, "predecessors": [], "milestone": false }
 ```
 
+Optional `delay_days` (default 0) records days an activity's start is already pushed back. Schedule impact counts it.
+
+`decisions.json` (optional), one row per site decision. `decided_by_role` is a role ID, never a name:
+
+```json
+{ "id": "D-1", "text": "Use the alternate cable route", "tag": "GEN-3", "activity": "A20",
+  "decided_by_role": "PM-01", "date": "2026-11-20" }
+```
+
+`actions.json` (optional), one row per action item. `owner_role` is a role ID or null:
+
+```json
+{ "id": "AI-1", "text": "Confirm cable delivery", "owner_role": "ELEC-02", "tag": null,
+  "activity": "A30", "due": "2026-11-21" }
+```
+
+A missing `decisions.json` or `actions.json` means no rows. `tag`, `activity`, `decided_by_role` and `date` (or `due`) may be null.
+
 `deliveries.json`, one row per ticket line. `driver_id` is a role ID like `DRV-17`, never a name:
 
 ```json
@@ -109,3 +127,21 @@ Never guess a value. `"unreadable"` is a correct label.
 | `expected.failing_checks` | Any of `identity`, `spec`, `substitution`, `location`, `revision`, `completeness`, `schedule_impact` |
 | `expected.candidates` | Optional: tags Bankai should list when it cannot pick one |
 | `kind` | `correct`, `wrong_location`, `superseded_revision`, `spec_mismatch`, `partial_shipment`, `unapproved_substitution`, `unreadable`, `not_in_project` |
+
+## Voice notes
+
+Synthetic voices only (Track 02). Use the `generate-voice-note` skill. Three files share one id, for example `n004-tx1-delivered`:
+
+- `eval/voice/<id>.txt`: the script the TTS voice reads, at most 200 characters. The eval checks claims against this text, so a claim naming something the script never says counts as fabricated.
+- `eval/audio/<id>.wav`: the audio, made with `bun packages/core/scripts/tts.ts`.
+- `eval/voice/<id>.json`: the expected answer.
+
+| Key | Meaning |
+|---|---|
+| `id` | Same as the file name |
+| `project` | Folder name under `data/projects/` |
+| `audio` | File name inside `eval/audio/`, no folders |
+| `expected.status` | `confirmed`, `flagged` (a claim conflicts with the records) or `needs_human` (an unknown tag, a calendar date with no day count, a unit that was not named) |
+| `expected.claims` | One entry per fact: `type` (`status`, `date_change`, `issue`, `decision`, `action_item`), optional `tag`, optional `activity` id, optional `value` that the proposed update (or the claim text) must contain, such as `set at PAD-B` or `3` |
+
+Name people only by role ID (`ELEC-02`). A made-up first name is allowed only to test that Bankai removes it.

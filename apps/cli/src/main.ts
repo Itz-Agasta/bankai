@@ -3,6 +3,7 @@ import { VERSION } from "@bankai/core";
 import { Command } from "commander";
 import { evalCommand } from "./commands/eval";
 import { mcpCommand } from "./commands/mcp";
+import { noteCommand } from "./commands/note";
 import { statusCommand } from "./commands/status";
 import { verifyCommand } from "./commands/verify";
 
@@ -21,6 +22,16 @@ program
   .option("--json", "print the Verdict as JSON")
   .action(async (photos: string[], opts) => {
     process.exitCode = await verifyCommand(photos, opts);
+  });
+
+program
+  .command("note")
+  .description("Turn a spoken site walk note into cited claims and proposed updates")
+  .argument("<audio>", "the walk note: wav, mp3, m4a, ogg, webm or flac")
+  .requiredOption("--project <dir>", "project folder (see docs/data-format.md)")
+  .option("--json", "print the NoteRun as JSON")
+  .action(async (audio: string, opts) => {
+    process.exitCode = await noteCommand(audio, opts);
   });
 
 program

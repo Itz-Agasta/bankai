@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { ActorId, Citation } from "./citation";
 import { Confidence, NonNegative } from "./numbers";
-import { Status, Verdict } from "./verdict";
+import { Check, Status, Verdict } from "./verdict";
 
 export const ProposedUpdate = z.object({
   id: z.string(),
@@ -32,6 +32,8 @@ export const Claim = z.object({
   text: z.string(),
   span: Citation.extend({ kind: z.literal("audio_span") }),
   links: z.array(Citation),
+  /** Rule checks run on this claim; a failing one says why the note was flagged. */
+  checks: z.array(Check),
   confidence: Confidence,
 });
 export type Claim = z.infer<typeof Claim>;
@@ -47,3 +49,29 @@ export const NoteResult = z.object({
   latency_ms: NonNegative,
 });
 export type NoteResult = z.infer<typeof NoteResult>;
+
+/** One transcript word with its time in the audio, in seconds. */
+export const Word = z.object({
+  i: z.number().int().nonnegative(),
+  text: z.string(),
+  start: NonNegative,
+  end: NonNegative,
+});
+export type Word = z.infer<typeof Word>;
+
+/** A claim the model returned that the transcript did not support. */
+export const DroppedClaim = z.object({
+  // Not int: a malformed model span is exactly what gets reported here.
+  word_start: z.number(),
+  word_end: z.number(),
+  type: ClaimType,
+  reason: z.string(),
+});
+export type DroppedClaim = z.infer<typeof DroppedClaim>;
+
+export const NoteRun = z.object({
+  result: NoteResult,
+  transcript: z.array(Word),
+  dropped: z.array(DroppedClaim),
+});
+export type NoteRun = z.infer<typeof NoteRun>;

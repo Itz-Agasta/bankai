@@ -72,16 +72,17 @@ async function setup(answer: Answer, era?: "2026") {
 }
 
 describe("apply_update", () => {
-  test("is listed third and marked as a non-destructive write", async () => {
+  test("is listed fourth and marked as a non-destructive write", async () => {
     const { client } = await setup("accept");
     const { tools } = await client.listTools();
     expect(tools.map((t) => t.name)).toEqual([
       "verify_equipment",
       "check_delivery",
+      "process_site_note",
       "apply_update",
       "explain",
     ]);
-    expect(tools[2]!.annotations).toMatchObject({
+    expect(tools[3]!.annotations).toMatchObject({
       readOnlyHint: false,
       destructiveHint: false,
       idempotentHint: true,

@@ -60,7 +60,14 @@ describe("schemas", () => {
   });
 
   test("a claim span must be an audio span", () => {
-    const claim = { id: "c1", type: "status", text: "GEN-3 landed", links: [], confidence: 0.7 };
+    const claim = {
+      id: "c1",
+      type: "status",
+      text: "GEN-3 landed",
+      links: [],
+      checks: [],
+      confidence: 0.7,
+    };
     expect(Claim.safeParse({ ...claim, span: cite }).success).toBe(false);
     expect(
       Claim.safeParse({ ...claim, span: { kind: "audio_span", ref: "n1#0.0-2.1" } }).success,
@@ -128,5 +135,15 @@ describe("schemas", () => {
     };
     expect(NoteResult.safeParse({ ...note, cost_usd: 0 }).success).toBe(true);
     expect(NoteResult.safeParse(note).success).toBe(false);
+  });
+});
+
+describe("cubic fixes: dropped claims", () => {
+  test("a dropped claim may carry a malformed span", async () => {
+    const { DroppedClaim } = await import("../src/update");
+    expect(
+      DroppedClaim.safeParse({ word_start: 1.5, word_end: 2, type: "status", reason: "bad_span" })
+        .success,
+    ).toBe(true);
   });
 });

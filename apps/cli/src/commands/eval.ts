@@ -1,5 +1,6 @@
 import {
   fakeModelsFor,
+  fakeNoteModelsFor,
   liveModels,
   loadUserEnv,
   modelConfig,
@@ -17,20 +18,26 @@ export interface EvalOptions {
   out: string;
 }
 
-/** Score a set; exit 1 if anything was fabricated, so CI fails on an invented record. */
+/** Score a set; exit 1 if anything was fabricated (record or note claim), so CI fails on it. */
 export async function evalCommand(opts: EvalOptions): Promise<number> {
   await loadUserEnv();
   let models;
-  if (opts.fake) models = await fakeModelsFor(opts.set);
-  else {
+  let noteModels;
+  if (opts.fake) {
+    models = await fakeModelsFor(opts.set);
+    noteModels = await fakeNoteModelsFor(opts.set);
+  } else {
     const live = liveModels(modelConfig());
     models = () => live;
+    const { speech, extract } = live;
+    if (speech && extract) noteModels = () => ({ speech, extract });
   }
   const result = await runEval({
     set: opts.set,
     projectRoot: opts.projects,
     models,
     noCrop: !opts.crop,
+    noteModels,
   });
 
   await mkdir(opts.out, { recursive: true });
@@ -50,10 +57,11 @@ export async function evalCommand(opts: EvalOptions): Promise<number> {
     ...result.fields.map((f) => JSON.stringify({ type: "field", ...f })),
     // Case costs (actual.cost_usd) plus these label costs add up to the report's total.
     ...result.labelCosts.map((l) => JSON.stringify({ type: "label_cost", ...l })),
+    ...(result.notes?.cases ?? []).map((c) => JSON.stringify({ type: "note", ...c })),
   ];
   await Bun.write(join(opts.out, "results.jsonl"), `${lines.join("\n")}\n`);
   const report = renderReport(result, { set: opts.set });
   await Bun.write(join(opts.out, "EVAL_REPORT.md"), report);
   console.log(report);
-  return result.fabricated > 0 ? 1 : 0;
+  return result.fabricated > 0 || (result.notes?.fabricated ?? 0) > 0 ? 1 : 0;
 }

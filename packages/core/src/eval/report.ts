@@ -50,5 +50,37 @@ export function renderReport(r: EvalResult, meta: { set?: string; at?: string } 
           "",
         ]
       : []),
+    ...notesSection(r),
   ].join("\n");
+}
+
+function notesSection(r: EvalResult): string[] {
+  const n = r.notes;
+  if (!n) return [];
+  const wrong = n.cases.filter(
+    (c) =>
+      !c.statusCorrect ||
+      c.matched < c.expected.claims.length ||
+      c.matched < c.actual.claims.length,
+  );
+  return [
+    "## Site notes",
+    "",
+    `${n.cases.length} notes | Models: ${n.models.join(", ") || "none"}`,
+    "",
+    "| Metric | Value |",
+    "|---|---|",
+    `| Status accuracy | ${pct(n.statusAccuracy)} |`,
+    `| Claim precision | ${pct(n.claimPrecision)} |`,
+    `| Claim recall | ${pct(n.claimRecall)} |`,
+    `| Fabricated claims | ${n.fabricated} |`,
+    `| Cost, notes | $${n.costUsd.toFixed(4)} |`,
+    `| Mean latency per note | ${(n.meanLatencyMs / 1000).toFixed(1)} s |`,
+    "",
+    ...wrong.map(
+      (c) =>
+        `- \`${c.id}\`: expected ${c.expected.status} with ${c.expected.claims.length} claims, got ${c.actual.status}, ${c.matched} matched of ${c.actual.claims.length} returned`,
+    ),
+    ...(wrong.length ? [""] : []),
+  ];
 }

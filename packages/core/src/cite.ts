@@ -13,6 +13,8 @@ export const cite = {
   }),
   submittal: (id: string): Citation => ({ kind: "submittal", ref: id }),
   activity: (id: string): Citation => ({ kind: "schedule_activity", ref: id }),
+  decision: (id: string): Citation => ({ kind: "decision", ref: `decisions.json#${id}` }),
+  action: (id: string): Citation => ({ kind: "action_item", ref: `actions.json#${id}` }),
   deliveryLine: (d: DeliveryLine): Citation => ({
     kind: "delivery_line",
     ref: `${d.ticket}#L${d.line}`,

@@ -10,6 +10,7 @@ import { loadProject } from "../project/load";
 import type { Project } from "../project/types";
 import { verifyEquipment } from "../verify";
 import { caseCorrect, caseFabricated, fieldMatches, summarize } from "./metrics";
+import { runNotes, type NoteModelsFor } from "./notes";
 import type { CaseResult, EvalResult, FieldResult, ModelsFor } from "./types";
 
 /** A set may name files only inside its own folders: "../" would let it read, or upload, anything. */
@@ -42,6 +43,8 @@ export async function runEval(opts: {
   projectRoot: string;
   models: ModelsFor;
   noCrop?: boolean;
+  /** Needed only when the set has voice notes (`<set>/voice/`). */
+  noteModels?: NoteModelsFor;
 }): Promise<EvalResult> {
   const photo = (name: string) => join(opts.set, "photos", plain(name, "photo"));
   const projects = new Map<string, Project>();
@@ -95,12 +98,14 @@ export async function runEval(opts: {
     }
   }
 
-  return summarize(cases, fields, {
-    costUsd,
+  const notes = await runNotes({ set: opts.set, project, models: opts.noteModels, plain });
+  const result = summarize(cases, fields, {
+    costUsd: costUsd + (notes?.costUsd ?? 0),
     labelCosts,
-    models: [...models],
+    models: [...new Set([...models, ...(notes?.models ?? [])])],
     noCrop: opts.noCrop ?? false,
   });
+  return { ...result, notes };
 }
 
 interface FakeEntry {

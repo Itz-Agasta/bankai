@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { Field } from "./observation";
+import { ClaimType } from "./update";
 import { CheckName, Status } from "./verdict";
 
 /** Ground truth for one photo: each field exactly as printed, or "unreadable". */
@@ -38,3 +39,23 @@ export const Scenario = z.object({
   kind: ScenarioKind,
 });
 export type Scenario = z.infer<typeof Scenario>;
+
+/** One voice exam question: a walk note and the claims a careful listener would record. */
+export const NoteScenario = z.object({
+  id: z.string().min(1),
+  project: z.string().min(1),
+  audio: z.string().min(1),
+  expected: z.object({
+    status: Status,
+    claims: z.array(
+      z.object({
+        type: ClaimType,
+        tag: z.string().min(1).optional(),
+        activity: z.string().min(1).optional(),
+        /** Text the proposal (or, without one, the claim) must contain. */
+        value: z.string().min(1).optional(),
+      }),
+    ),
+  }),
+});
+export type NoteScenario = z.infer<typeof NoteScenario>;

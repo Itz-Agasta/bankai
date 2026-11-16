@@ -100,7 +100,7 @@ Use the `make-scenario` skill. CI checks format. The “not in project” cases 
 
 ## 4. Voice notes, the ears
 
-Write about 30 scripts (“GEN-3 landed on pad B, controls cabinet missing”), turn them into audio with `generate-voice-note` (synthetic voices only, varied including Indian English and site noise), and label the expected claims with time spans.
+Write about 30 scripts (“GEN-3 landed on pad B, controls cabinet missing”), turn them into audio with the `generate-voice-note` skill (synthetic voices only, rotate the six Groq voices), and write the expected claims for each. Format: `docs/data-format.md`, "Voice notes".
 
 Release valve: if voice is not end to end by Nov 29, it moves to Round 2 and photos ship alone.
 

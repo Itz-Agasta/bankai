@@ -1,4 +1,4 @@
-import type { DrawingRev, EquipmentRow, PoLine } from "@bankai/schemas";
+import type { Activity, DrawingRev, EquipmentRow, PoLine } from "@bankai/schemas";
 import { normalizeLocation } from "../link/normalize";
 import type { Project, ProjectData } from "./types";
 
@@ -19,6 +19,7 @@ export function indexProject(name: string, data: ProjectData): Project {
     ...data,
     byTag,
     poByTag,
+    activityById: new Map<string, Activity>(data.activities.map((a) => [a.id, a])),
     currentRevision: (drawing) => current.get(drawing),
     locations: new Set(data.equipment.map((r) => normalizeLocation(r.location))),
   };

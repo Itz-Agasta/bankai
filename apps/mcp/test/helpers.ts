@@ -1,4 +1,4 @@
-import { fakeVision } from "@bankai/core";
+import { fakeVision, type Models } from "@bankai/core";
 import { Client, InMemoryTransport } from "@modelcontextprotocol/client";
 import { cp, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -50,10 +50,18 @@ export async function miniProject(): Promise<string> {
 
 /** In-memory client on a fresh server over a fresh mini copy. */
 export async function connect(
-  opts: { components?: string[]; client?: ConstructorParameters<typeof Client>[1] } = {},
+  opts: {
+    components?: string[];
+    client?: ConstructorParameters<typeof Client>[1];
+    /** Extra models (speech, extract) on top of the fake vision pair. */
+    models?: Partial<Models>;
+  } = {},
 ): Promise<{ client: Client; ctx: ServerContext; project: string }> {
   const project = await miniProject();
-  const ctx = await buildContext({ projectDir: project, models: fakeModels(opts.components) });
+  const ctx = await buildContext({
+    projectDir: project,
+    models: { ...fakeModels(opts.components), ...opts.models },
+  });
   const [a, b] = InMemoryTransport.createLinkedPair();
   await createServer(ctx).connect(b);
   const client = new Client({ name: "test", version: "0" }, opts.client);

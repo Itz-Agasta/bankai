@@ -1,4 +1,4 @@
-import { PhotoLabel, Scenario } from "@bankai/schemas";
+import { NoteScenario, PhotoLabel, Scenario } from "@bankai/schemas";
 import { existsSync } from "node:fs";
 import { basename, join, relative } from "node:path";
 import type { z } from "zod";
@@ -86,6 +86,41 @@ const scenarios = await check(`${SET}/scenarios`, Scenario, (file, s) => {
   }
 });
 
+// Voice notes are optional: voice/nNNN-*.json, its .txt script and audio/<name>.
+let notes = 0;
+for (const file of await listFiles(join(ROOT, SET, "voice"))) {
+  const name = basename(file);
+  if (name === "fake-notes.json" || name.endsWith(".txt")) continue;
+  if (!/^n\d{3}-.+\.json$/.test(name)) {
+    errors.push(
+      `${rel(file)}: voice/ holds nNNN-<name>.json scenarios and their .txt scripts only`,
+    );
+    continue;
+  }
+  const r = NoteScenario.safeParse(
+    await Bun.file(file)
+      .json()
+      .catch(() => null),
+  );
+  if (!r.success) {
+    const issue = r.error.issues[0];
+    errors.push(`${rel(file)}: ${issue?.path.join(".") || "file"}: ${issue?.message}`);
+    continue;
+  }
+  const s = r.data;
+  if (!bareName(file, "id", s.id)) continue;
+  if (basename(file, ".json") !== s.id) errors.push(`${rel(file)}: name the file ${s.id}.json`);
+  const script = join(ROOT, SET, "voice", `${s.id}.txt`);
+  if (!existsSync(script)) errors.push(`${rel(file)}: script ${SET}/voice/${s.id}.txt not found`);
+  else if ((await Bun.file(script).text()).trim().length > 200)
+    errors.push(`${rel(script)}: over 200 characters, the TTS limit`);
+  if (bareName(file, "audio", s.audio) && !existsSync(join(ROOT, SET, "audio", s.audio)))
+    errors.push(`${rel(file)}: audio ${SET}/audio/${s.audio} not found`);
+  if (bareName(file, "project", s.project) && !existsSync(join(ROOT, PROJECTS, s.project)))
+    errors.push(`${rel(file)}: project ${PROJECTS}/${s.project} not found`);
+  notes++;
+}
+
 let photos = 0;
 for (const file of await listFiles(PHOTOS)) {
   if (!isPhoto(file)) {
@@ -110,4 +145,4 @@ if (errors.length) {
   for (const e of errors) console.error(e);
   process.exit(1);
 }
-console.log(`OK ${labels} labels, ${scenarios} scenarios, ${photos} photos`);
+console.log(`OK ${labels} labels, ${scenarios} scenarios, ${photos} photos, ${notes} voice notes`);
