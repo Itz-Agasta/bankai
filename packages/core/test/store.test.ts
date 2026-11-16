@@ -184,7 +184,7 @@ describe("notes in the store", () => {
     const store = openStore(await dbPath());
     try {
       const process = async () => {
-        const r = await processNote({ audio }, { project, models, tracer: memoryTracer("t") });
+        const r = await processNote({ audio }, { project, models, tracer: memoryTracer });
         store.saveNote(r.result, "2026-11-16T10:00:00Z");
         store.saveUpdates(r.result.id, r.result.updates);
         return r.result;

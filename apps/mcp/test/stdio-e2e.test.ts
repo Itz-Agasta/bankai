@@ -28,7 +28,7 @@ async function fakeScript(dir: string) {
 }
 
 describe("bankai mcp over stdio", () => {
-  test("serves the four tools and verifies a plate", async () => {
+  test("serves the five tools and verifies a plate", async () => {
     const project = await miniProject();
     const transport = new StdioClientTransport({
       command: "bun",
@@ -46,6 +46,7 @@ describe("bankai mcp over stdio", () => {
       expect(tools.map((t) => t.name)).toEqual([
         "verify_equipment",
         "check_delivery",
+        "process_site_note",
         "apply_update",
         "explain",
       ]);

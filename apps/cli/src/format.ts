@@ -1,4 +1,4 @@
-import type { Check, Verdict } from "@bankai/schemas";
+import type { Check, NoteRun, Verdict } from "@bankai/schemas";
 
 const color = !process.env.NO_COLOR && process.stdout.isTTY;
 const ESC = String.fromCharCode(27);
@@ -49,5 +49,23 @@ export function formatVerdict(raw: Verdict): string {
     lines.push(`  retake: ${v.retake_request.region} (${v.retake_request.why})`);
   const bill = `$${v.cost_usd.toFixed(4)}  ${(v.latency_ms / 1000).toFixed(1)}s`;
   lines.push(`  ${v.models.join(", ") || "no models"}  ${bill}`);
+  return lines.join("\n");
+}
+
+const span = (ref: string) => ref.slice(ref.lastIndexOf("@") + 1);
+
+/** Status line, one line per claim with its time span, pending updates, dropped count, then the bill. */
+export function formatNote(run: NoteRun): string {
+  const r = run.result;
+  const lines = [`${STATUS[r.status]}  ${safe(r.id)}  confidence ${r.confidence}`];
+  for (const c of r.claims)
+    lines.push(safe(`  [${span(c.span.ref)}] ${c.type} ${c.text} (${c.confidence})`));
+  if (r.updates.length) lines.push("  proposed updates (need approval):");
+  for (const u of r.updates)
+    lines.push(safe(`    ${u.id}  ${u.field} on ${u.target.ref}: '${u.old}' -> '${u.new}'`));
+  if (run.dropped.length)
+    lines.push(`  ${run.dropped.length} claim(s) dropped: not supported by the recording`);
+  const bill = `$${r.cost_usd.toFixed(4)}  ${(r.latency_ms / 1000).toFixed(1)}s`;
+  lines.push(`  ${r.models.map(safe).join(", ") || "no models"}  ${bill}`);
   return lines.join("\n");
 }

@@ -22,7 +22,8 @@ import { whisperPrompt } from "./whisper-prompt";
 export interface NoteDeps {
   project: Project;
   models: { speech: TranscriptionModel; extract: ExtractModel };
-  tracer: Tracer;
+  /** Opens the step trail once the note id (from the audio hash) is known. */
+  tracer: (noteId: string) => Tracer;
 }
 
 const NO_SPEECH = 0.5;
@@ -52,9 +53,10 @@ const silent = (t: Transcript) =>
 
 /** A walk note in, cited claims and rule-written proposals out. Unsure means a person decides. */
 export async function processNote(input: { audio: string }, deps: NoteDeps): Promise<NoteRun> {
-  const { project, models, tracer } = deps;
+  const { project, models } = deps;
   const audio = await loadAudio(input.audio);
   const id = `note_${audio.hash.slice(0, 12)}`;
+  const tracer = deps.tracer(id);
   const name = basename(input.audio);
   const meter = memoryMeter();
   const vocab = vocabOf(project);

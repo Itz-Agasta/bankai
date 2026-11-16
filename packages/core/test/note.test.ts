@@ -34,7 +34,7 @@ const run = (audio: string, models: { speech?: TranscriptionModel; extract?: Ext
     {
       project: mini,
       models: { speech: models.speech ?? speech, extract: models.extract ?? extract },
-      tracer: memoryTracer("t"),
+      tracer: memoryTracer,
     },
   );
 
