@@ -17,3 +17,7 @@ Never infer, complete or correct a value from what the equipment usually is. A w
 export const COMPONENTS_PROMPT = `This photo was taken at a delivery on a data center construction site.
 From the list you are given, return only the items you can clearly see in the photo.
 Do not guess. Leave out anything hidden, wrapped beyond recognition or not in the photo. An empty list is a valid answer.`;
+
+export const CHOOSE_PROMPT = `This is a crop of an equipment nameplate. For each field below you get the values it could hold.
+Return the one value that is printed on the plate, copied exactly from the options, or null if it is not printed,
+unreadable, or none of the options match. Never pick an option because it is more likely; only because you read it.`;

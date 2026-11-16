@@ -17,7 +17,7 @@ export interface Candidate {
 export const AMBIGUOUS_MARGIN = 0.15;
 export const MIN_LINK_SCORE = 0.6;
 
-interface Target {
+export interface Target {
   tag: string;
   manufacturer: string;
   model: string;
@@ -28,7 +28,7 @@ interface Target {
 }
 
 /** Current schedule rows, plus tags that exist only on a PO line. */
-function records(project: Project): Target[] {
+export function records(project: Project): Target[] {
   const out: Target[] = [...project.byTag.values()].map((r) => ({
     ...r,
     record: cite.equipmentRow(r.tag),
@@ -40,7 +40,7 @@ function records(project: Project): Target[] {
   return out;
 }
 
-const sameNumber = (observed: string, expected: string | number | null) => {
+export const sameNumber = (observed: string, expected: string | number | null) => {
   const got = firstNumber(observed);
   return expected !== null && got !== null && got === firstNumber(String(expected));
 };

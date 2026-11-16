@@ -1,7 +1,7 @@
 import { generateText, Output, type LanguageModel } from "ai";
 import sharp from "sharp";
 import { z } from "zod";
-import { COMPONENTS_PROMPT, LOCATE_PROMPT, READ_PROMPT } from "../perceive/prompts";
+import { CHOOSE_PROMPT, COMPONENTS_PROMPT, LOCATE_PROMPT, READ_PROMPT } from "../perceive/prompts";
 import { costUsd } from "./config";
 import type { Fields, Located, Metered, VisionModel } from "./types";
 
@@ -88,6 +88,19 @@ export function aiVision(id: string, model: LanguageModel): VisionModel {
       const prompt = `${COMPONENTS_PROMPT}\nItems: ${JSON.stringify(candidates)}`;
       const r = await ask(prompt, schema, img);
       return { value: [...new Set(r.value.seen)], cost: r.cost };
+    },
+    async choose(img, questions) {
+      const schema = z.object({
+        answers: z.array(z.object({ field: z.string(), value: z.nullable(z.string()) })),
+      });
+      const prompt = `${CHOOSE_PROMPT}\nFields: ${JSON.stringify(questions)}`;
+      const r = await ask(prompt, schema, img);
+      const fields: Fields = {};
+      for (const a of r.value.answers) {
+        const q = questions.find((x) => x.field === a.field);
+        if (q && a.value !== null && q.options.includes(a.value)) fields[q.field] = a.value;
+      }
+      return { value: fields, cost: r.cost };
     },
   };
 }

@@ -1,7 +1,7 @@
 import { sha256Hex } from "./hash";
 import type { Fields, Located, VisionModel } from "./types";
 
-type Script = Record<string, Located & { fields: Fields; components?: string[] }>;
+type Script = Record<string, Located & { fields: Fields; components?: string[]; choose?: Fields }>;
 
 /**
  * Offline model for tests. Entries are keyed by the first 12 hex chars of the
@@ -21,6 +21,8 @@ export function fakeVision(id: string, script: Script): VisionModel {
       return { value: { plate, tags }, cost };
     },
     read: async (img) => ({ value: entry(img).fields, cost }),
+    // Answers as scripted, unfiltered: the pipeline must ignore values outside the options.
+    choose: async (img) => ({ value: entry(img).choose ?? {}, cost }),
     components: async (img, candidates) => ({
       value: (entry(img).components ?? []).filter((c) => candidates.includes(c)),
       cost,

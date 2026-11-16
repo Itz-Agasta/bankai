@@ -33,6 +33,14 @@ export interface VisionModel {
   read(img: Uint8Array): Promise<Metered<Fields>>;
   /** Which of `candidates` are visible in the photo; answers only from that list. */
   components?(img: Uint8Array, candidates: string[]): Promise<Metered<string[]>>;
+  /** For each field, which listed value is printed on the plate; a field is left out when unclear. */
+  choose?(img: Uint8Array, questions: TieQuestion[]): Promise<Metered<Fields>>;
+}
+
+/** A nameplate field the candidate units disagree on, and the values they hold. */
+export interface TieQuestion {
+  field: Field;
+  options: string[];
 }
 
 export interface Segment {
