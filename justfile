@@ -11,4 +11,4 @@ types:
     bunx tsc -b
 
 validate-data dir:
-    bun packages/core/scripts/validate-data.ts {{dir}}
+    bun packages/core/scripts/validate-data.ts "{{dir}}"

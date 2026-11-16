@@ -1,13 +1,17 @@
-import { describe, expect, test } from "bun:test";
-import { cp, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { afterAll, describe, expect, test } from "bun:test";
+import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { loadProject } from "../src/project/load";
 
 const MINI = join(import.meta.dir, "../../../data/fixtures/mini");
 
+const temps: string[] = [];
+afterAll(() => Promise.all(temps.map((d) => rm(d, { recursive: true, force: true }))));
+
 async function brokenCopy(file: string, edit: (text: string) => string): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), "bankai-mini-"));
+  temps.push(dir);
   await cp(MINI, dir, { recursive: true });
   const path = join(dir, file);
   await writeFile(path, edit(await readFile(path, "utf8")));
@@ -95,6 +99,30 @@ describe("loadProject rejects bad data", () => {
     const err = await loadError(dir);
     expect(err.code).toBe("PROJECT_INVALID");
     expect(err.detail).toBe("drawings.csv:5: unterminated quote");
+  });
+
+  test("two current rows for one tag are rejected", async () => {
+    const dir = await brokenCopy("equipment_schedule.csv", (t) =>
+      t.replace("GEN-4,generator,PAD-C", "GEN-3,generator,PAD-C"),
+    );
+    const err = await loadError(dir);
+    expect(err.code).toBe("PROJECT_INVALID");
+    expect(err.detail).toBe("equipment_schedule.csv:3: GEN-3: duplicate current row");
+  });
+
+  test("superseded_by must name a revision of the same drawing", async () => {
+    const dir = await brokenCopy("drawings.csv", (t) =>
+      t.replace("E-201,B,2026-08-10,C,", "E-201,B,2026-08-10,D,"),
+    );
+    const err = await loadError(dir);
+    expect(err.code).toBe("PROJECT_INVALID");
+    expect(err.detail).toStartWith("drawings.csv:2:");
+  });
+
+  test("a negative delivery quantity is rejected", async () => {
+    const dir = await brokenCopy("deliveries.json", (t) => t.replace('"qty": 1', '"qty": -1'));
+    const err = await loadError(dir);
+    expect(err.detail).toStartWith("deliveries.json:1: qty:");
   });
 
   test("an activity whose low duration exceeds likely is rejected", async () => {

@@ -48,8 +48,8 @@ export function parseCsvRows(text: string): CsvRow[] {
       fieldStart = false;
     } else if (c === ",") endField();
     else if (c === "\n" || c === "\r") {
-      if (c === "\r" && text[i + 1] === "\n") {
-        i++;
+      if (c === "\r") {
+        if (text[i + 1] === "\n") i++;
         line++;
       }
       endField();

@@ -74,9 +74,19 @@ function checkDurations(activities: Activity[]): void {
 
 /** A row on an unregistered revision would silently drop out of byTag and read as "not in project". */
 function checkRevisions(equipment: EquipmentRow[], lines: number[], drawings: DrawingRev[]): void {
-  const known = new Set(drawings.map((d) => `${d.drawing}@${d.revision}`));
+  const current = new Map(
+    drawings.filter((d) => d.superseded_by === null).map((d) => [d.drawing, d.revision]),
+  );
+  const key = (drawing: string, revision: string) => JSON.stringify([drawing, revision]);
+  const known = new Set(drawings.map((d) => key(d.drawing, d.revision)));
+  const currentTags = new Set<string>();
   equipment.forEach((r, i) => {
-    if (!known.has(`${r.drawing}@${r.revision}`)) {
+    if (r.revision === current.get(r.drawing)) {
+      if (currentTags.has(r.tag))
+        throw invalid("equipment_schedule.csv", lines[i] ?? 0, `${r.tag}: duplicate current row`);
+      currentTags.add(r.tag);
+    }
+    if (!known.has(key(r.drawing, r.revision))) {
       const msg = `${r.tag}: ${r.drawing} rev ${r.revision} not in drawings.csv`;
       throw invalid("equipment_schedule.csv", lines[i] ?? 0, msg);
     }
@@ -95,7 +105,17 @@ function checkDrawings(drawings: DrawingRev[], lines: number[]): void {
         `${d.drawing} rev ${d.revision}: superseded_by and superseded_on must both be set or both empty`,
       );
     }
-    if (d.superseded_by !== null) return;
+    if (d.superseded_by !== null) {
+      const next = d.superseded_by;
+      if (!drawings.some((o) => o.drawing === d.drawing && o.revision === next)) {
+        throw invalid(
+          "drawings.csv",
+          line,
+          `${d.drawing} rev ${d.revision}: superseded_by ${next} is not a revision of ${d.drawing}`,
+        );
+      }
+      return;
+    }
     if (current.has(d.drawing)) {
       throw invalid("drawings.csv", line, `${d.drawing}: more than one current revision`);
     }

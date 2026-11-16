@@ -18,6 +18,10 @@ describe("parseCsv", () => {
   });
 });
 
+test("counts lone CR as a line break", () => {
+  expect(() => parseCsv('a,b\r1,2\r3,"x\r')).toThrow("line 3: unterminated quote");
+});
+
 describe("csvRecords", () => {
   test("rejects a row wider than the header", () => {
     expect(() => csvRecords("a,b\n1,2,3\n", new Set())).toThrow("line 2: 3 cells, header has 2");

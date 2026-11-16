@@ -1,5 +1,15 @@
 import { describe, expect, test } from "bun:test";
-import { Check, Citation, DeliveryLine, NoteResult, PoLine, ProposedUpdate, Verdict } from "../src";
+import {
+  Check,
+  Citation,
+  Claim,
+  Link,
+  DeliveryLine,
+  NoteResult,
+  PoLine,
+  ProposedUpdate,
+  Verdict,
+} from "../src";
 
 const cite = { kind: "po_line", ref: "PO-1042#14" } as const;
 
@@ -34,6 +44,27 @@ const update = {
 describe("schemas", () => {
   test("a valid verdict parses", () => {
     expect(Verdict.safeParse(verdict).success).toBe(true);
+  });
+
+  test("confidence must be within 0 and 1", () => {
+    expect(Verdict.safeParse({ ...verdict, confidence: 1.2 }).success).toBe(false);
+  });
+
+  test("cost cannot be negative", () => {
+    expect(Verdict.safeParse({ ...verdict, cost_usd: -0.01 }).success).toBe(false);
+  });
+
+  test("a link needs at least one observation", () => {
+    const link = { observation_ids: [], record: cite, method: "exact", score: 1, margin: 1 };
+    expect(Link.safeParse(link).success).toBe(false);
+  });
+
+  test("a claim span must be an audio span", () => {
+    const claim = { id: "c1", type: "status", text: "GEN-3 landed", links: [], confidence: 0.7 };
+    expect(Claim.safeParse({ ...claim, span: cite }).success).toBe(false);
+    expect(
+      Claim.safeParse({ ...claim, span: { kind: "audio_span", ref: "n1#0.0-2.1" } }).success,
+    ).toBe(true);
   });
 
   test("a check result outside pass/fail/unknown is rejected", () => {

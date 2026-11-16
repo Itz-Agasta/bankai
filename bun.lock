@@ -19,7 +19,6 @@
       },
       "dependencies": {
         "@bankai/core": "workspace:*",
-        "@bankai/schemas": "workspace:*",
       },
     },
     "packages/core": {

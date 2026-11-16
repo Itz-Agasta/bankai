@@ -7,9 +7,6 @@
   "include": ["src", "test", "scripts"],
   "references": [
     {
-      "path": "../../packages/schemas"
-    },
-    {
       "path": "../../packages/core"
     }
   ]

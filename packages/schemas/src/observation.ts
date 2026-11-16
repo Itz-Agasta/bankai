@@ -25,7 +25,7 @@ export const Observation = z.object({
 export type Observation = z.infer<typeof Observation>;
 
 export const Link = z.object({
-  observation_ids: z.array(z.string()),
+  observation_ids: z.array(z.string()).min(1),
   record: Citation,
   method: z.enum(["exact", "normalized", "fuzzy", "llm_tiebreak"]),
   score: z.number(),

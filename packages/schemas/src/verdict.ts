@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { Citation } from "./citation";
+import { Confidence, NonNegative } from "./numbers";
 
 export const CheckName = z.enum([
   "identity",
@@ -41,12 +42,12 @@ export const Verdict = z.object({
   subject_tag: z.nullable(z.string()),
   status: Status,
   checks: z.array(Check),
-  confidence: z.number(),
+  confidence: Confidence,
   retake_request: z.nullable(RetakeRequest),
   candidates: z.array(z.string()),
   models: z.array(z.string()),
-  cost_usd: z.number(),
-  latency_ms: z.number(),
+  cost_usd: NonNegative,
+  latency_ms: NonNegative,
 });
 export type Verdict = z.infer<typeof Verdict>;
 
@@ -57,8 +58,8 @@ export const TraceEvent = z.object({
   input_hash: z.string(),
   summary: z.string(),
   model: z.nullable(z.string()),
-  ms: z.number(),
-  usd: z.number(),
+  ms: NonNegative,
+  usd: NonNegative,
   at: z.string(),
 });
 export type TraceEvent = z.infer<typeof TraceEvent>;

@@ -36,7 +36,7 @@ export const PoLine = z.object({
   kva: z.nullable(z.number()),
   kw: z.nullable(z.number()),
   components: z.array(z.string()),
-  qty: z.number(),
+  qty: z.number().nonnegative(),
 });
 export type PoLine = z.infer<typeof PoLine>;
 
@@ -55,9 +55,9 @@ export const Activity = z.object({
   id: z.string(),
   name: z.string(),
   tag: z.nullable(z.string()),
-  duration_days: z.number(),
-  duration_low_days: z.number(),
-  duration_high_days: z.number(),
+  duration_days: z.number().nonnegative(),
+  duration_low_days: z.number().nonnegative(),
+  duration_high_days: z.number().nonnegative(),
   predecessors: z.array(z.string()),
   milestone: z.boolean(),
 });
@@ -69,7 +69,7 @@ export const DeliveryLine = z.object({
   po: z.string(),
   tag: z.string(),
   item: z.string(),
-  qty: z.number(),
+  qty: z.number().nonnegative(),
   driver_id: ActorId,
 });
 export type DeliveryLine = z.infer<typeof DeliveryLine>;
