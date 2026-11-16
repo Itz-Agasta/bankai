@@ -22,7 +22,11 @@ export const AudioInput = z.union([
     path: z.string().min(1).describe("Audio file path, absolute or relative to the project folder"),
   }),
   z.object({
-    base64: z.string().min(1).max(MAX_AUDIO_BASE64).describe("Audio bytes, base64, up to 25 MB decoded"),
+    base64: z
+      .string()
+      .min(1)
+      .max(MAX_AUDIO_BASE64)
+      .describe("Audio bytes, base64, up to 25 MB decoded"),
     mediaType: z
       .enum(Object.keys(EXT) as [keyof typeof EXT, ...(keyof typeof EXT)[]])
       .describe("Audio media type"),

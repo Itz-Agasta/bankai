@@ -31,7 +31,10 @@ export function registerExplain(server: McpServer, ctx: ServerContext): void {
       description:
         "Show how a verdict, site note or proposed update was reached: the stored record and every pipeline step with its model, latency and cost. Use before disputing a verdict.",
       inputSchema: z.object({
-        id: z.string().min(1).describe("A verdict id, a note id (note_...) or a proposed update id (upd_...)"),
+        id: z
+          .string()
+          .min(1)
+          .describe("A verdict id, a note id (note_...) or a proposed update id (upd_...)"),
       }),
       outputSchema: Output,
       annotations: { readOnlyHint: true, openWorldHint: false },
@@ -64,7 +67,9 @@ export function registerExplain(server: McpServer, ctx: ServerContext): void {
             note: note ?? undefined,
             trace,
           });
-        return ok(verdict ? { kind: "verdict", verdict, trace } : { kind: "note", note: note!, trace });
+        return ok(
+          verdict ? { kind: "verdict", verdict, trace } : { kind: "note", note: note!, trace },
+        );
       } catch (e) {
         return fail(e);
       }

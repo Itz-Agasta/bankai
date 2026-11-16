@@ -3,11 +3,7 @@ import { fakeExtractor, fakeTranscriber } from "@bankai/core";
 import { NoteRun } from "@bankai/schemas";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import {
-  extractScript,
-  N001,
-  transcript,
-} from "../../../packages/core/test/fixtures/notes";
+import { extractScript, N001, transcript } from "../../../packages/core/test/fixtures/notes";
 import { cleanup, connect } from "./helpers";
 
 afterAll(cleanup);
@@ -40,7 +36,10 @@ describe("process_site_note", () => {
 
   test("process, then apply_update, then explain the update and the note", async () => {
     const { client, ctx, audio } = await withNote();
-    const r = await client.callTool({ name: "process_site_note", arguments: { audio: { path: audio } } });
+    const r = await client.callTool({
+      name: "process_site_note",
+      arguments: { audio: { path: audio } },
+    });
     expect(r.isError).toBeFalsy();
     const run = NoteRun.parse(r.structuredContent);
     expect(run.result.status).toBe("confirmed");
@@ -88,7 +87,10 @@ describe("process_site_note", () => {
     const { client, project } = await connect();
     const audio = join(project, "n001.wav");
     writeFileSync(audio, WAV);
-    const r = await client.callTool({ name: "process_site_note", arguments: { audio: { path: audio } } });
+    const r = await client.callTool({
+      name: "process_site_note",
+      arguments: { audio: { path: audio } },
+    });
     expect(r.isError).toBe(true);
     expect(text(r)).toStartWith("PERCEPTION_UNAVAILABLE");
   });

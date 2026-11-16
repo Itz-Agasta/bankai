@@ -35,7 +35,9 @@ export async function noteCommand(audio: string, opts: NoteOptions): Promise<num
       store.saveUpdates(run.result.id, run.result.updates);
     } catch (e) {
       // The model run already happened and was paid for: show the result, say it was not kept.
-      console.error(`warning: note not saved to ${storePath(opts.project)}: ${(e as Error).message}`);
+      console.error(
+        `warning: note not saved to ${storePath(opts.project)}: ${(e as Error).message}`,
+      );
     }
     console.log(opts.json ? JSON.stringify(run, null, 2) : formatNote(run));
     return 0;
