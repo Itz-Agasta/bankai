@@ -68,7 +68,7 @@ Label each nameplate exactly as printed:
 - Ratings: voltage, kVA or kW, phase, frequency
 - `unreadable` when you cannot read a field
 
-Never guess a value. `unreadable` is a valid label: it tests that Bankai asks for a retake or hands off instead of guessing.
+Never guess a value. `unreadable` is a valid label: it tests that Bankai reports the field as unknown instead of guessing it.
 
 Use the `label-photo` skill. File format: `data-format.md`.
 

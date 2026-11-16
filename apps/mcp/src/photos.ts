@@ -1,7 +1,7 @@
 import { MAX_IMAGE_BYTES } from "@bankai/core";
 import { z } from "zod";
 import type { ServerContext } from "./context";
-import { storeUpload } from "./http/uploads";
+import { cleanPhoto, storeUpload } from "./http/uploads";
 import { allowedPath } from "./paths";
 
 /** Base64 length of core's image size limit: refuse before decoding. */
@@ -28,7 +28,7 @@ export async function resolvePhotos(inputs: PhotoInput[], ctx: ServerContext): P
       out.push(allowedPath(input.path, ctx, "photo"));
     } else {
       const bytes = Buffer.from(input.base64, "base64");
-      out.push(await storeUpload(ctx.tmpDir, bytes, EXT[input.mediaType]));
+      out.push(await storeUpload(ctx.tmpDir, await cleanPhoto(bytes), EXT[input.mediaType]));
     }
   }
   return out;

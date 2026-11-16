@@ -8,7 +8,14 @@ export type { RuleContext } from "./rules";
 export { loadProject } from "./project/load";
 export type { Project } from "./project/types";
 export * from "./models";
-export { loadImage, MAX_IMAGE_BYTES, perceivePhoto, validateField } from "./perceive";
+export {
+  hasMetadata,
+  loadImage,
+  MAX_IMAGE_BYTES,
+  perceivePhoto,
+  stripMetadata,
+  validateField,
+} from "./perceive";
 export type { Perception } from "./perceive";
 export * from "./verify";
 export * from "./delivery";

@@ -1,9 +1,11 @@
 import {
   audioMediaType,
   BankaiFailure,
+  hasMetadata,
   MAX_AUDIO_BYTES,
   MAX_IMAGE_BYTES,
   sha256Hex,
+  stripMetadata,
 } from "@bankai/core";
 import { mkdir, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -28,6 +30,16 @@ function imageExt(b: Uint8Array): string | null {
   if (b[0] === 0x89 && at(b, 1, "PNG")) return "png";
   if (at(b, 0, "RIFF") && at(b, 8, "WEBP")) return "webp";
   return null;
+}
+
+/** Uploads are served back to the app, so a photo is stored without GPS, device or time. */
+export async function cleanPhoto(bytes: Uint8Array): Promise<Uint8Array> {
+  if (!hasMetadata(bytes)) return bytes;
+  try {
+    return await stripMetadata(bytes);
+  } catch {
+    throw new BankaiFailure("INPUT_UNSUPPORTED", "photo could not be read");
+  }
 }
 
 /**
@@ -82,7 +94,9 @@ export async function saveUploads(
         "INPUT_UNSUPPORTED",
         kind === "photo" ? "photo must be jpg, png or webp" : "audio format not supported",
       );
-    out.push(await storeUpload(ctx.tmpDir, bytes, ext));
+    out.push(
+      await storeUpload(ctx.tmpDir, kind === "photo" ? await cleanPhoto(bytes) : bytes, ext),
+    );
   }
   return out;
 }

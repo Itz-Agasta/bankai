@@ -1,6 +1,6 @@
 # Web API reference
 
-`bankai serve` runs the HTTP server the phone app talks to. It uses the same core as the command line and the Model Context Protocol (MCP) server, so every answer carries the same citations and confidence. This page lists how to start it, its routes, and its errors.
+`bankai serve` runs the HTTP server the phone app talks to. It uses the same core as the command line and the Model Context Protocol (MCP) server, so every verdict and site note carries the same citations and confidence. This page lists how to start it, its routes, and its errors.
 
 ## Start the server
 
@@ -17,6 +17,8 @@ Settings come from the environment:
 - **`BANKAI_PROJECT`**: project folder when `--project` is not given
 - **`PORT`**: port when `--port` is not given
 - **`BANKAI_ALLOWED_ORIGINS`**: comma separated hostnames a browser may call from, for example `localhost,your_app_host`
+- **`BANKAI_DEMO=1`**: same as `--demo`
+- **`BANKAI_CACHE_DIR`**: folder of recorded model responses (with `--demo`, defaults to `data/replay`)
 - **`GEMINI_API_KEY`, `OPENROUTER_API_KEY`, `GROQ_API_KEY`**: model keys, not needed with `--demo`
 
 ## Routes
@@ -34,7 +36,7 @@ Request and response types are the zod schemas in `@bankai/schemas`.
 | `POST /api/updates/:id/reject` | JSON `{ approved_by }` | `ProposedUpdate`, rejected |
 | `GET /api/explain/:id` | | The stored verdict, note or update with every pipeline step |
 | `GET /api/status` | | `{ open_items, pending_updates }` |
-| `GET /api/evidence?kind=&ref=` | | `{ citation, record }`: the project row a citation points at |
+| `GET /api/evidence?kind=po_line&ref=PO-1042%23L14` | | `{ citation, record }`: the record a citation points at (shapes below) |
 | `GET /api/uploads/:name` | | An uploaded photo or audio file |
 | `POST /api/demo/reset` | | Starts the demo over (demo mode only) |
 | `/mcp` | MCP | The same 5 tools as the stdio MCP server |
@@ -64,4 +66,4 @@ Each photo can be up to 20 MB and each audio file up to 25 MB. A request over 64
 
 ## Browser access
 
-Only hostnames in `BANKAI_ALLOWED_ORIGINS` can call the server from a browser; other origins get no cross-origin headers, and `/mcp` refuses them with 403. This allowlist is not authentication, so the public demo serves synthetic project data only.
+Only hostnames in `BANKAI_ALLOWED_ORIGINS` can call the server from a browser. Other origins get no cross-origin headers, so the browser blocks the response, and `/mcp` also answers their requests with 403. This allowlist is not authentication, so the public demo serves synthetic project data only.
