@@ -120,6 +120,14 @@ describe("linkObservations", () => {
     expect(linkObservations(two, mini).links[0]?.record.ref).toBe("equipment_schedule.csv#GEN-3");
   });
 
+  test("two different visible tags block a ratings-only link", () => {
+    const two = [
+      ...obs({ manufacturer: "Vertiv", model: "PX080", voltage: "415", tag: "CRAH-2" }),
+      { ...obs({ tag: "CRAH-7" })[0]!, id: "o9" },
+    ];
+    expect(linkObservations(two, mini).links).toEqual([]);
+  });
+
   test("a tag only on a PO links to the PO line", () => {
     const r = linkObservations(obs({ tag: "pump 9" }), mini);
     expect(r.links[0]?.record).toEqual({ kind: "po_line", ref: "PO-1070#L2" });

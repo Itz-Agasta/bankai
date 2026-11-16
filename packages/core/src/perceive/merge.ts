@@ -16,10 +16,20 @@ const FIELDS: Field[] = [
   "frequency",
 ];
 
-const clean = (v: string | undefined | null) =>
-  v && v.trim() && v.trim().toLowerCase() !== "null" ? v.trim() : null;
+const SENTINELS = new Set(["null", "none", "n/a", "na", "unknown", "unreadable", "illegible", "-"]);
+
+/** A reading, or null for empty text, punctuation only, or a placeholder word. */
+const clean = (v: string | undefined | null) => {
+  const t = v?.trim() ?? "";
+  return t && /[a-z0-9]/i.test(t) && !SENTINELS.has(t.toLowerCase()) ? t : null;
+};
+
+const numbers = (s: string) => s.match(/\d+(?:\.\d+)?/g)?.map(Number) ?? [];
 
 function agree(field: Field, a: string, b: string): boolean {
+  // A dual voltage like 415/240 must match on every number, not just the first.
+  if (field === "voltage")
+    return numbers(a).length > 0 && numbers(a).join("/") === numbers(b).join("/");
   if (RATINGS.has(field)) return firstNumber(a) !== null && firstNumber(a) === firstNumber(b);
   const canon = (s: string) => s.toUpperCase().replace(/[\s\-/.]+/g, "");
   return canon(a) === canon(b);

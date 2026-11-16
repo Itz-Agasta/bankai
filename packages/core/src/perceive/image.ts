@@ -4,6 +4,7 @@ import type { BBox } from "../models/types";
 import { stripMetadata } from "./exif";
 
 export const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
+const MAX_PIXELS = 50_000_000;
 const FORMATS = new Set(["jpeg", "png", "webp"]);
 
 /** Read a photo, refuse what we cannot or should not process, and drop its metadata (D25). */
@@ -15,10 +16,17 @@ export async function loadImage(path: string): Promise<Uint8Array> {
   }
   if (file.size === 0) throw new BankaiFailure("INPUT_UNSUPPORTED", "photo is empty", path);
   const bytes = await file.bytes();
-  const format = await sharp(bytes)
+  const meta = await sharp(bytes)
     .metadata()
-    .then((m) => m.format)
     .catch(() => undefined);
+  const format = meta?.format;
+  if (meta && (meta.width ?? 0) * (meta.height ?? 0) > MAX_PIXELS) {
+    throw new BankaiFailure(
+      "INPUT_TOO_LARGE",
+      "photo over 50 megapixels",
+      `${path}: ${meta.width}x${meta.height}`,
+    );
+  }
   if (!format || !FORMATS.has(format)) {
     throw new BankaiFailure(
       "INPUT_UNSUPPORTED",
@@ -26,7 +34,14 @@ export async function loadImage(path: string): Promise<Uint8Array> {
       `${path}: ${format ?? "unreadable"}`,
     );
   }
-  return stripMetadata(bytes);
+  // The header can parse while the pixel data is corrupt; that surfaces on re-encode.
+  return stripMetadata(bytes).catch((e: Error) => {
+    throw new BankaiFailure(
+      "INPUT_UNSUPPORTED",
+      "photo could not be decoded",
+      `${path}: ${e.message}`,
+    );
+  });
 }
 
 /** Crop a box plus padding on each side, clamped to the image. */
@@ -42,6 +57,7 @@ export async function cropPadded(img: Uint8Array, box: BBox, pad = 0.05): Promis
   return new Uint8Array(
     await sharp(img)
       .extract({ left, top, width: right - left, height: bottom - top })
+      .jpeg({ quality: 95 }) // small print needs detail; sharp defaults to 80
       .toBuffer(),
   );
 }

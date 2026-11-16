@@ -47,7 +47,7 @@ export async function loadUserEnv(path = join(homedir(), ".config/bankai/env")):
   const file = Bun.file(path);
   if (!(await file.exists())) return;
   for (const line of (await file.text()).split("\n")) {
-    const m = /^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/.exec(line);
+    const m = /^\s*([A-Z0-9_]+)\s*=\s*("[^"]*"|'[^']*'|[^#]*?)\s*(?:#.*)?$/.exec(line);
     if (m && !process.env[m[1]!]) process.env[m[1]!] = unquote(m[2]!);
   }
 }

@@ -1,12 +1,15 @@
-import { mkdir } from "node:fs/promises";
+import { mkdir, rename } from "node:fs/promises";
 import { join } from "node:path";
 import { BankaiFailure } from "../errors";
+import { PROMPT_VERSION } from "../perceive/prompts";
 import { sha256Hex } from "./hash";
 import type { Metered, VisionModel } from "./types";
 
 /**
- * Disk cache keyed by model id, call and image bytes. In replay mode (D30) it
- * never calls the model, so a demo runs with no keys.
+ * Disk cache keyed by prompt version, model id, call and image bytes. In replay
+ * mode (D30) it never calls the model, so a demo runs with no keys. Outside
+ * replay the cache is best effort: a broken entry or a failed write never
+ * costs us the model's answer.
  */
 export function withCache(m: VisionModel, opts: { dir: string; replayOnly: boolean }): VisionModel {
   async function cached<T>(
@@ -14,19 +17,29 @@ export function withCache(m: VisionModel, opts: { dir: string; replayOnly: boole
     img: Uint8Array,
     run: () => Promise<Metered<T>>,
   ) {
-    const path = join(opts.dir, `${sha256Hex(m.id, "\0", call, "\0", img)}.json`);
-    const file = Bun.file(path);
+    const path = join(opts.dir, `${sha256Hex(PROMPT_VERSION, m.id, call, img)}.json`);
     const started = performance.now();
-    if (await file.exists()) {
-      const value = (await file.json()) as T;
+    const hit = await Bun.file(path)
+      .json()
+      .catch(() => undefined);
+    if (hit !== undefined) {
       // A cache hit costs nothing; latency is the disk read.
-      return { value, cost: { model: m.id, ms: Math.round(performance.now() - started), usd: 0 } };
+      return {
+        value: hit as T,
+        cost: { model: m.id, ms: Math.round(performance.now() - started), usd: 0 },
+      };
     }
     if (opts.replayOnly)
       throw new BankaiFailure("PERCEPTION_UNAVAILABLE", "not in replay cache", `${m.id} ${call}`);
     const result = await run();
-    await mkdir(opts.dir, { recursive: true });
-    await Bun.write(path, JSON.stringify(result.value));
+    try {
+      await mkdir(opts.dir, { recursive: true });
+      const tmp = `${path}.${process.pid}.tmp`;
+      await Bun.write(tmp, JSON.stringify(result.value));
+      await rename(tmp, path);
+    } catch {
+      // Unwritable cache: keep the answer, skip caching it.
+    }
     return result;
   }
   return {
@@ -36,7 +49,11 @@ export function withCache(m: VisionModel, opts: { dir: string; replayOnly: boole
   };
 }
 
-/** Try the primary; on any error use the fallback; both failing is PERCEPTION_UNAVAILABLE. */
+/**
+ * Try the primary; on any error use the fallback; both failing is
+ * PERCEPTION_UNAVAILABLE. Cache each model before wrapping, so a fallback
+ * answer is stored and labelled under the fallback's own id.
+ */
 export function withFallback(primary: VisionModel, fallback: VisionModel): VisionModel {
   async function either<T>(a: () => Promise<T>, b: () => Promise<T>): Promise<T> {
     try {
@@ -51,7 +68,7 @@ export function withFallback(primary: VisionModel, fallback: VisionModel): Visio
     }
   }
   return {
-    id: primary.id,
+    id: `${primary.id}|${fallback.id}`,
     locate: (img) =>
       either(
         () => primary.locate(img),

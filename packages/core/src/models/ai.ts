@@ -25,6 +25,8 @@ const ReadOut = z.object({
   frequency: text,
 });
 
+const CALL_TIMEOUT_MS = 60_000;
+
 const mediaType = (img: Uint8Array) =>
   img[0] === 0x89 ? "image/png" : img[0] === 0x52 && img[8] === 0x57 ? "image/webp" : "image/jpeg";
 
@@ -39,6 +41,8 @@ export function aiVision(id: string, model: LanguageModel): VisionModel {
     const r = await generateText({
       model,
       temperature: 0,
+      // A hung call must fail so withFallback can switch models.
+      timeout: CALL_TIMEOUT_MS,
       output: Output.object({ schema }),
       messages: [
         {
@@ -69,7 +73,8 @@ export function aiVision(id: string, model: LanguageModel): VisionModel {
             h: Math.round(((b.ymax - b.ymin) / 1000) * height),
           }
         : null;
-      return { value: { plate, tags: r.value.tags }, cost: r.cost };
+      const tags = r.value.tags.map((t) => t.trim()).filter((t) => t.length > 0);
+      return { value: { plate, tags }, cost: r.cost };
     },
     async read(img) {
       const r = await ask(READ_PROMPT, ReadOut, img);

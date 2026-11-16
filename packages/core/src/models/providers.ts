@@ -2,7 +2,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { aiVision } from "./ai";
 import { withCache, withFallback } from "./cache";
-import type { ModelConfig } from "./config";
+import { PRICES, type ModelConfig } from "./config";
 import type { VisionModel } from "./types";
 
 /** Primary (Gemini with a cheaper Gemini fallback) and a checker from another family, both cached. */
@@ -10,12 +10,14 @@ export function liveModels(cfg: ModelConfig): { primary: VisionModel; checker: V
   const google = createGoogleGenerativeAI({ apiKey: cfg.keys.gemini });
   const openrouter = createOpenRouter({ apiKey: cfg.keys.openrouter });
   const cache = { dir: cfg.cacheDir, replayOnly: cfg.replayOnly };
-  const primary = withFallback(
-    aiVision(cfg.vision, google(cfg.vision)),
-    aiVision(cfg.visionFallback, google(cfg.visionFallback)),
-  );
+  // Honest cost per run: refuse a model we cannot price rather than report $0.
+  for (const id of [cfg.vision, cfg.visionFallback, cfg.checker]) {
+    if (!PRICES[id])
+      throw new Error(`No price for model ${id}: add it to PRICES in models/config.ts`);
+  }
+  const vision = (id: string) => withCache(aiVision(id, google(id)), cache);
   return {
-    primary: withCache(primary, cache),
+    primary: withFallback(vision(cfg.vision), vision(cfg.visionFallback)),
     checker: withCache(aiVision(cfg.checker, openrouter(cfg.checker)), cache),
   };
 }

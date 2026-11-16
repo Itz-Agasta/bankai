@@ -82,6 +82,23 @@ describe("perceivePhoto", () => {
     expect(r.retake).toBeNull();
   });
 
+  test("sentinel words are not readings", async () => {
+    const r = await run(
+      { manufacturer: "N/A", model: "C2000D6" },
+      { manufacturer: "N/A", model: "C2000D6" },
+    );
+    expect(r.observations.some((o) => o.field === "manufacturer")).toBe(false);
+    expect(r.retake?.why).toContain("manufacturer unreadable");
+  });
+
+  test("dual voltages must agree on every number", async () => {
+    const r = await run(
+      { model: "C2000D6", voltage: "415/240" },
+      { model: "C2000D6", voltage: "415/208" },
+    );
+    expect(r.observations.some((o) => o.field === "voltage")).toBe(false);
+  });
+
   test("records trace steps in order", async () => {
     const r = await run({ model: "C2000D6" }, { model: "C2000D6" });
     expect(r.tracer.events().map((e) => e.step)).toEqual([
@@ -93,15 +110,47 @@ describe("perceivePhoto", () => {
   });
 });
 
+describe("tags", () => {
+  const scripted = (tags: string[], plate: typeof BOX | null) => ({
+    primary: fakeVision("p", { "*": { plate, tags, fields: {} } }),
+    checker: fakeVision("c", { "*": { plate: null, tags: [], fields: {} } }),
+  });
+
+  test("the same tag twice is one observation; blanks are dropped", async () => {
+    const r = await perceivePhoto(
+      [PLATE],
+      scripted(["GEN 3", "GEN-3", "  "], null),
+      memoryMeter(),
+      memoryTracer("t"),
+    );
+    expect(r.observations.filter((o) => o.field === "tag")).toHaveLength(1);
+  });
+
+  test("a tag with no plate asks for a nameplate retake", async () => {
+    const r = await perceivePhoto(
+      [PLATE],
+      scripted(["GEN-3"], null),
+      memoryMeter(),
+      memoryTracer("t"),
+    );
+    expect(r.retake?.region).toBe("nameplate");
+  });
+
+  test("only blank tags and no plate is no nameplate", async () => {
+    const r = await perceivePhoto([PLATE], scripted([" "], null), memoryMeter(), memoryTracer("t"));
+    expect(r.noNameplate).toBe(true);
+  });
+});
+
 describe("loadImage", () => {
   test("rejects an empty file", async () => {
     const p = join(await mkdtemp(join(tmpdir(), "bankai-img-")), "empty.jpg");
     await writeFile(p, "");
-    expect(loadImage(p)).rejects.toMatchObject({ code: "INPUT_UNSUPPORTED" });
+    await expect(loadImage(p)).rejects.toMatchObject({ code: "INPUT_UNSUPPORTED" });
   });
 
   test("rejects a HEIC renamed to .jpg", async () => {
-    expect(loadImage(join(FIX, "heic-as.jpg"))).rejects.toMatchObject({
+    await expect(loadImage(join(FIX, "heic-as.jpg"))).rejects.toMatchObject({
       code: "INPUT_UNSUPPORTED",
     });
   });
@@ -110,7 +159,7 @@ describe("loadImage", () => {
     const p = join(await mkdtemp(join(tmpdir(), "bankai-img-")), "big.png");
     await writeFile(p, "");
     await truncate(p, 21 * 1024 * 1024);
-    expect(loadImage(p)).rejects.toMatchObject({ code: "INPUT_TOO_LARGE" });
+    await expect(loadImage(p)).rejects.toMatchObject({ code: "INPUT_TOO_LARGE" });
   });
 
   test("strips EXIF before anything sees the bytes", async () => {
@@ -127,5 +176,9 @@ describe("validateField", () => {
     expect(validateField("kva", "2000")).toBe(true);
     expect(validateField("kw", "0")).toBe(false);
     expect(validateField("model", "  ")).toBe(false);
+    expect(validateField("voltage", "277/480")).toBe(true);
+    expect(validateField("voltage", "13.8kV")).toBe(true);
+    expect(validateField("voltage", "-480")).toBe(false);
+    expect(validateField("kva", "-10")).toBe(false);
   });
 });

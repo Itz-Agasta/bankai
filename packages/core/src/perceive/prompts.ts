@@ -1,3 +1,6 @@
+/** Bump when a prompt or output schema changes: it is part of every cache key. */
+export const PROMPT_VERSION = "1";
+
 export const LOCATE_PROMPT = `You are looking at a photo taken on a data center construction site.
 Find the equipment nameplate (the metal or plastic plate with manufacturer, model, serial and ratings).
 Return its bounding box as integers on a 0 to 1000 scale of the image: ymin, xmin, ymax, xmax.
