@@ -14,7 +14,7 @@ export async function statusCommand(opts: StatusOptions): Promise<number> {
   } catch (e) {
     if (!(e instanceof BankaiFailure)) throw e;
     if (opts.json) console.log(JSON.stringify({ error: e.toJSON() }, null, 2));
-    else console.error(`error ${e.code}: ${e.message}${e.detail ? ` (${e.detail})` : ""}`);
+    else console.error(safe(`error ${e.code}: ${e.message}${e.detail ? ` (${e.detail})` : ""}`));
     return 2;
   }
   const store = openStore(storePath(opts.project));

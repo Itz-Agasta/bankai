@@ -124,6 +124,23 @@ describe("store", () => {
     store.close();
   });
 
+  test("the stored trace JSON carries the same id as its row", async () => {
+    const path = await dbPath();
+    const store = openStore(path);
+    const t = store.tracer("run-j");
+    t.step("locate", "i", "s");
+    t.step("merge", "i", "s");
+    store.close();
+    const { Database } = await import("bun:sqlite");
+    const db = new Database(path);
+    const rows = db.query("SELECT id, json FROM trace ORDER BY seq").all() as {
+      id: string;
+      json: string;
+    }[];
+    for (const row of rows) expect(JSON.parse(row.json).id).toBe(row.id);
+    db.close();
+  });
+
   test("two tracers on one run never collide", async () => {
     const store = openStore(await dbPath());
     const a = store.tracer("run-x");

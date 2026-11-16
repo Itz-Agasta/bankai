@@ -1,6 +1,6 @@
 import { BankaiFailure, loadProject, openStore, storePath, verifyEquipment } from "@bankai/core";
 import { models } from "../deps";
-import { formatVerdict } from "../format";
+import { formatVerdict, safe } from "../format";
 
 export interface VerifyOptions {
   project: string;
@@ -45,6 +45,6 @@ export async function verifyCommand(photos: string[], opts: VerifyOptions): Prom
 function fail(e: unknown, opts: VerifyOptions): number {
   if (!(e instanceof BankaiFailure)) throw e;
   if (opts.json) console.log(JSON.stringify({ error: e.toJSON() }, null, 2));
-  else console.error(`error ${e.code}: ${e.message}${e.detail ? ` (${e.detail})` : ""}`);
+  else console.error(safe(`error ${e.code}: ${e.message}${e.detail ? ` (${e.detail})` : ""}`));
   return 2;
 }

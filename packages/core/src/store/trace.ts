@@ -5,12 +5,13 @@ import { traceEvent, type Tracer } from "../models/meter";
 /**
  * A tracer that writes each step as it happens, so a crash mid-run still leaves
  * the trail. The sequence number is taken inside the INSERT itself, so several
- * tracers (or processes) on one run never pick the same one.
+ * tracers (or processes) on one run never pick the same one, and the stored
+ * JSON gets the same id in that one statement.
  */
 export function dbTracer(db: Database, runId: string): Tracer {
   const insert = db.query(
     `INSERT INTO trace (id, run_id, seq, json, at)
-     SELECT $run || '.' || n, $run, n, $json, $at
+     SELECT $run || '.' || n, $run, n, json_set($json, '$.id', $run || '.' || n), $at
      FROM (SELECT COALESCE(MAX(seq) + 1, 0) AS n FROM trace WHERE run_id = $run)`,
   );
   return {
@@ -24,8 +25,7 @@ export function dbTracer(db: Database, runId: string): Tracer {
 
 export function readTrace(db: Database, runId: string): TraceEvent[] {
   const rows = db
-    .query(`SELECT id, json FROM trace WHERE run_id = $run ORDER BY seq`)
-    .all({ run: runId }) as { id: string; json: string }[];
-  // The row id carries the real sequence; the JSON was built before it was assigned.
-  return rows.map((r) => TraceEvent.parse({ ...JSON.parse(r.json), id: r.id }));
+    .query(`SELECT json FROM trace WHERE run_id = $run ORDER BY seq`)
+    .all({ run: runId }) as { json: string }[];
+  return rows.map((r) => TraceEvent.parse(JSON.parse(r.json)));
 }
