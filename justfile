@@ -12,3 +12,9 @@ types:
 
 validate-data dir:
     bun packages/core/scripts/validate-data.ts "{{dir}}"
+
+validate-eval:
+    bun packages/core/scripts/validate-eval.ts
+
+strip-exif dir:
+    bun packages/core/scripts/strip-exif.ts "{{dir}}"
