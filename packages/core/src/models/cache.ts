@@ -83,6 +83,10 @@ export function withCache(m: VisionModel, opts: CacheOpts): VisionModel {
     id: m.id,
     locate: (img) => cached("locate", img, () => m.locate(img)),
     read: (img) => cached("read", img, () => m.read(img)),
+    choose: m.choose
+      ? (img, questions) =>
+          cached(`choose:${JSON.stringify(questions)}`, img, () => m.choose!(img, questions))
+      : undefined,
     components: m.components
       ? async (img, candidates) => {
           if (candidates.length === 0) return { value: [], cost: { model: m.id, ms: 0, usd: 0 } };
@@ -113,6 +117,16 @@ export function withFallback(primary: VisionModel, fallback: VisionModel): Visio
         () => primary.read(img),
         () => fallback.read(img),
       ),
+    choose: (img, questions) => {
+      const ask = async (m: VisionModel) => {
+        if (!m.choose) throw new Error("no choose call");
+        return m.choose(img, questions);
+      };
+      return either(
+        () => ask(primary),
+        () => ask(fallback),
+      );
+    },
     components: (img, candidates) => {
       const ask = async (m: VisionModel) => {
         if (!m.components) throw new Error("no components call");

@@ -9,6 +9,7 @@ import { runRules } from "../rules";
 import { confidence } from "./confidence";
 import { citeOrDrop, dropUncited } from "./drop-uncited";
 import { decideStatus } from "./status";
+import { breakTie } from "./tiebreak";
 
 export interface VerifyInput {
   photos: string[];
@@ -91,12 +92,17 @@ export async function verifyEquipment(input: VerifyInput, deps: VerifyDeps): Pro
   }
 
   const linked = linkObservations(perception.observations, project);
-  const link = linked.links[0];
-  const tag = link ? (linked.candidates[0]?.tag ?? null) : null;
+  const tie = linked.ambiguous
+    ? await breakTie(linked.candidates, perception, models, project, meter, tracer)
+    : null;
+  const observations = tie?.observations ?? perception.observations;
+  const link = tie?.link ?? linked.links[0];
+  const tag = tie ? tie.tag : link ? (linked.candidates[0]?.tag ?? null) : null;
   const top = linked.candidates[0]?.score ?? 0;
-  const candidates = linked.ambiguous
-    ? linked.candidates.filter((c) => c.score >= top - AMBIGUOUS_MARGIN).map((c) => c.tag)
-    : [];
+  const candidates =
+    linked.ambiguous && !tie
+      ? linked.candidates.filter((c) => c.score >= top - AMBIGUOUS_MARGIN).map((c) => c.tag)
+      : [];
   tracer.step(
     "link",
     runId,
@@ -107,7 +113,7 @@ export async function verifyEquipment(input: VerifyInput, deps: VerifyDeps): Pro
     runRules({
       project,
       tag,
-      observations: perception.observations,
+      observations,
       location: input.location,
       observedComponents: input.observedComponents ?? [],
     }),
@@ -115,11 +121,15 @@ export async function verifyEquipment(input: VerifyInput, deps: VerifyDeps): Pro
   tracer.step("rules", runId, checks.map((c) => `${c.name}:${c.result}`).join(" "));
 
   const conf = confidence({
-    agreementRate: agreementRate(perception.observations, perception.dropped),
+    // A field the tie-break settled is no longer a disagreement.
+    agreementRate: agreementRate(
+      observations,
+      perception.dropped.filter((f) => !tie || !tie.observations.some((o) => o.id === `tb.${f}`)),
+    ),
     linkScore: link?.score ?? 0,
     // A tag read off the unit decides it (linkObservations); the twin's score gap is not doubt.
-    margin: link?.method === "exact" ? 1 : (link?.margin ?? 0),
-    ratingCoverage: ratingCoverage(project, tag, perception.observations),
+    margin: link?.method === "exact" || link?.method === "llm_tiebreak" ? 1 : (link?.margin ?? 0),
+    ratingCoverage: ratingCoverage(project, tag, observations),
   });
   return done({
     subject_tag: tag,

@@ -41,6 +41,8 @@ export interface Perception {
   noNameplate: boolean;
   /** Fields a model read that were discarded (disagreement or implausible), for confidence. */
   dropped: Field[];
+  /** The plate images that were read, for a targeted re-read (tie-break). */
+  crops: { img: Uint8Array; region: string }[];
 }
 
 /** Locate, crop, read with two model families, merge. The models perceive; nothing here decides. */
@@ -54,6 +56,7 @@ export async function perceivePhoto(
   const observations: Observation[] = [];
   let anything = false;
   const dropped: Field[] = [];
+  const crops: Perception["crops"] = [];
 
   for (const [i, path] of paths.entries()) {
     const img = await loadImage(path);
@@ -84,6 +87,7 @@ export async function perceivePhoto(
 
     // noCrop reads the whole photo: the spot check compares it against the crop.
     const crop = opts.noCrop ? img : await cropPadded(img, plate);
+    crops.push({ img: crop, region });
     const [p, c] = await Promise.all([
       call(() => models.primary.read(crop)),
       call(() => models.checker.read(crop)),
@@ -116,5 +120,5 @@ export async function perceivePhoto(
     anything && missing.length > 0
       ? { region: "nameplate", why: `${missing.join(", ")} unreadable` }
       : null;
-  return { observations, retake, noNameplate: !anything, dropped };
+  return { observations, retake, noNameplate: !anything, dropped, crops };
 }
