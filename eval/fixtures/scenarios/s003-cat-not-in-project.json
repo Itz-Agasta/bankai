@@ -1,0 +1,8 @@
+{
+  "id": "s003-cat-not-in-project",
+  "project": "mini",
+  "photos": ["cat-plate.jpg"],
+  "location": "PAD-B",
+  "expected": { "status": "needs_human", "subject_tag": null, "failing_checks": [] },
+  "kind": "not_in_project"
+}

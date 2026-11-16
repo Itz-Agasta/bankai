@@ -11,3 +11,4 @@ export * from "./models";
 export { loadImage, perceivePhoto, validateField } from "./perceive";
 export type { Perception } from "./perceive";
 export * from "./verify";
+export * from "./eval";

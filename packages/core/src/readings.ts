@@ -14,10 +14,22 @@ export function reading(observations: Observation[], field: Field): Observation 
   return all.every((o) => key(o.value) === key(all[0]!.value)) ? all[0] : undefined;
 }
 
+/** "2,250" is one number on a nameplate, not two. */
+const dropThousands = (s: string) => s.replace(/(\d),(?=\d{3}(?!\d))/g, "$1");
+
+/** Every number in a rating, thousands commas removed: "415/240 V" gives [415, 240]. */
+export function numbersIn(raw: string): number[] {
+  return (
+    dropThousands(raw)
+      .match(/\d+(?:\.\d+)?/g)
+      ?.map(Number) ?? []
+  );
+}
+
 /** First number in a rating: "415/240V" gives 415, "11kV" gives 11000, "1800 kVA" gives 1800. */
 export function firstNumber(raw: string): number | null {
   // k is a multiplier only in kV; in kVA and kW it is part of the unit.
-  const m = /(\d+(?:\.\d+)?)\s*(k(?=v(?!a)))?/i.exec(raw);
+  const m = /(\d+(?:\.\d+)?)\s*(k(?=v(?!a)))?/i.exec(dropThousands(raw));
   if (!m) return null;
   return Number(m[1]) * (m[2] ? 1000 : 1);
 }

@@ -7,7 +7,17 @@ import { hasMetadata } from "../src/perceive/exif";
 import { isPhoto, listFiles } from "./photos";
 
 const ROOT = join(import.meta.dir, "../../..");
-const PHOTOS = join(ROOT, "eval/photos");
+// Usage: validate-eval [set] [projects]; defaults to the real dataset.
+const SET = process.argv[2] ?? "eval";
+const PROJECTS = process.argv[3] ?? "data/projects";
+const PHOTOS = join(ROOT, SET, "photos");
+// A typo in the set name must fail, not validate an empty dataset.
+for (const sub of ["photos", "labels", "scenarios"]) {
+  if (!existsSync(join(ROOT, SET, sub))) {
+    console.error(`${SET}/${sub}: folder missing (is the set path right?)`);
+    process.exit(1);
+  }
+}
 const errors: string[] = [];
 const rel = (p: string) => relative(ROOT, p);
 
@@ -49,14 +59,14 @@ const bareName = (file: string, what: string, name: string) => {
 const needPhoto = (file: string, photo: string) => {
   if (!bareName(file, "photo", photo)) return;
   if (!existsSync(join(PHOTOS, photo)))
-    errors.push(`${rel(file)}: photo eval/photos/${photo} not found`);
+    errors.push(`${rel(file)}: photo ${SET}/photos/${photo} not found`);
 };
 
 // Ratings are labelled as the printed number without its unit: "415", "415/240", "2000".
 const RATING_FIELDS = ["voltage", "kva", "kw", "phase", "frequency"] as const;
 const RATING = /^\d+(\.\d+)?(\/\d+(\.\d+)?)*$/;
 
-const labels = await check("eval/labels", PhotoLabel, (file, l) => {
+const labels = await check(`${SET}/labels`, PhotoLabel, (file, l) => {
   needPhoto(file, l.photo);
   for (const f of RATING_FIELDS) {
     const v = l.fields[f];
@@ -68,11 +78,11 @@ const labels = await check("eval/labels", PhotoLabel, (file, l) => {
   if (basename(file, ".json") !== stem) errors.push(`${rel(file)}: name the file ${stem}.json`);
 });
 
-const scenarios = await check("eval/scenarios", Scenario, (file, s) => {
+const scenarios = await check(`${SET}/scenarios`, Scenario, (file, s) => {
   s.photos.forEach((p) => needPhoto(file, p));
   if (basename(file, ".json") !== s.id) errors.push(`${rel(file)}: name the file ${s.id}.json`);
-  if (bareName(file, "project", s.project) && !existsSync(join(ROOT, "data/projects", s.project))) {
-    errors.push(`${rel(file)}: project data/projects/${s.project} not found`);
+  if (bareName(file, "project", s.project) && !existsSync(join(ROOT, PROJECTS, s.project))) {
+    errors.push(`${rel(file)}: project ${PROJECTS}/${s.project} not found`);
   }
 });
 
@@ -90,7 +100,7 @@ for (const file of await listFiles(PHOTOS)) {
       errors.push(`${rel(file)}: not a readable JPEG or PNG`);
     else if (hasMetadata(bytes))
       errors.push(
-        `${rel(file)}: has photo metadata (EXIF, XMP or IPTC), run just strip-exif eval/photos`,
+        `${rel(file)}: has photo metadata (EXIF, XMP or IPTC), run just strip-exif ${SET}/photos`,
       );
   }
   photos++;

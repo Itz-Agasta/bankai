@@ -49,6 +49,7 @@ export async function perceivePhoto(
   models: { primary: VisionModel; checker: VisionModel },
   meter: Meter,
   tracer: Tracer,
+  opts: { noCrop?: boolean } = {},
 ): Promise<Perception> {
   const observations: Observation[] = [];
   let anything = false;
@@ -81,7 +82,8 @@ export async function perceivePhoto(
     }
     if (!plate) continue;
 
-    const crop = await cropPadded(img, plate);
+    // noCrop reads the whole photo: the spot check compares it against the crop.
+    const crop = opts.noCrop ? img : await cropPadded(img, plate);
     const [p, c] = await Promise.all([
       call(() => models.primary.read(crop)),
       call(() => models.checker.read(crop)),

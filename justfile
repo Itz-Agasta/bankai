@@ -13,8 +13,8 @@ types:
 validate-data dir:
     bun packages/core/scripts/validate-data.ts "{{dir}}"
 
-validate-eval:
-    bun packages/core/scripts/validate-eval.ts
+validate-eval set="eval" projects="data/projects":
+    bun packages/core/scripts/validate-eval.ts "{{set}}" "{{projects}}"
 
 strip-exif dir:
     bun packages/core/scripts/strip-exif.ts "{{dir}}"

@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import { VERSION } from "@bankai/core";
 import { Command } from "commander";
+import { evalCommand } from "./commands/eval";
 import { verifyCommand } from "./commands/verify";
 
 const program = new Command()
@@ -18,6 +19,18 @@ program
   .option("--json", "print the Verdict as JSON")
   .action(async (photos: string[], opts) => {
     process.exitCode = await verifyCommand(photos, opts);
+  });
+
+program
+  .command("eval")
+  .description("Score Bankai on a labelled set and write EVAL_REPORT.md")
+  .option("--set <dir>", "set folder with photos/, labels/, scenarios/", "eval")
+  .option("--projects <dir>", "folder holding the projects scenarios name", "data/projects")
+  .option("--fake", "use <set>/fake-models.json instead of live models")
+  .option("--no-crop", "read the whole photo instead of the nameplate crop")
+  .option("--out <dir>", "where results.jsonl and EVAL_REPORT.md go", "eval/out")
+  .action(async (opts) => {
+    process.exitCode = await evalCommand(opts);
   });
 
 await program.parseAsync();

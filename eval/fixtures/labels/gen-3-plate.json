@@ -1,0 +1,15 @@
+{
+  "photo": "gen-3-plate.jpg",
+  "equipment_type": "generator",
+  "fields": {
+    "manufacturer": "CUMMINS",
+    "model": "C2000D6",
+    "serial": "77120488",
+    "voltage": "415/240",
+    "kva": "2000",
+    "phase": "3",
+    "frequency": "50"
+  },
+  "hard": false,
+  "people_checked": true
+}

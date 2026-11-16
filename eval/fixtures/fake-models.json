@@ -1,0 +1,46 @@
+{
+  "gen-3-plate.jpg": {
+    "plate": { "x": 200, "y": 150, "w": 400, "h": 260 },
+    "tags": ["GEN-3"],
+    "primary": {
+      "manufacturer": "CUMMINS",
+      "model": "C2000D6",
+      "serial": "77120488",
+      "voltage": "415/240",
+      "kva": "2000",
+      "phase": "3",
+      "frequency": "50"
+    },
+    "checker": {
+      "manufacturer": "Cummins",
+      "model": "C2000 D6",
+      "serial": "77120488",
+      "voltage": "415/240",
+      "kva": "2000",
+      "phase": "3",
+      "frequency": "50"
+    }
+  },
+  "cat-plate.jpg": {
+    "plate": { "x": 180, "y": 160, "w": 440, "h": 240 },
+    "tags": [],
+    "primary": {
+      "manufacturer": "CATERPILLAR",
+      "model": "3516C",
+      "serial": "SBK00921",
+      "voltage": "480",
+      "kva": "2250",
+      "phase": "3",
+      "frequency": "60"
+    },
+    "checker": {
+      "manufacturer": "Caterpillar",
+      "model": "3516C",
+      "serial": "SBK00921",
+      "voltage": "480",
+      "kva": "2250",
+      "phase": "3",
+      "frequency": "60"
+    }
+  }
+}
