@@ -35,9 +35,10 @@ export async function breakTie(
   if (perception.observations.some((o) => o.field === "tag")) return null;
   const questions = tieQuestions(tied, project);
   if (questions.length === 0) return null; // identical twins: only the painted tag can tell
+  // Promise.resolve().then: a synchronous throw becomes a rejection too.
   const settled = await Promise.allSettled([
-    primary.choose(crop.img, questions),
-    checker.choose(crop.img, questions),
+    Promise.resolve().then(() => primary.choose!(crop.img, questions)),
+    Promise.resolve().then(() => checker.choose!(crop.img, questions)),
   ]);
   const answers: Fields[] = [];
   for (const [step, r] of [

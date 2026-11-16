@@ -157,6 +157,18 @@ describe("verify with a tie-break", () => {
     expect(trace.some((e) => e.step === "tiebreak.primary")).toBe(true);
   });
 
+  test("a choose call that throws synchronously still leaves the tie open", async () => {
+    const p = pair({ kva: "2500" }, { kva: "2500" });
+    const broken: VisionModel = {
+      ...p.checker,
+      choose: () => {
+        throw new Error("boom");
+      },
+    };
+    const { v } = await run(sizes, { primary: p.primary, checker: broken });
+    expect(v.subject_tag).toBeNull();
+  });
+
   test("identical twins never call the tie-break", async () => {
     let asked = false;
     const spy = (m: VisionModel): VisionModel => ({
