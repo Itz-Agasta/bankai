@@ -4,7 +4,6 @@ import {
   openStore,
   storePath,
   type Models,
-  type Project,
   type Store,
 } from "@bankai/core";
 import type { SkillsExtension } from "@modelcontextprotocol/server/ext/skills";
@@ -13,7 +12,6 @@ import { bankaiSkills } from "./skills";
 
 export interface ServerContext {
   projectDir: string;
-  project: Project;
   store: Store;
   models: Models;
   /** Photo paths must resolve under one of these. */
@@ -33,16 +31,15 @@ export async function buildContext(opts: {
   photoRoots?: string[];
 }): Promise<ServerContext> {
   const projectDir = resolve(opts.projectDir);
-  const project = await loadProject(projectDir);
+  await loadProject(projectDir); // fail at startup, not on the first call
   const extra = (process.env.BANKAI_PHOTO_ROOTS ?? "").split(":").filter(Boolean);
   return {
     projectDir,
-    project,
     store: openStore(storePath(projectDir)),
     // Hosts often start servers from `/`: keep the response cache with the project.
     models:
       opts.models ?? (await modelsFromEnv({ cacheDir: join(projectDir, ".bankai", "cache") })),
-    photoRoots: (opts.photoRoots ?? [projectDir, ...extra]).map((r) => resolve(r)),
+    photoRoots: (opts.photoRoots ?? [projectDir, ...extra]).map((r) => resolve(projectDir, r)),
     tmpDir: join(projectDir, ".bankai", "tmp"),
     skills: await bankaiSkills(),
   };

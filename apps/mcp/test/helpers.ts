@@ -26,7 +26,11 @@ export function fakeModels(components: string[] = []) {
 }
 
 const temps: string[] = [];
-export const cleanup = () => Promise.all(temps.map((d) => rm(d, { recursive: true, force: true })));
+const open: { close(): Promise<void> | void }[] = [];
+export async function cleanup() {
+  for (const c of open.splice(0)) await c.close();
+  await Promise.all(temps.map((d) => rm(d, { recursive: true, force: true })));
+}
 
 /** A temp copy of the mini project with the plate photo inside it. */
 export async function miniProject(): Promise<string> {
@@ -48,5 +52,6 @@ export async function connect(
   await createServer(ctx).connect(b);
   const client = new Client({ name: "test", version: "0" }, opts.client);
   await client.connect(a);
+  open.push(client, ctx.store);
   return { client, ctx, project };
 }

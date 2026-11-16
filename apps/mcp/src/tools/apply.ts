@@ -19,8 +19,8 @@ const Input = z.object({
   approved_by: ActorId.describe("Role id of the person approving, e.g. SUPT-01. Never a name"),
 });
 
-const prompt = (u: ProposedUpdate) =>
-  `Approve ${u.field} on ${u.target.ref}: '${u.old}' -> '${u.new}'? Evidence: ${u.evidence.map((e) => e.ref).join(", ")}`;
+const prompt = (u: ProposedUpdate, by: string) =>
+  `${by}: approve ${u.field} on ${u.target.ref}: '${u.old}' -> '${u.new}'? Evidence: ${u.evidence.map((e) => e.ref).join(", ")}`;
 
 /** The only tool that writes: a person approves, the ledger and audit log record it. */
 export function registerApply(server: McpServer, ctx: ServerContext): void {
@@ -51,15 +51,18 @@ export function registerApply(server: McpServer, ctx: ServerContext): void {
         const caps = (envelope?.[CLIENT_CAPABILITIES_META_KEY] ??
           server.server.getClientCapabilities()) as ClientCapabilities | undefined;
         const at = new Date().toISOString();
-        // A client that cannot prompt: the role id the person gave is the approval.
-        if (!caps?.elicitation) return ok(ctx.store.approveUpdate(update_id, approved_by, at));
+        // A client that cannot show a form prompt: the role id the person gave is the approval.
+        // A bare `elicitation: {}` is the 2025 shape and means form.
+        const e = caps?.elicitation as { form?: unknown; url?: unknown } | undefined;
+        if (!e || (e.form === undefined && e.url !== undefined))
+          return ok(ctx.store.approveUpdate(update_id, approved_by, at));
 
         const answer = inputResponse(extra.mcpReq.inputResponses, "confirm");
         if (answer.kind === "missing")
           return inputRequired({
             inputRequests: {
               confirm: inputRequired.elicit({
-                message: prompt(u),
+                message: prompt(u, approved_by),
                 requestedSchema: {
                   type: "object",
                   properties: { approve: { type: "boolean", title: "Approve this update" } },

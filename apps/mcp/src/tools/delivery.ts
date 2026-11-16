@@ -1,4 +1,4 @@
-import { checkDelivery } from "@bankai/core";
+import { checkDelivery, loadProject } from "@bankai/core";
 import { VerifyResult } from "@bankai/schemas";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
@@ -15,6 +15,7 @@ const Input = z.object({
     .describe("PO line number; required when the PO has several lines"),
   ticket: z
     .string()
+    .min(1)
     .optional()
     .describe("Delivery ticket to check, e.g. DT-88; omit to use every ticket"),
   photos: z
@@ -37,10 +38,11 @@ export function registerDelivery(server: McpServer, ctx: ServerContext): void {
     },
     async ({ po, line, ticket, photos }) => {
       try {
+        const project = await loadProject(ctx.projectDir);
         const runId = crypto.randomUUID();
         const result = await checkDelivery(
           { po, line, ticket, photos: photos && (await resolvePhotos(photos, ctx)) },
-          { project: ctx.project, models: ctx.models, tracer: ctx.store.tracer(runId), runId },
+          { project, models: ctx.models, tracer: ctx.store.tracer(runId), runId },
         );
         ctx.store.saveVerdict(result.verdict, new Date().toISOString());
         ctx.store.saveUpdates(result.verdict.id, result.proposed_updates);

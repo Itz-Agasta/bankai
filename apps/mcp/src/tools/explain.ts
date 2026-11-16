@@ -12,10 +12,12 @@ const Output = z.object({
   trace: z.array(
     z.object({
       step: z.string(),
+      input_hash: z.string(),
       summary: z.string(),
       model: z.nullable(z.string()),
       ms: z.number(),
       usd: z.number(),
+      at: z.string(),
     }),
   ),
 });
@@ -40,9 +42,15 @@ export function registerExplain(server: McpServer, ctx: ServerContext): void {
         const verdict = verdictId ? ctx.store.getVerdict(verdictId) : null;
         if (!update && !verdict) throw new BankaiFailure("NOT_FOUND", `no verdict or update ${id}`);
         const trace = verdictId
-          ? ctx.store
-              .trace(verdictId)
-              .map(({ step, summary, model, ms, usd }) => ({ step, summary, model, ms, usd }))
+          ? ctx.store.trace(verdictId).map(({ step, input_hash, summary, model, ms, usd, at }) => ({
+              step,
+              input_hash,
+              summary,
+              model,
+              ms,
+              usd,
+              at,
+            }))
           : [];
         return ok(
           update
