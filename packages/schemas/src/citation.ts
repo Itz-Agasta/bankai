@@ -14,7 +14,7 @@ export type CitationKind = z.infer<typeof CitationKind>;
 
 export const Citation = z.object({
   kind: CitationKind,
-  ref: z.string(),
+  ref: z.string().min(1),
   quote: z.string().optional(),
 });
 export type Citation = z.infer<typeof Citation>;

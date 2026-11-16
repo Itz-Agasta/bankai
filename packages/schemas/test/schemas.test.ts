@@ -45,6 +45,10 @@ describe("schemas", () => {
     expect(Citation.safeParse({ kind: "gps", ref: "12.9,77.5" }).success).toBe(false);
   });
 
+  test("a citation with an empty ref is rejected", () => {
+    expect(Citation.safeParse({ kind: "po_line", ref: "" }).success).toBe(false);
+  });
+
   test("po line components must be an array", () => {
     const line = {
       po: "PO-1042",

@@ -72,6 +72,31 @@ describe("loadProject rejects bad data", () => {
     expect(err.detail).toStartWith("equipment_schedule.csv:5:");
   });
 
+  test("a drawing with superseded_on but no superseded_by is rejected", async () => {
+    const dir = await brokenCopy("drawings.csv", (t) =>
+      t.replace("E-201,B,2026-08-10,C,", "E-201,B,2026-08-10,,"),
+    );
+    const err = await loadError(dir);
+    expect(err.code).toBe("PROJECT_INVALID");
+    expect(err.detail).toStartWith("drawings.csv:2:");
+  });
+
+  test("a drawing with two current revisions is rejected", async () => {
+    const dir = await brokenCopy("drawings.csv", (t) =>
+      t.replace("E-201,B,2026-08-10,C,2026-10-02", "E-201,B,2026-08-10,,"),
+    );
+    const err = await loadError(dir);
+    expect(err.code).toBe("PROJECT_INVALID");
+    expect(err.detail).toContain("E-201");
+  });
+
+  test("a malformed CSV quote is reported as invalid project data", async () => {
+    const dir = await brokenCopy("drawings.csv", (t) => t.replace("M-301,B", 'M-301,"B'));
+    const err = await loadError(dir);
+    expect(err.code).toBe("PROJECT_INVALID");
+    expect(err.detail).toBe("drawings.csv:5: unterminated quote");
+  });
+
   test("an activity whose low duration exceeds likely is rejected", async () => {
     const dir = await brokenCopy("schedule.json", (t) =>
       t.replace('"duration_low_days": 1', '"duration_low_days": 9'),

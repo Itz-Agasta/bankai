@@ -9,14 +9,13 @@ import {
 import { basename, join } from "node:path";
 import type { z } from "zod";
 import { BankaiFailure } from "../errors";
-import { csvRecords } from "./csv";
+import { CsvError, csvRecords } from "./csv";
 import { indexProject } from "./index-project";
 import type { Project } from "./types";
 import { invalid, parseRows } from "./validate";
 
 const EQUIPMENT_NUMERIC = new Set(["kva", "kw", "phase", "frequency"]);
-// CSV line 1 is the header; JSON rows are counted from 1.
-const csvLine = (i: number) => i + 2;
+// JSON rows are counted from 1; CSV rows carry their file line.
 const jsonRow = (i: number) => i + 1;
 
 async function readText(dir: string, file: string): Promise<string> {
@@ -30,8 +29,22 @@ async function loadCsv<T>(
   file: string,
   schema: z.ZodType<T>,
   numeric = new Set<string>(),
-) {
-  return parseRows(file, csvRecords(await readText(dir, file), numeric), schema, csvLine);
+): Promise<{ rows: T[]; lines: number[] }> {
+  let recs: { line: number; record: Record<string, unknown> }[];
+  try {
+    recs = csvRecords(await readText(dir, file), numeric);
+  } catch (e) {
+    if (e instanceof CsvError) throw invalid(file, e.line, e.reason);
+    throw e;
+  }
+  const lines = recs.map((r) => r.line);
+  const rows = parseRows(
+    file,
+    recs.map((r) => r.record),
+    schema,
+    (i) => lines[i] ?? 0,
+  );
+  return { rows, lines };
 }
 
 async function loadJson<T>(dir: string, file: string, schema: z.ZodType<T>): Promise<T[]> {
@@ -60,16 +73,33 @@ function checkDurations(activities: Activity[]): void {
 }
 
 /** A row on an unregistered revision would silently drop out of byTag and read as "not in project". */
-function checkRevisions(equipment: EquipmentRow[], drawings: DrawingRev[]): void {
+function checkRevisions(equipment: EquipmentRow[], lines: number[], drawings: DrawingRev[]): void {
   const known = new Set(drawings.map((d) => `${d.drawing}@${d.revision}`));
   equipment.forEach((r, i) => {
     if (!known.has(`${r.drawing}@${r.revision}`)) {
+      const msg = `${r.tag}: ${r.drawing} rev ${r.revision} not in drawings.csv`;
+      throw invalid("equipment_schedule.csv", lines[i] ?? 0, msg);
+    }
+  });
+}
+
+/** Exactly one current revision per drawing, so currentRevision() never depends on row order. */
+function checkDrawings(drawings: DrawingRev[], lines: number[]): void {
+  const current = new Set<string>();
+  drawings.forEach((d, i) => {
+    const line = lines[i] ?? 0;
+    if ((d.superseded_by === null) !== (d.superseded_on === null)) {
       throw invalid(
-        "equipment_schedule.csv",
-        csvLine(i),
-        `${r.tag}: ${r.drawing} rev ${r.revision} not in drawings.csv`,
+        "drawings.csv",
+        line,
+        `${d.drawing} rev ${d.revision}: superseded_by and superseded_on must both be set or both empty`,
       );
     }
+    if (d.superseded_by !== null) return;
+    if (current.has(d.drawing)) {
+      throw invalid("drawings.csv", line, `${d.drawing}: more than one current revision`);
+    }
+    current.add(d.drawing);
   });
 }
 
@@ -83,10 +113,11 @@ export async function loadProject(dir: string): Promise<Project> {
     loadJson(dir, "deliveries.json", DeliveryLine),
   ]);
   checkDurations(activities);
-  checkRevisions(equipment, drawings);
+  checkDrawings(drawings.rows, drawings.lines);
+  checkRevisions(equipment.rows, equipment.lines, drawings.rows);
   return indexProject(basename(dir), {
-    equipment,
-    drawings,
+    equipment: equipment.rows,
+    drawings: drawings.rows,
     poLines,
     submittals,
     activities,
