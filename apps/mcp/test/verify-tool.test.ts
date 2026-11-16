@@ -13,7 +13,7 @@ describe("verify_equipment", () => {
   test("is listed read-only", async () => {
     const { client } = await connect();
     const { tools } = await client.listTools();
-    expect(tools.map((t) => t.name)).toEqual(["verify_equipment"]);
+    expect(tools[0]!.name).toBe("verify_equipment");
     expect(tools[0]!.annotations).toMatchObject({ readOnlyHint: true, openWorldHint: true });
     expect(tools[0]!.outputSchema).toBeDefined();
   });

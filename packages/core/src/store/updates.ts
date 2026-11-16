@@ -55,6 +55,13 @@ export function getUpdate(db: Database, id: string): ProposedUpdate | null {
   return row ? ProposedUpdate.parse(JSON.parse(row.json)) : null;
 }
 
+export function verdictOfUpdate(db: Database, id: string): string | null {
+  const row = db.query(`SELECT verdict_id FROM updates WHERE id = $id`).get({ id }) as {
+    verdict_id: string;
+  } | null;
+  return row?.verdict_id ?? null;
+}
+
 export function pendingUpdates(db: Database): ProposedUpdate[] {
   const rows = db
     .query(`SELECT json FROM updates WHERE approval = 'pending' ORDER BY rowid`)
