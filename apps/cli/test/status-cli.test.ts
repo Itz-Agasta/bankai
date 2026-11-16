@@ -20,7 +20,7 @@ async function bankai(args: string[], fake: string) {
   return { out, code };
 }
 
-test("a flagged verify shows up in status from a separate process", async () => {
+async function setup() {
   const dir = await mkdtemp(join(tmpdir(), "bankai-status-"));
   temps.push(dir);
   const project = join(dir, "mini");
@@ -41,18 +41,37 @@ test("a flagged verify shows up in status from a separate process", async () => 
   };
   const fake = join(dir, "fake.json");
   await writeFile(fake, JSON.stringify({ primary: entry, checker: entry }));
+  return { project, fake };
+}
 
+test("a flagged verify shows up in status from a separate process", async () => {
+  const { project, fake } = await setup();
   expect(
     (await bankai(["verify", PLATE, "--project", project, "--location", "PAD-A"], fake)).code,
   ).toBe(0);
   const status = await bankai(["status", "--project", project, "--json"], fake);
   expect(status.code).toBe(0);
-  const items = JSON.parse(status.out);
+  const items = JSON.parse(status.out).open_items;
   expect(items).toHaveLength(1);
   expect(items[0]).toMatchObject({ subject_tag: "GEN-3", status: "flagged" });
 
   const human = await bankai(["status", "--project", project], fake);
   expect(human.out).toContain("GEN-3  flagged  since");
+});
+
+test("a confirmed verify at a location leaves one pending update in status", async () => {
+  const { project, fake } = await setup();
+  await bankai(["verify", PLATE, "--project", project, "--location", "PAD-B"], fake);
+  const status = await bankai(["status", "--project", project, "--json"], fake);
+  const { pending_updates } = JSON.parse(status.out);
+  expect(pending_updates).toHaveLength(1);
+  expect(pending_updates[0]).toMatchObject({ field: "install_status", new: "installed at PAD-B" });
+
+  const human = await bankai(["status", "--project", project], fake);
+  expect(human.out).toContain("Pending updates");
+  expect(human.out).toContain(
+    "install_status on equipment_schedule.csv#GEN-3: '' -> 'installed at PAD-B'",
+  );
 });
 
 test("status on a folder that is not a project exits 2", async () => {

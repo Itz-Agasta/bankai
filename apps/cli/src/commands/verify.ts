@@ -3,6 +3,7 @@ import {
   loadProject,
   modelsFromEnv,
   openStore,
+  proposeForVerify,
   storePath,
   verifyEquipment,
 } from "@bankai/core";
@@ -33,6 +34,7 @@ export async function verifyCommand(photos: string[], opts: VerifyOptions): Prom
     );
     try {
       store.saveVerdict(verdict, new Date().toISOString());
+      store.saveUpdates(verdict.id, proposeForVerify(verdict, opts.location ?? null, project));
     } catch (e) {
       // The model run already happened and was paid for: show the verdict, say it was not kept.
       console.error(
