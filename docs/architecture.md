@@ -1,62 +1,57 @@
 # How Bankai works
 
-One core library runs three surfaces: an MCP server, a CLI, and a SKILL.md for coding agents. A phone web app is the fourth entry point. Every answer flows through the same five stages: perceive, link, decide, calibrate, act.
+One core library serves four entry points: an MCP server, a command line, an HTTP API for the phone app, and a skill for coding agents. Every answer goes through the same stages: perceive, link, decide, calibrate, act.
 
-## Principle
+## The principle
 
-The AI perceives, rules decide, a human approves. Models never write records. Rules are pure functions you can unit-test. Writes wait for a person.
+The AI perceives, rules decide, a human approves. Models never write records, rules are pure functions you can unit-test, and writes wait for a person.
 
 ## Pipeline
 
-1. **Perceive: photos.** Gemini finds the nameplate, crops it, and re-reads at full resolution. A second model family (via OpenRouter) reads the same crop. Field agreement is trusted; disagreement triggers a targeted third read or a retake request. Validators check voltage sets, plausible ratings, and serial formats. Failing fields become `unknown`, never guessed. Missing required fields become `retake_request { region, why }`.
-2. **Perceive: audio.** Groq Whisper transcribes with word timestamps, prompted with project tags. A large language model (LLM) extracts typed claims (`status`, `date_change`, `issue`, `decision`, `action_item`) pinned to time spans. Grounding drops any claim whose key terms (tag, place, day count, date, component, status verb, and the activity of a delay) are not spoken inside that span. Incidental fields the model filled but nobody said (an activity on a non-delay claim, an issue kind, an owner) are cleared instead, and the claim is kept. Names the rules can spot (a word before "said", a capitalized word mid-sentence) are replaced with `[name]` before the LLM sees the transcript; the LLM flags any others, and every flagged name becomes `[name]` in the returned transcript and quotes, and is removed from claim text. A name the rules miss does reach the extraction model.
-3. **Link.** Normalize tags (`GEN 3`, `G-3`, `Generator 3` become `GEN-3`). Match exact keys first (serial, tag), then OCR-aware fuzzy distance for model numbers (O/0, I/1, S/5, B/8, Z/2 cost less; other substitutions cost more). Score candidates, keep top-1 vs top-2 margin. An LLM tie-break runs only on thin margin and must pick a listed candidate or “none”.
-4. **Decide.** Pure rules: identity, spec, substitution, location, revision, completeness, schedule impact. Schedule impact is a range from three-point durations (best / likely / worst), not a single guess.
-5. **Calibrate.** Features (model agreement, validators, link score and margin, rule certainty) feed a logistic calibrator and a conformal threshold at target risk 5% among answered cases. Output status: `confirmed`, `flagged`, or `needs_human`.
-6. **Act.** Proposed updates only. `apply_update` requires approval (MCP elicitation or Approve button in the app). Idempotency keys. Append-only audit log. Identity is a role or device ID, never a name.
+Each stage feeds the next:
 
-## Surfaces
+1. **Perceive photos**: Gemini finds the nameplate, crops it and re-reads it at full resolution, and a second model family (through OpenRouter) reads the same crop. Fields both models agree on are trusted. Validators check voltage sets, plausible ratings and serial formats, and a failing field becomes `unknown`, never a guess. A missing required field becomes a retake request naming the region and why.
+2. **Perceive audio**: Groq Whisper transcribes with word timestamps, prompted with the project’s tags. A large language model (LLM) extracts typed claims (`status`, `date_change`, `issue`, `decision`, `action_item`), each pinned to a time span.
+3. **Ground claims**: a claim is dropped when its key terms (tag, place, day count, date, component, status verb) aren’t spoken inside its span. Fields the model filled but nobody said are cleared, and the claim is kept.
+4. **Remove names**: names the rules can spot become `[name]` before the LLM reads the transcript, and names the LLM flags are removed from the transcript, quotes and claims it returns.
+5. **Link**: tags are normalized (`GEN 3`, `G-3` and `Generator 3` become `GEN-3`), then matched on exact keys first and on optical character recognition (OCR) aware distance for model numbers. When units tie, both models re-read only the printed field they differ on, and Bankai links a unit only when exactly one fits.
+6. **Decide**: pure rules check identity, spec, substitution, location, revision, completeness and schedule impact. Schedule impact is a range from best, likely and worst durations.
+7. **Calibrate**: confidence blends model agreement, link score and margin, and rating coverage. A fitted calibrator with a 5% risk target replaces this blend once the eval set is labelled. The status is `confirmed`, `flagged` or `needs_human`.
+8. **Act**: Bankai only proposes updates. A person approves each one, every decision goes to an append-only audit log, and people appear as role IDs.
 
-### MCP tools (5)
+## Entry points
 
-| Tool | Returns |
-|---|---|
-| `verify_equipment(photos[], location?)` | Verdict |
-| `check_delivery(photos[], po_id, ticket_lines?)` | Verdict (completeness focus) |
-| `process_site_note(audio)` | NoteRun: NoteResult (claims and proposed updates, each with confidence; models, cost, latency), the redacted transcript, and claims dropped by grounding |
-| `apply_update(update_id)` | The only write; needs human approval |
-| `explain(verdict_id \| update_id)` | Full evidence trail and trace |
+The MCP server has 5 tools:
 
-Results are compact JSON. Evidence comes on demand. Every result validates against its zod schema.
+| Tool | Input | Returns |
+|---|---|---|
+| `verify_equipment` | `photos`, `location?`, `components?` | Verdict and proposed updates |
+| `check_delivery` | `po`, `line?`, `ticket?`, `photos?` | Verdict on completeness and proposed updates |
+| `process_site_note` | `audio` | Claims with time spans, proposed updates, the redacted transcript, and dropped claims |
+| `apply_update` | `update_id`, `approved_by` | The approved update (the only write) |
+| `explain` | A verdict, note or update id | The stored record and every pipeline step |
 
-### CLI
+The other entry points share the same core:
 
-`bankai verify | delivery | note | explain | apply | init | eval`. Built with `bun build --compile` into a single binary. `bankai init <dir>` loads a project in the documented format.
-
-### HTTP API
-
-`bankai serve` runs a JSON API for the phone app plus MCP over HTTP at `/mcp`, both on the same core and store. `--demo` runs replay only on a throwaway copy of the project. Contract: `docs/web-api.md`.
-
-### Phone web app
-
-React mobile web app: capture photos or audio, pick a room (or scan a door QR; no GPS), see the result card, open evidence, approve or reject proposed updates, request a retake.
-
-### SKILL.md
-
-Teaches a coding agent the workflow: verify on arrival, check completeness, process the walk note, propose and get approval, hand off when unsure.
+- **Command line**: `bankai verify`, `note`, `status`, `eval`, `mcp` (stdio MCP) and `serve` (HTTP)
+- **HTTP API**: the JSON API the phone app calls, plus MCP over HTTP at `/mcp`. See [web-api.md](web-api.md).
+- **Phone web app**: capture photos or audio, pick a room or scan a door QR code, see the result card, open evidence, approve or reject updates
+- **Skill**: `skills/bankai/SKILL.md` teaches an agent when to call each tool and how to read the results
 
 ## Memory and trace
 
-- **Memory.** A `bun:sqlite` store at `.bankai/state.db` keeps verdicts, open items, and pending proposals across restarts. `bankai status` and the MCP tools read it.
-- **Trace.** Every pipeline step writes a trace event (step, input hash, summary, model, ms, usd). `explain` returns it.
-- **Replay.** `BANKAI_REPLAY=1` answers only from a committed response cache so `bankai demo` runs Project Alpha with no API keys.
+Bankai keeps state between runs:
+
+- **Memory**: a SQLite store at `.bankai/state.db` keeps verdicts, notes, open items and proposed updates across restarts
+- **Trace**: every pipeline step records its input hash, summary, model, latency and cost, and `explain` returns it
+- **Replay**: `bankai serve --demo` answers only from recorded model responses, so the demo needs no API keys
 
 ## Project data
 
-Inputs are structured exports, not PDFs: equipment schedule, drawings register, purchase orders, submittals, schedule, deliveries. Sample project: Project Alpha, a synthetic 12 MW data center in Navi Mumbai. Templates and a format doc ship in `data/templates/` so anyone can load their own project.
+Bankai reads structured exports, not PDFs: equipment schedule, drawing register, purchase orders, submittals, schedule and deliveries. The sample project, Project Alpha, is a synthetic 12 MW data center in Navi Mumbai. Templates in `data/templates/` and [data-format.md](data-format.md) let anyone load their own project.
 
-Photos are stripped of EXIF (GPS, device, time) on ingest and upload. CI fails on any photo that still has an EXIF segment.
+Photos lose their EXIF metadata (GPS, device, time) on upload, and CI fails on any committed photo that still has it.
 
 ## Evaluation
 
-Roughly 150 nameplate photos, 60 verification scenarios, 30 text-to-speech (TTS) voice notes, and a 20-case blind set. Splits: calibration, held-out test, blind. Metrics include field accuracy, verdict accuracy, selective accuracy vs coverage, fabrication rate (must be 0), calibration error, cost, and latency per run. `bankai eval` writes `EVAL_REPORT.md` and runs in CI on every pull request.
+`bankai eval` scores Bankai on labelled nameplate photos, verification scenarios, synthetic voice notes, and a blind set written without reading the rules. It reports field accuracy, verdict accuracy, accuracy against coverage, fabrication rate, calibration error, and cost and latency per run, and it runs in CI on every pull request.

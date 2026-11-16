@@ -9,13 +9,13 @@ Bankai checks data center equipment on site. It reads photos and voice notes, li
 | `packages/schemas` | zod schemas shared by everything |
 | `packages/core` | Project loader, linking, rules, perception, scripts |
 | `apps/cli` | `bankai` command line (`bankai mcp` starts the MCP server, `bankai serve` the HTTP API) |
-| `apps/mcp` | MCP server: `verify_equipment`, `check_delivery`, `apply_update`, `explain` |
+| `apps/mcp` | MCP server (5 tools) and the HTTP API for the phone app |
 | `skills/bankai` | The `bankai` skill the MCP server serves to agents |
 | `data/templates` | Empty project files to start from |
 | `data/fixtures/mini` | Tiny complete project used by tests |
 | `data/projects/` | Eval projects (Project Alpha, being built) |
 | `eval/` | Photos, labels, scenarios |
-| `docs/` | Overview, architecture, dataset plan, data format |
+| `docs/` | Overview, architecture, dataset plan, data format, web API |
 | `.agents/skills/` | Skills for coding agents |
 
 ## Run
@@ -44,5 +44,6 @@ Bun 1.4.4 and `just` required.
 
 - `.agents/skills/label-photo`: label one nameplate photo.
 - `.agents/skills/make-scenario`: write one verification scenario.
+- `.agents/skills/generate-voice-note`: write one synthetic voice note.
 
 File formats: `docs/data-format.md`. HTTP API for the phone app: `docs/web-api.md`.

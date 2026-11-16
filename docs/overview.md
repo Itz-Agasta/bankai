@@ -1,47 +1,40 @@
 # What Bankai is
 
-Bankai is the eyes and ears of Kaya’s Amber agent after equipment reaches the site gate. You photograph data center equipment or record a voice note on a site walk. Bankai links what it sees and hears to the project’s purchase orders, approved submittals, current drawing revisions, and schedule, then returns a verdict with a citation for every claim.
+Bankai checks data center equipment once it reaches the site gate, as the eyes and ears of Kaya’s Amber agent. You photograph equipment or record a voice note on a site walk, and Bankai links what it sees and hears to the project’s purchase orders, approved submittals, current drawing revisions and schedule. It returns a verdict with a citation for every claim, or says it needs a human.
 
-## The problem
+## The gap after site arrival
 
-Kaya’s products stop at “site arrival” / “brought to the pad”. After that, wrong-location installs, superseded drawings in the field, partial shipments, and decisions said out loud never reach the system. Bankai fills that gap.
+Kaya’s products stop at “site arrival” or “brought to the pad”. After that, these problems never reach the system:
 
-## Who it is for
+- A unit installed in the wrong place
+- A crew working from a superseded drawing
+- A partial shipment
+- A decision said out loud on a site walk
 
-Superintendents, field engineers, and project engineers on data center builds. The buyer and consumer is Kaya’s Amber, which calls Bankai over the Model Context Protocol (MCP).
+## Who uses it
 
-## Pitch line
+Superintendents, field engineers and project engineers on data center builds use it from a phone. Kaya’s Amber calls it over the Model Context Protocol (MCP).
 
-**You built Amber’s brain. We built its eyes and ears.**
+## What it does
 
-## What Round 1 ships
+Bankai covers three jobs on site:
 
-- Photo verification: nameplate and tag reading, link to records, checks for identity, spec, substitution, location, revision, completeness, schedule impact, retake requests.
-- Delivery check: photos and ticket lines vs PO components, partial shipment flag.
-- Voice site notes: transcript with timestamps, typed claims, proposed updates a person approves. Voice is the release valve: if it is not end to end by Nov 29, it moves to Round 2.
-- MCP server (5 tools), CLI, SKILL.md, mobile web app, eval harness with calibrated abstention.
+- **Photo verification**: reads the nameplate and painted tag, links the unit to its records, and checks identity, spec, substitution, location, drawing revision, completeness and schedule impact. It asks for a retake when a photo can’t settle the answer.
+- **Delivery check**: compares photos and ticket lines with the purchase order’s components and flags a partial shipment.
+- **Voice site notes**: turns a spoken note into timestamped claims (status, delay, issue, decision, action item) and proposes record updates a person approves.
 
-Out of scope: parsing drawings from images, GPS or person tracking, writing straight into Amber’s records, bid leveling, lead-time prediction, storage lookup.
+It runs as an MCP server (5 tools), a command line, an HTTP API for the phone app, and a skill for coding agents.
 
-## How we are judged
-
-Kaya AI Grand Challenge, Edition 2, Track 02 (Contextual Intelligence), Students division. Round 1 closes Sun Dec 6, 23:45 IST. Our submit target: Dec 6, 12:00 IST.
-
-| Criterion | Weight | What judges look for |
-|---|---|---|
-| Accuracy | 40% | Gets the job right on realistic examples |
-| Customer value | 30% | A procurement manager or superintendent would use it tomorrow |
-| Trustworthiness | 20% | Sources cited, sensible confidence, nothing made up |
-| Build quality | 10% | Documented setup, cost and speed per run, code quality |
-
-“An agent that says ‘not sure, check with a human’ scores better than one that confidently gives a wrong answer.”
+These are out of scope: reading drawings from images, GPS or person tracking, writing straight into Amber’s records, bid leveling, lead-time prediction and storage lookup.
 
 ## Rules that shape every choice
 
-- **AI perceives, rules decide, a human approves.** Models read photos and audio. Verdicts come from pure, unit-tested rules. A person approves every write.
-- **Citation or drop.** Any value without a citation is removed before output. Fabrication rate must stay at 0.
-- **Read-only by default.** The only write is `apply_update`, and it needs human approval.
-- **Honest numbers.** The deck, video, and README show what `bankai eval` actually measured.
-- **Track 02 privacy.** No real people in photos or recordings, no GPS, synthetic voices for test audio, role IDs only (for example `SUPT-01`, never a name).
+Five rules decide how Bankai is built:
 
-How we build the test data: `dataset.md`.
+- **AI perceives, rules decide, a human approves**: models read photos and audio, verdicts come from pure, unit-tested rules, and a person approves every write
+- **Citation or drop**: any value without a citation is removed before output, so the fabrication rate stays at 0
+- **Read-only by default**: the only write is `apply_update`, and it needs a person’s approval
+- **Honest numbers**: every accuracy figure shown is what `bankai eval` measured
+- **Privacy**: no real people in photos or recordings, no GPS, synthetic voices for test audio, and role IDs such as `SUPT-01` instead of names
+
+How the test data is built: [dataset.md](dataset.md). How the pipeline works: [architecture.md](architecture.md).
