@@ -52,12 +52,14 @@ export function mergeReadings(
   const out: MergedField[] = [];
   const dropped: Field[] = [];
   for (const field of FIELDS) {
-    const p = clean(primary[field]);
-    const c = clean(checker[field]);
+    const rawP = clean(primary[field]);
+    const rawC = clean(checker[field]);
+    // An implausible vote is no vote: "-50" must not count as agreeing with "50".
+    const p = rawP && validateField(field, rawP) ? rawP : null;
+    const c = rawC && validateField(field, rawC) ? rawC : null;
     const value = p && c ? (agree(field, p, c) ? p : null) : (p ?? c);
-    if (value && validateField(field, value))
-      out.push({ field, value, votes: { primary: p, checker: c } });
-    else if (p || c) dropped.push(field);
+    if (value) out.push({ field, value, votes: { primary: p, checker: c } });
+    else if (rawP || rawC) dropped.push(field);
   }
   return { kept: out, dropped };
 }

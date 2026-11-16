@@ -119,7 +119,15 @@ export async function verifyEquipment(input: VerifyInput, deps: VerifyDeps): Pro
     status: decideStatus(checks, conf, calibrator.threshold),
     checks,
     confidence: conf,
-    retake_request: perception.retake,
+    // Identical units: the plate alone cannot tell them apart, the painted tag can.
+    retake_request:
+      perception.retake ??
+      (candidates.length > 1
+        ? {
+            region: "equipment tag",
+            why: `matches ${candidates.join(", ")}; photograph the painted tag`,
+          }
+        : null),
     candidates,
   });
 }

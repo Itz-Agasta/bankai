@@ -99,6 +99,36 @@ describe("perceivePhoto", () => {
     expect(r.observations.some((o) => o.field === "voltage")).toBe(false);
   });
 
+  test("an invalid vote is not counted as agreement", async () => {
+    const r = await run(
+      { model: "C2000D6", frequency: "50" },
+      { model: "C2000D6", frequency: "-50" },
+    );
+    expect(r.observations.find((o) => o.field === "frequency")?.model_votes).toEqual({
+      primary: "50",
+      checker: null,
+    });
+  });
+
+  test("a disagreeing nameplate tag is not a dropped rating", async () => {
+    const r = await run({ model: "C2000D6", tag: "GEN-3" }, { model: "C2000D6", tag: "GEN-8" });
+    expect(r.dropped).not.toContain("tag");
+  });
+
+  test("a model outage is PERCEPTION_UNAVAILABLE, not a raw error", async () => {
+    const k = (await loadImage(PLATE)).length;
+    const down = {
+      id: "down",
+      locate: () => Promise.reject(new Error("503 " + k)),
+      read: () => Promise.reject(new Error("503")),
+    };
+    await expect(
+      perceivePhoto([PLATE], { primary: down, checker: down }, memoryMeter(), memoryTracer("t")),
+    ).rejects.toMatchObject({
+      code: "PERCEPTION_UNAVAILABLE",
+    });
+  });
+
   test("records trace steps in order", async () => {
     const r = await run({ model: "C2000D6" }, { model: "C2000D6" });
     expect(r.tracer.events().map((e) => e.step)).toEqual([

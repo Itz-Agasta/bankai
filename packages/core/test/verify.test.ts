@@ -70,11 +70,14 @@ describe("verifyEquipment", () => {
     expect(v.status).toBe("needs_human");
     expect(v.candidates).toEqual(["GEN-3", "GEN-4"]);
     expect(v.subject_tag).toBeNull();
+    expect(v.retake_request?.region).toBe("equipment tag");
+    expect(v.retake_request?.why).toContain("GEN-3, GEN-4");
   });
 
   test("a blank photo needs a human: no nameplate found", async () => {
     const v = await verify({ photo: BLANK, location: "PAD-B", tags: [], plate: null });
     expect(v.status).toBe("needs_human");
+    expect(v.retake_request).toEqual({ region: "nameplate", why: "no nameplate found" });
     expect(v.checks.find((c) => c.name === "identity")).toMatchObject({
       result: "unknown",
       reason: "no_nameplate_found",
@@ -156,6 +159,8 @@ describe("dropUncited", () => {
       cost_usd: 0,
       latency_ms: 0,
     };
-    expect(dropUncited(v).checks[0]).toMatchObject({ result: "unknown", reason: "uncited" });
+    const out = dropUncited(v);
+    expect(out.checks[0]).toMatchObject({ result: "unknown", reason: "uncited" });
+    expect(out.status).toBe("needs_human");
   });
 });

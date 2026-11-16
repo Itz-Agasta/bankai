@@ -17,4 +17,9 @@ export const citeOrDrop = (checks: Check[]): Check[] =>
     return { ...c, citations };
   });
 
-export const dropUncited = (v: Verdict): Verdict => ({ ...v, checks: citeOrDrop(v.checks) });
+/** If dropping a citation-less check changed anything, the old status no longer stands: hand it to a human. */
+export const dropUncited = (v: Verdict): Verdict => {
+  const checks = citeOrDrop(v.checks);
+  const changed = checks.some((c, i) => c.result !== v.checks[i]?.result);
+  return { ...v, checks, status: changed ? "needs_human" : v.status };
+};
