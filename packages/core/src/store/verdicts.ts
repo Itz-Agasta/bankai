@@ -13,11 +13,13 @@ export interface OpenItem {
 
 const reasonOf = (checks: Check[]) =>
   (checks.find((c) => c.result === "fail") ?? checks.find((c) => c.result === "unknown"))?.reason ??
-  "";
+  // Every check passed or was cited yet the verdict is not confirmed: the confidence gate stopped it.
+  "confidence below threshold";
 
 export function saveVerdict(db: Database, v: Verdict, at: string): void {
   db.query(
-    `INSERT OR REPLACE INTO verdicts (id, json, status, subject_tag, at) VALUES ($id, $json, $status, $tag, $at)`,
+    `INSERT INTO verdicts (id, json, status, subject_tag, at) VALUES ($id, $json, $status, $tag, $at)
+     ON CONFLICT(id) DO UPDATE SET json = excluded.json, status = excluded.status, subject_tag = excluded.subject_tag, at = excluded.at`,
   ).run({
     id: v.id,
     json: JSON.stringify(Verdict.parse(v)),

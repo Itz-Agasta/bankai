@@ -25,7 +25,14 @@ export async function verifyCommand(photos: string[], opts: VerifyOptions): Prom
       { photos, location: opts.location ?? null, observedComponents },
       { project, models: await models(), tracer: store.tracer(runId), runId },
     );
-    store.saveVerdict(verdict, new Date().toISOString());
+    try {
+      store.saveVerdict(verdict, new Date().toISOString());
+    } catch (e) {
+      // The model run already happened and was paid for: show the verdict, say it was not kept.
+      console.error(
+        `warning: verdict not saved to ${storePath(opts.project)}: ${(e as Error).message}`,
+      );
+    }
     console.log(opts.json ? JSON.stringify(verdict, null, 2) : formatVerdict(verdict));
     return 0;
   } catch (e) {

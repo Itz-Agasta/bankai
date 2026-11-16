@@ -27,6 +27,8 @@ CREATE INDEX IF NOT EXISTS trace_run ON trace (run_id, seq);
 export function openDb(path: string): Database {
   if (path !== ":memory:") mkdirSync(dirname(path), { recursive: true });
   const db = new Database(path, { create: true, strict: true });
+  // Two CLI runs on one project: wait for the lock instead of failing with SQLITE_BUSY.
+  db.exec("PRAGMA busy_timeout = 5000");
   db.exec("PRAGMA journal_mode = WAL");
   db.exec(SCHEMA);
   return db;

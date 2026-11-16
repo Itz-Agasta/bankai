@@ -54,3 +54,11 @@ test("a flagged verify shows up in status from a separate process", async () => 
   const human = await bankai(["status", "--project", project], fake);
   expect(human.out).toContain("GEN-3  flagged  since");
 });
+
+test("status on a folder that is not a project exits 2", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "bankai-status-"));
+  temps.push(dir);
+  const r = await bankai(["status", "--project", join(dir, "typo"), "--json"], "");
+  expect(r.code).toBe(2);
+  expect(JSON.parse(r.out).error.code).toBe("PROJECT_INVALID");
+});

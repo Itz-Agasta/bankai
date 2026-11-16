@@ -27,8 +27,8 @@ program
   .description("List open items (flagged or needing a human), oldest first")
   .requiredOption("--project <dir>", "project folder")
   .option("--json", "print open items as JSON")
-  .action((opts) => {
-    process.exitCode = statusCommand(opts);
+  .action(async (opts) => {
+    process.exitCode = await statusCommand(opts);
   });
 
 program

@@ -17,7 +17,7 @@ const STATUS: Record<Verdict["status"], string> = {
 };
 
 /** Model and project text is data: no control character (ESC, CR, LF) may reach the terminal. */
-const safe = (s: string) =>
+export const safe = (s: string) =>
   [...s].map((ch) => (ch.charCodeAt(0) < 32 || ch.charCodeAt(0) === 127 ? " " : ch)).join("");
 
 /** One line per check with its reason and sources, then the bill. */

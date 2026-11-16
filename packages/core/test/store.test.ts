@@ -87,6 +87,54 @@ describe("store", () => {
     store.close();
   });
 
+  test("re-saving a resolved verdict keeps it resolved", async () => {
+    const store = openStore(await dbPath());
+    const v = verdict("v1", "GEN-3", "flagged");
+    store.saveVerdict(v, "2026-11-20T10:00:00Z");
+    store.resolve("v1", "SUPT-01", "2026-11-20T11:00:00Z");
+    store.saveVerdict(v, "2026-11-20T10:00:00Z");
+    expect(store.openItems()).toEqual([]);
+    store.close();
+  });
+
+  test("resolving twice or resolving nothing throws", async () => {
+    const store = openStore(await dbPath());
+    store.saveVerdict(verdict("v1", "GEN-3", "flagged"), "2026-11-20T10:00:00Z");
+    store.resolve("v1", "SUPT-01", "2026-11-20T11:00:00Z");
+    expect(() => store.resolve("v1", "SUPT-01", "2026-11-20T12:00:00Z")).toThrow("no open verdict");
+    expect(() => store.resolve("nope", "SUPT-01", "2026-11-20T12:00:00Z")).toThrow(
+      "no open verdict",
+    );
+    store.close();
+  });
+
+  test("open item reasons fall back to unknown checks, then to low confidence", async () => {
+    const store = openStore(await dbPath());
+    const unknownOnly = verdict("u", "GEN-3", "needs_human");
+    unknownOnly.checks = [
+      { name: "identity", result: "unknown", reason: "no_link", citations: [], range: null },
+    ];
+    unknownOnly.retake_request = { region: "equipment tag", why: "matches GEN-3, GEN-4" };
+    const lowConf = verdict("c", "GEN-4", "needs_human");
+    store.saveVerdict(unknownOnly, "2026-11-20T10:00:00Z");
+    store.saveVerdict(lowConf, "2026-11-20T10:01:00Z");
+    const [u, c] = store.openItems();
+    expect(u).toMatchObject({ reason: "no_link", retake: true });
+    expect(c?.reason).toBe("confidence below threshold");
+    store.close();
+  });
+
+  test("two tracers on one run never collide", async () => {
+    const store = openStore(await dbPath());
+    const a = store.tracer("run-x");
+    const b = store.tracer("run-x");
+    a.step("locate", "i", "s");
+    b.step("read.primary", "i", "s");
+    a.step("merge", "i", "s");
+    expect(store.trace("run-x").map((e) => e.step)).toEqual(["locate", "read.primary", "merge"]);
+    store.close();
+  });
+
   test("a tracer's events come back in order after a restart", async () => {
     const path = await dbPath();
     let store = openStore(path);
