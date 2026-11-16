@@ -60,7 +60,14 @@ describe("schemas", () => {
   });
 
   test("a claim span must be an audio span", () => {
-    const claim = { id: "c1", type: "status", text: "GEN-3 landed", links: [], confidence: 0.7 };
+    const claim = {
+      id: "c1",
+      type: "status",
+      text: "GEN-3 landed",
+      links: [],
+      checks: [],
+      confidence: 0.7,
+    };
     expect(Claim.safeParse({ ...claim, span: cite }).success).toBe(false);
     expect(
       Claim.safeParse({ ...claim, span: { kind: "audio_span", ref: "n1#0.0-2.1" } }).success,

@@ -29,7 +29,8 @@ export function proposeForClaim(
   link: ClaimLink,
   p: Project,
   noteId: string,
-  n: number,
+  /** Stable per claim (from its content), so ids survive a re-run that reorders claims. */
+  key: string,
 ): ClaimOutcome {
   if (link.unknown) return none("unknown_record");
   const draft = (
@@ -42,7 +43,7 @@ export function proposeForClaim(
     checks,
     needsHuman: null,
     update: {
-      id: `upd_${noteId}_${n}`,
+      id: `upd_${noteId}_${key}`,
       target,
       field,
       old,
@@ -101,10 +102,10 @@ export function proposeForClaim(
       return draft(cite.poLine(po), "issues", "", what);
     }
     case "decision":
-      return draft({ kind: "decision", ref: `decisions.json#new-${n}` }, "text", "", c.text);
+      return draft({ kind: "decision", ref: `decisions.json#new-${key}` }, "text", "", c.text);
     case "action_item":
       return draft(
-        { kind: "action_item", ref: `actions.json#new-${n}` },
+        { kind: "action_item", ref: `actions.json#new-${key}` },
         "text",
         "",
         `${c.owner_role ?? "unassigned"}: ${c.text}`,

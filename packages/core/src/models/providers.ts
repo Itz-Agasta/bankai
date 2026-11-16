@@ -28,7 +28,8 @@ export function liveModels(cfg: ModelConfig): Models {
     checker: withCache(aiVision(cfg.checker, openrouter(cfg.checker)), cache),
     extract: withExtractFallback(extract(cfg.vision), extract(cfg.visionFallback)),
   };
-  if (cfg.keys.groq) {
+  // Replay (D30) answers from the committed cache, so it needs no key.
+  if (cfg.keys.groq || cfg.replayOnly) {
     for (const id of [cfg.speech, cfg.speechFallback]) {
       if (SPEECH_PRICES[id] === undefined)
         throw new Error(`No price for model ${id}: add it to SPEECH_PRICES in models/speech.ts`);

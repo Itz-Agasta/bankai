@@ -24,7 +24,7 @@ const RawClaimOut = z.object({
   owner_role: text,
   text: z.string(),
 });
-const ExtractOut = z.object({ claims: z.array(RawClaimOut) });
+const ExtractOut = z.object({ claims: z.array(RawClaimOut), names: z.array(z.number()) });
 
 export type RawClaim = z.infer<typeof RawClaimOut> & { type: ClaimType };
 
@@ -36,9 +36,15 @@ export interface ExtractInput {
   locations: string[];
 }
 
+export interface ExtractResult {
+  claims: RawClaim[];
+  /** Indexes of words that are part of a person's name, for redaction. */
+  names: number[];
+}
+
 export interface ExtractModel {
   id: string;
-  extract(input: ExtractInput): Promise<Metered<RawClaim[]>>;
+  extract(input: ExtractInput): Promise<Metered<ExtractResult>>;
 }
 
 const CALL_TIMEOUT_MS = 60_000;
@@ -68,7 +74,7 @@ export function aiExtractor(id: string, model: LanguageModel): ExtractModel {
       });
       const ms = Math.round(performance.now() - started);
       const usd = costUsd(id, r.usage.inputTokens, r.usage.outputTokens);
-      return { value: r.output.claims, cost: { model: id, ms, usd } };
+      return { value: r.output, cost: { model: id, ms, usd } };
     },
   };
 }
@@ -76,13 +82,17 @@ export function aiExtractor(id: string, model: LanguageModel): ExtractModel {
 const wordsKey = (input: ExtractInput) => sha256Hex(input.words.map((w) => w.text).join(" "));
 
 /** Offline extractor for tests, keyed by the first 12 hex chars of sha256(words joined by spaces); "*" answers the rest. */
-export function fakeExtractor(id: string, script: Record<string, RawClaim[]>): ExtractModel {
+export function fakeExtractor(
+  id: string,
+  script: Record<string, RawClaim[] | ExtractResult>,
+): ExtractModel {
   return {
     id,
     async extract(input) {
-      const claims = script[wordsKey(input).slice(0, 12)] ?? script["*"];
-      if (!claims) throw new Error(`fakeExtractor ${id}: no script for these words`);
-      return { value: claims, cost: { model: id, ms: 0, usd: 0 } };
+      const e = script[wordsKey(input).slice(0, 12)] ?? script["*"];
+      if (!e) throw new Error(`fakeExtractor ${id}: no script for these words`);
+      const value = Array.isArray(e) ? { claims: e, names: [] } : e;
+      return { value, cost: { model: id, ms: 0, usd: 0 } };
     },
   };
 }

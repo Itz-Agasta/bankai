@@ -7,6 +7,7 @@ import {
   storePath,
   verifyEquipment,
 } from "@bankai/core";
+import { join } from "node:path";
 import { formatVerdict, safe } from "../format";
 
 export interface VerifyOptions {
@@ -30,7 +31,12 @@ export async function verifyCommand(photos: string[], opts: VerifyOptions): Prom
       .filter(Boolean);
     const verdict = await verifyEquipment(
       { photos, location: opts.location ?? null, observedComponents },
-      { project, models: await modelsFromEnv(), tracer: store.tracer(runId), runId },
+      {
+        project,
+        models: await modelsFromEnv({ cacheDir: join(opts.project, ".bankai", "cache") }),
+        tracer: store.tracer(runId),
+        runId,
+      },
     );
     try {
       store.saveVerdict(verdict, new Date().toISOString());

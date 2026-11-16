@@ -9,6 +9,7 @@ import type {
 import { basename } from "node:path";
 import calibrator from "../../calibrator.json";
 import type { ExtractModel } from "../models/extract";
+import { sha256Hex } from "../models/hash";
 import { memoryMeter, type Tracer } from "../models/meter";
 import type { Segment, Transcript, TranscriptionModel } from "../models/types";
 import type { Project } from "../project/types";
@@ -46,6 +47,23 @@ function claimConfidence(c: GroundedClaim, link: ClaimLink, speech: number | nul
   if (speech !== null) parts.push(speech);
   return Math.round(mean(parts) * 1000) / 1000;
 }
+
+/** Content key: where the fact was said and what it says, not the order the model listed it in. */
+const claimKey = (c: GroundedClaim) =>
+  sha256Hex(
+    c.type,
+    c.span.ref,
+    JSON.stringify([
+      c.tag,
+      c.activity_id,
+      c.location,
+      c.status_value,
+      c.delay_days,
+      c.component,
+      c.issue_kind,
+      c.owner_role,
+    ]),
+  ).slice(0, 10);
 
 const silent = (t: Transcript) =>
   t.words.length === 0 ||
@@ -94,20 +112,27 @@ export async function processNote(input: { audio: string }, deps: NoteDeps): Pro
   }
   if (silent(t)) return finish("needs_human", "no_speech");
 
+  // Names the rules can spot never reach the model; the model flags the rest for redaction.
   const names = findNames(t.words, vocab);
-  const words = redactNames(t.words, names);
+  let words = redactNames(t.words, names);
   let raw;
   try {
     const r = await models.extract.extract(extractInput(words, project));
     meter.record(r.cost.model, r.cost.ms, r.cost.usd);
-    tracer.step("extract", JSON.stringify(words), `${r.value.length} claims`, r.cost);
-    raw = r.value;
-  } catch (e) {
     tracer.step(
       "extract",
-      JSON.stringify(words),
-      `extraction_unavailable: ${(e as Error).message}`,
+      sha256Hex(JSON.stringify(words)),
+      `${r.value.claims.length} claims`,
+      r.cost,
     );
+    raw = r.value.claims;
+    for (const i of r.value.names) {
+      const w = words[i]?.text.replace(/[^A-Za-z]/g, "").toLowerCase();
+      if (w) names.add(w);
+    }
+    words = redactNames(words, names);
+  } catch (e) {
+    tracer.step("extract", id, `extraction_unavailable: ${(e as Error).message}`);
     return finish("needs_human", "extraction_unavailable", words);
   }
 
@@ -124,24 +149,33 @@ export async function processNote(input: { audio: string }, deps: NoteDeps): Pro
   const updates: ProposedUpdate[] = [];
   let human: string | null = null;
   let conflict = false;
-  grounded.forEach((c, k) => {
-    const n = k + 1;
+  if (dropped.length) human = "unsupported_claims_dropped";
+  const seen = new Set<string>();
+  for (const c of grounded) {
+    const key = claimKey(c);
+    if (seen.has(key)) continue; // the same fact twice
+    seen.add(key);
     const link = linkClaim(c, project);
-    const out = proposeForClaim(c, link, project, id, n);
+    const out = proposeForClaim(c, link, project, id, key);
     const confidence = claimConfidence(c, link, speechConfidence(t.segments, c, words));
     claims.push({
-      id: `clm_${id}_${n}`,
+      id: `clm_${id}_${key}`,
       type: c.type,
       text: c.text,
       span: c.span,
       links: link.links,
+      checks: out.checks,
       confidence,
     });
+    if (c.doubt) {
+      human ??= c.doubt; // spoken, but a person must judge it: no proposal
+      continue;
+    }
     if (out.update) updates.push({ ...out.update, confidence });
     if (out.checks.some((x) => x.result === "fail")) conflict = true;
     if (out.needsHuman) human ??= out.needsHuman;
     else if (confidence < calibrator.threshold) human ??= "confidence below threshold";
-  });
+  }
   tracer.step("rules", id, `${updates.length} proposals${human ? `, ${human}` : ""}`);
 
   const status = human ? "needs_human" : conflict ? "flagged" : "confirmed";

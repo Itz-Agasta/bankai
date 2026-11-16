@@ -210,3 +210,49 @@ describe("names", () => {
     ).toBe("says GEN-3 door at Pad B by Cummins damaged, tell ELEC-02");
   });
 });
+
+describe("review fixes: grounding doubts", () => {
+  test("a span naming two project tags is ambiguous", () => {
+    const w = words(
+      "GEN-3",
+      "was",
+      "delivered",
+      "today,",
+      "GEN-4",
+      "is",
+      "still",
+      "on",
+      "the",
+      "truck.",
+    );
+    const r = g(claim({ tag: "GEN-4", status_value: "delivered", word_end: 9 }), w);
+    expect("claim" in r && r.claim.doubt).toBe("ambiguous_span");
+  });
+
+  test("a span naming one tag twice is not ambiguous", () => {
+    const w = words("GEN-3", "arrived,", "yes", "gen", "three");
+    const r = g(claim({ tag: "GEN-3", status_value: "delivered", word_end: 4 }), w);
+    expect("claim" in r && r.claim.doubt).toBeNull();
+  });
+
+  test("a negated status verb is in doubt", () => {
+    const w = words("Gen", "three", "is", "not", "set", "yet,", "pad", "B", "is", "still", "wet.");
+    const r = g(claim({ tag: "GEN-3", status_value: "set", word_end: 10 }), w);
+    expect("claim" in r && r.claim.doubt).toBe("negated");
+    const w2 = words("gen", "three", "hasn't", "arrived");
+    const r2 = g(claim({ tag: "GEN-3", status_value: "delivered", word_end: 3 }), w2);
+    expect("claim" in r2 && r2.claim.doubt).toBe("negated");
+  });
+
+  test("a span over 30 words is span_too_long", () => {
+    const w = words(...Array.from({ length: 40 }, () => "set"));
+    expect(dropped(g(claim({ word_end: 30 }), w))).toBe("span_too_long");
+  });
+});
+
+describe("review fixes: names in lowercase transcripts", () => {
+  test("a lowercase name before a speech verb is found", () => {
+    const w = words("confirm", "cable", "delivery", "by", "friday", "ravi", "said", "the", "door");
+    expect([...findNames(w, vocab)]).toEqual(["ravi"]);
+  });
+});

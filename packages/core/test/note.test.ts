@@ -98,6 +98,7 @@ describe("processNote", () => {
     });
     const r = await run(wav.n001, { extract: lying });
     expect(r.result.claims).toEqual([]);
+    expect(r.result.status).toBe("needs_human");
     expect(r.dropped).toEqual([
       { word_start: 5, word_end: 11, type: "status", reason: "tag_not_in_span" },
     ]);
@@ -160,5 +161,81 @@ describe("loadAudio", () => {
     const a = await loadAudio(wav.n001);
     expect(a.mediaType).toBe("audio/wav");
     expect(a.hash.slice(0, 12)).toBe(await wavHash(wav.n001));
+  });
+});
+
+describe("review fixes: processNote", () => {
+  const LOWER =
+    "load bank test is delayed three days action for ELEC-02 confirm cable by friday ask priya about the door";
+  const one = (text: string, claims: unknown, names: number[] = []) => ({
+    speech: fakeTranscriber("fake-speech", { "*": transcript(text) }),
+    extract: fakeExtractor("fake-extract", { "*": { claims, names } } as never),
+  });
+  const raw = (over: object) => ({
+    type: "status",
+    word_start: 0,
+    word_end: 0,
+    tag: null,
+    activity_id: null,
+    status_value: null,
+    location: null,
+    delay_days: null,
+    spoken_date: null,
+    component: null,
+    issue_kind: null,
+    owner_role: null,
+    text: "x",
+    ...over,
+  });
+
+  test("a name only the extractor recognised is redacted everywhere", async () => {
+    const words = LOWER.split(" ");
+    const priya = words.indexOf("priya");
+    const claims = [
+      raw({ type: "action_item", word_start: 7, word_end: 11, text: "confirm cable by friday" }),
+    ];
+    const r = await run(wav.n001, one(LOWER, claims, [priya]));
+    expect(JSON.stringify(r)).not.toContain("priya");
+    expect(r.transcript[priya]!.text).toBe("[name]");
+  });
+
+  test("update and claim ids do not depend on claim order", async () => {
+    const a = raw({
+      type: "date_change",
+      activity_id: "A30",
+      delay_days: 3,
+      word_start: 0,
+      word_end: 6,
+      text: "delay",
+    });
+    const b = raw({
+      type: "action_item",
+      owner_role: "ELEC-02",
+      word_start: 7,
+      word_end: 12,
+      text: "confirm cable",
+    });
+    const r1 = await run(wav.n001, one(LOWER, [a, b]));
+    const r2 = await run(wav.n001, one(LOWER, [b, a]));
+    const ids = (r: NoteRun) => r.result.updates.map((u) => u.id).sort();
+    expect(ids(r2)).toEqual(ids(r1));
+    expect(r1.result.claims.map((c) => c.id).sort()).toEqual(
+      r2.result.claims.map((c) => c.id).sort(),
+    );
+  });
+
+  test("a flagged claim carries the failing checks", async () => {
+    const r = await run(wav.n002);
+    const checks = r.result.claims[0]!.checks;
+    expect(checks.find((c) => c.name === "revision")?.result).toBe("fail");
+    expect(checks.find((c) => c.name === "location")?.reason).toContain("belongs at PAD-B");
+  });
+
+  test("a negated claim needs a human", async () => {
+    const text = "gen three is not set yet";
+    const claims = [raw({ tag: "GEN-3", status_value: "set", word_start: 0, word_end: 5 })];
+    const r = await run(wav.n001, one(text, claims));
+    expect(r.result.status).toBe("needs_human");
+    expect(r.result.updates).toEqual([]);
   });
 });

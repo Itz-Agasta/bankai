@@ -16,13 +16,15 @@ export type GroundedClaim = RawClaim & {
   span: Citation & { kind: "audio_span" };
   /** False when a key value matched only after folding spoken numbers ("gen three"). */
   exact: boolean;
+  /** Spoken, but a person must judge it: the span names other units too, or the verb is negated. */
+  doubt: "ambiguous_span" | "negated" | null;
 };
 
 export type GroundResult =
   | { claim: GroundedClaim }
   | { dropped: { word_start: number; word_end: number; type: RawClaim["type"]; reason: string } };
 
-const MAX_SPAN_WORDS = 60;
+const MAX_SPAN_WORDS = 30;
 const FILLER = new Set(["number", "no"]);
 const STATUS_VERBS: Record<NonNullable<RawClaim["status_value"]>, string[]> = {
   set: ["set", "placed", "landed", "positioned"],
@@ -38,7 +40,56 @@ const SPEECH_VERBS = new Set([
   "reported",
   "will",
   "wants",
+  "confirmed",
+  "thinks",
 ]);
+// Words that open "<x> said" without being a name.
+const NOT_NAMES = new Set([
+  "he",
+  "she",
+  "they",
+  "we",
+  "you",
+  "it",
+  "who",
+  "that",
+  "which",
+  "crew",
+  "foreman",
+  "engineer",
+  "supervisor",
+  "vendor",
+  "driver",
+  "site",
+  "team",
+  "everyone",
+  "nobody",
+  "somebody",
+  "someone",
+]);
+const NEGATORS = new Set([
+  "not",
+  "never",
+  "no",
+  "cannot",
+  "isn't",
+  "isnt",
+  "wasn't",
+  "wasnt",
+  "hasn't",
+  "hasnt",
+  "haven't",
+  "havent",
+  "didn't",
+  "didnt",
+  "aren't",
+  "arent",
+  "weren't",
+  "werent",
+  "won't",
+  "wont",
+]);
+const NEGATION_REACH = 3;
 const CALENDAR = [
   "monday",
   "tuesday",
@@ -87,11 +138,18 @@ export function spokenAs(tokens: Token[], value: string, norm: (s: string) => st
   return null;
 }
 
-function hasPhrase(tokens: Token[], phrase: string): boolean {
+/** Index of the first occurrence of the phrase, or -1. */
+function phraseAt(tokens: Token[], phrase: string): number {
   const p = foldSpoken(phrase.split(/\s+/));
   const t = tokens.map((x) => x.t);
-  return t.some((_, a) => p.every((x, k) => t[a + k] === x));
+  return t.findIndex((_, a) => p.every((x, k) => t[a + k] === x));
 }
+
+const hasPhrase = (tokens: Token[], phrase: string) => phraseAt(tokens, phrase) >= 0;
+
+/** "not set", "hasn't arrived": a negator within a few tokens before the verb. */
+const negated = (tokens: Token[], at: number) =>
+  tokens.slice(Math.max(0, at - NEGATION_REACH), at).some((x) => NEGATORS.has(x.t));
 
 export function hasDelay(tokens: Token[], days: number): boolean {
   return tokens.some((x, k) => {
@@ -143,10 +201,21 @@ export function ground(c: RawClaim, words: Word[], vocab: Vocab, audio: string):
   }
   if (c.delay_days !== null && !hasDelay(tokens, c.delay_days)) return drop("number_not_in_span");
   if (c.component !== null && !hasPhrase(tokens, c.component)) return drop("component_not_in_span");
+  let doubt: GroundedClaim["doubt"] = null;
   if (c.type === "status") {
     const verbs = c.status_value ? STATUS_VERBS[c.status_value] : [];
-    if (!verbs.some((v) => hasPhrase(tokens, v))) return drop("verb_not_in_span");
+    const at = verbs.map((v) => phraseAt(tokens, v)).filter((i) => i >= 0);
+    if (at.length === 0) return drop("verb_not_in_span");
+    if (at.every((i) => negated(tokens, i))) doubt = "negated";
   }
+  // A long span that names other units or places too: the claim could belong to any of them.
+  const named = (values: string[], norm: (s: string) => string, max?: number) =>
+    values.filter((v) => spokenAs(tokens, v, norm, max)).length;
+  if (
+    (c.tag !== null && named(vocab.tags, normalizeTag) > 1) ||
+    (c.location !== null && named(vocab.locations, normalizeLocation, 3) > 1)
+  )
+    doubt = "ambiguous_span";
   const owner =
     c.owner_role !== null &&
     ActorId.safeParse(c.owner_role).success &&
@@ -161,6 +230,7 @@ export function ground(c: RawClaim, words: Word[], vocab: Vocab, audio: string):
       ...c,
       owner_role: owner,
       exact,
+      doubt,
       span: {
         kind: "audio_span",
         ref: `${audio}@${first.start.toFixed(1)}-${last.end.toFixed(1)}`,
@@ -173,9 +243,9 @@ export function ground(c: RawClaim, words: Word[], vocab: Vocab, audio: string):
 const letters = (s: string) => s.replace(/^[^A-Za-z]+|[^A-Za-z]+$/g, "");
 
 /**
- * People's names in a transcript: a capitalized word that is not project vocabulary or a
- * calendar word, said mid-sentence (Whisper capitalizes proper nouns) or opening a sentence
- * right before a speech verb ("Ravi said").
+ * People's names in a transcript: a word that is not project vocabulary or a calendar word,
+ * either right before a speech verb ("ravi said", any case) or capitalized mid-sentence
+ * (Whisper capitalizes proper nouns when it punctuates). The extractor flags the rest.
  */
 export function findNames(words: Word[], vocab: Vocab): Set<string> {
   const allow = new Set([
@@ -190,10 +260,13 @@ export function findNames(words: Word[], vocab: Vocab): Set<string> {
   const names = new Set<string>();
   words.forEach((w, k) => {
     const core = letters(w.text);
-    if (!/^[A-Z][a-z]+$/.test(core) || allow.has(core.toLowerCase())) return;
+    const lc = core.toLowerCase();
+    if (!/^[a-z]+$/i.test(core) || allow.has(lc) || NOT_NAMES.has(lc)) return;
+    // Whisper may write the whole note in lower case: "<x> said" counts whatever the case.
+    const beforeSpeech = SPEECH_VERBS.has(cleanWord(words[k + 1]?.text ?? ""));
     const opensSentence = k === 0 || /[.!?]$/.test(words[k - 1]!.text);
-    const next = cleanWord(words[k + 1]?.text ?? "");
-    if (!opensSentence || SPEECH_VERBS.has(next)) names.add(core.toLowerCase());
+    const midCapital = /^[A-Z][a-z]+$/.test(core) && !opensSentence;
+    if (beforeSpeech || midCapital) names.add(lc);
   });
   return names;
 }

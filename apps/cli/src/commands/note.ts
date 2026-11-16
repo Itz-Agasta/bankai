@@ -6,6 +6,7 @@ import {
   processNote,
   storePath,
 } from "@bankai/core";
+import { join } from "node:path";
 import { formatNote, safe } from "../format";
 
 export interface NoteOptions {
@@ -19,7 +20,10 @@ export async function noteCommand(audio: string, opts: NoteOptions): Promise<num
   if (project instanceof Error) return fail(project, opts);
   const store = openStore(storePath(opts.project));
   try {
-    const { speech, extract } = await modelsFromEnv();
+    // Cache with the project, as the MCP server does, so replay and re-runs hit the same entries.
+    const { speech, extract } = await modelsFromEnv({
+      cacheDir: join(opts.project, ".bankai", "cache"),
+    });
     if (!speech || !extract)
       throw new BankaiFailure(
         "PERCEPTION_UNAVAILABLE",

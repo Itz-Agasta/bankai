@@ -29,10 +29,11 @@ const claim = (over: Partial<RawClaim>): GroundedClaim => ({
   text: "x",
   span: SPAN,
   exact: true,
+  doubt: null,
   ...over,
 });
 
-const run = (c: GroundedClaim) => proposeForClaim(c, linkClaim(c, mini), mini, "note_abc", 1);
+const run = (c: GroundedClaim) => proposeForClaim(c, linkClaim(c, mini), mini, "note_abc", "1");
 
 describe("linkClaim", () => {
   test("a known tag links its equipment row, PO line and only activity", () => {

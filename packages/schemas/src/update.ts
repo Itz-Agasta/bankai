@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { ActorId, Citation } from "./citation";
 import { Confidence, NonNegative } from "./numbers";
-import { Status, Verdict } from "./verdict";
+import { Check, Status, Verdict } from "./verdict";
 
 export const ProposedUpdate = z.object({
   id: z.string(),
@@ -32,6 +32,8 @@ export const Claim = z.object({
   text: z.string(),
   span: Citation.extend({ kind: z.literal("audio_span") }),
   links: z.array(Citation),
+  /** Rule checks run on this claim; a failing one says why the note was flagged. */
+  checks: z.array(Check),
   confidence: Confidence,
 });
 export type Claim = z.infer<typeof Claim>;

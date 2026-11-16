@@ -32,7 +32,7 @@ const CLAIM: RawClaim = {
 function mockModel(claims: RawClaim[]) {
   return new MockLanguageModelV4({
     doGenerate: {
-      content: [{ type: "text", text: JSON.stringify({ claims }) }],
+      content: [{ type: "text", text: JSON.stringify({ claims, names: [] }) }],
       finishReason: { unified: "stop", raw: "stop" },
       usage: {
         inputTokens: { total: 1000, noCache: 1000, cacheRead: 0, cacheWrite: 0 },
@@ -70,7 +70,7 @@ describe("aiExtractor", () => {
     const r = await aiExtractor("gemini-3.8-flash", mockModel([CLAIM])).extract(
       extractInput(words("Gen", "three"), mini),
     );
-    expect(r.value).toEqual([CLAIM]);
+    expect(r.value).toEqual({ claims: [CLAIM], names: [] });
     expect(r.cost.model).toBe("gemini-3.8-flash");
     expect(r.cost.usd).toBeCloseTo((1000 * 0.75 + 100 * 3.75) / 1e6, 10);
   });
@@ -83,7 +83,7 @@ describe("fakeExtractor", () => {
     const { sha256Hex } = await import("../src/models/hash");
     const key = sha256Hex("Gen three").slice(0, 12);
     const fake = fakeExtractor("fake-extract", { [key]: [CLAIM], "*": [] });
-    expect((await fake.extract(input)).value).toEqual([CLAIM]);
-    expect((await fake.extract(other)).value).toEqual([]);
+    expect((await fake.extract(input)).value.claims).toEqual([CLAIM]);
+    expect((await fake.extract(other)).value.claims).toEqual([]);
   });
 });

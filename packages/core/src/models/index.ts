@@ -30,4 +30,4 @@ export { liveModels } from "./providers";
 export { modelsFromEnv } from "./env";
 export type { Models } from "./env";
 export { aiExtractor, fakeExtractor, withExtractCache, withExtractFallback } from "./extract";
-export type { ExtractInput, ExtractModel, RawClaim } from "./extract";
+export type { ExtractInput, ExtractModel, ExtractResult, RawClaim } from "./extract";
