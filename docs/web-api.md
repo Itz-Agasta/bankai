@@ -80,9 +80,13 @@ git add data/replay
 
 The `Dockerfile` builds in two stages: it installs from the lockfile and bundles the app into one file, then the runtime image (`oven/bun` alpine) gets only the bundle, `sharp` (native, so it stays a package) and `data/`. It runs `bankai serve --demo` as the non-root `bun` user, on `PORT` (default 8080).
 
-Cloud Run fits as is: it injects `PORT`, the server listens on all interfaces, and SIGTERM stops it cleanly (removing the demo copy). The demo copy lives in `/tmp`, which on Cloud Run is memory, so keep the project small. Set `BANKAI_PROJECT` (e.g. `data/projects/alpha`) and `BANKAI_ALLOWED_ORIGINS` (the app's hostname) on the service.
+Cloud Run fits as is: it injects `PORT`, the server listens on all interfaces, and SIGTERM stops it cleanly (removing the demo copy). The demo copy lives in `/tmp`, which on Cloud Run is memory, so keep the project small. Set `BANKAI_PROJECT` and `BANKAI_ALLOWED_ORIGINS` (the app's hostname) on the service.
+
+`--allow-unauthenticated` makes every route public, including `/api/project` and the evidence records. That is fine for the demo, whose project is synthetic. Never deploy a real project this way: there is no auth, and CORS does not stop direct callers.
+
+Demo with the fixture project that ships in the image (switch to `data/projects/alpha` once it lands):
 
 ```bash
 gcloud run deploy bankai --source . --region <region> --allow-unauthenticated \
-  --set-env-vars BANKAI_PROJECT=data/projects/alpha,BANKAI_ALLOWED_ORIGINS=<app host>
+  --set-env-vars BANKAI_PROJECT=data/fixtures/mini,BANKAI_ALLOWED_ORIGINS=<app host>
 ```

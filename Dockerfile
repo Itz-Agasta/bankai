@@ -12,17 +12,14 @@ COPY apps apps
 COPY packages packages
 COPY skills/bankai skills/bankai
 RUN bun build apps/cli/src/main.ts --target=bun --minify --external sharp --outfile dist/main.js
-# sharp is native (libvips), so it stays a package, at the version the lockfile installed.
-RUN v=$(bun -p 'require("./packages/core/node_modules/sharp/package.json").version') \
- && mkdir /sharp && cd /sharp \
- && echo "{\"dependencies\":{\"sharp\":\"$v\"}}" > package.json \
- && bun install --production --linker hoisted --ignore-scripts
+# sharp is native (libvips), so it stays a package: its locked tree, symlinks resolved.
+RUN cp -rL node_modules/.bun/sharp@*/node_modules /sharp && rm -rf /sharp/.bin /sharp/@types
 
 # Runtime: alpine, the bundle, sharp and the project data.
 FROM oven/bun:1.4.4-alpine
 WORKDIR /app
 ENV NODE_ENV=production PORT=8080
-COPY --from=build /sharp/node_modules node_modules
+COPY --from=build /sharp node_modules
 COPY --from=build /app/dist/main.js main.js
 COPY data data
 USER bun
