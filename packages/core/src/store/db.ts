@@ -29,6 +29,12 @@ CREATE TABLE IF NOT EXISTS updates (
   approved_by TEXT,
   at TEXT
 );
+CREATE TABLE IF NOT EXISTS notes (
+  id TEXT PRIMARY KEY,
+  json TEXT NOT NULL,
+  status TEXT NOT NULL,
+  at TEXT NOT NULL
+);
 `;
 
 /** SQLite file with WAL (readers do not block the writer) and the schema in place. */

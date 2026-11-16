@@ -166,3 +166,39 @@ describe("store", () => {
     store.close();
   });
 });
+
+describe("notes in the store", () => {
+  test("a note round-trips and its proposals keep their approval when the audio comes again", async () => {
+    const { fakeExtractor } = await import("../src/models/extract");
+    const { fakeTranscriber } = await import("../src/models/speech");
+    const { memoryTracer } = await import("../src/models/meter");
+    const { processNote } = await import("../src/note");
+    const { loadMini } = await import("./helpers");
+    const { extractScript, N001, transcript, wavFiles } = await import("./fixtures/notes");
+    const project = await loadMini();
+    const audio = (await wavFiles()).n001;
+    const models = {
+      speech: fakeTranscriber("fake-speech", { "*": transcript(N001) }),
+      extract: fakeExtractor("fake-extract", extractScript()),
+    };
+    const store = openStore(await dbPath());
+    try {
+      const process = async () => {
+        const r = await processNote({ audio }, { project, models, tracer: memoryTracer("t") });
+        store.saveNote(r.result, "2026-11-16T10:00:00Z");
+        store.saveUpdates(r.result.id, r.result.updates);
+        return r.result;
+      };
+      const first = await process();
+      expect(store.getNote(first.id)).toEqual(first);
+      const id = first.updates[0]!.id;
+      store.approveUpdate(id, "SUPT-01", "2026-11-16T10:05:00Z");
+      await process();
+      expect(store.getUpdate(id)?.approval).toBe("approved");
+      expect(store.verdictOfUpdate(id)).toBe(first.id);
+      expect(store.getNote("note_missing")).toBeNull();
+    } finally {
+      store.close();
+    }
+  });
+});
