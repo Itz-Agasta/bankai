@@ -1,11 +1,10 @@
 import {
   audioMediaType,
   BankaiFailure,
-  hasMetadata,
+  cleanImage,
   MAX_AUDIO_BYTES,
   MAX_IMAGE_BYTES,
   sha256Hex,
-  stripMetadata,
 } from "@bankai/core";
 import { mkdir, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -32,15 +31,8 @@ function imageExt(b: Uint8Array): string | null {
   return null;
 }
 
-/** Uploads are served back to the app, so a photo is stored without GPS, device or time. */
-export async function cleanPhoto(bytes: Uint8Array): Promise<Uint8Array> {
-  if (!hasMetadata(bytes)) return bytes;
-  try {
-    return await stripMetadata(bytes);
-  } catch {
-    throw new BankaiFailure("INPUT_UNSUPPORTED", "photo could not be read");
-  }
-}
+/** Uploads are served back to the app, so a photo is checked and stored without GPS, device or time. */
+export const cleanPhoto = (bytes: Uint8Array) => cleanImage(bytes, "photo");
 
 /**
  * Store bytes under the tmp folder as `<sha256>.<ext>`. The name is the content: an existing

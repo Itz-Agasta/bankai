@@ -50,7 +50,7 @@ Bankai keeps state between runs:
 
 Bankai reads structured exports, not PDFs: equipment schedule, drawing register, purchase orders, submittals, schedule and deliveries. The sample project, Project Alpha, is a synthetic 12 MW data center in Navi Mumbai. Templates in `data/templates/` and [data-format.md](data-format.md) let anyone load their own project.
 
-Uploaded photos are stored and read without EXIF, XMP or IPTC metadata (GPS, device, time), and CI fails on any committed photo that still has it.
+Uploaded photos are stored and read without EXIF, XMP or IPTC metadata (GPS, device, time), and CI fails on any eval photo committed with it.
 
 ## Evaluation
 

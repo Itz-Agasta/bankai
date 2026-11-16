@@ -7,8 +7,7 @@ import { BankaiFailure } from "../errors";
 import { normalizeTag } from "../link/normalize";
 import { mergeReadings } from "./merge";
 
-export { hasMetadata, stripMetadata } from "./exif";
-export { loadImage, MAX_IMAGE_BYTES } from "./image";
+export { cleanImage, loadImage, MAX_IMAGE_BYTES } from "./image";
 export { validateField } from "./validators";
 
 const REQUIRED: Field[] = ["manufacturer", "model"];

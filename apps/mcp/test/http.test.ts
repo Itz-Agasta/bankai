@@ -67,6 +67,21 @@ describe("HTTP API", () => {
     expect(hasMetadata(await Bun.file(join(s.ctx().tmpDir, files[0]!)).bytes())).toBe(false);
   });
 
+  test("a huge-pixel photo with metadata is refused before it is stored", async () => {
+    const s = await startTest();
+    // sharp belongs to core, not this package.
+    const sharp = (await import(Bun.resolveSync("sharp", join(ROOT, "packages/core")))).default;
+    const bomb = await sharp({
+      create: { width: 8000, height: 8000, channels: 3, background: "#fff" },
+    })
+      .withExif({ IFD0: { Make: "x" } })
+      .png()
+      .toBuffer();
+    const r = await post(s.at("/api/verify"), form({ photos: new Blob([bomb]) }));
+    expect(r.status).toBe(413);
+    expect(existsSync(s.ctx().tmpDir) ? readdirSync(s.ctx().tmpDir) : []).toEqual([]);
+  });
+
   test("a photos field that is text is 400", async () => {
     const s = await startTest();
     const r = await post(s.at("/api/verify"), form({ photos: "plate.jpg" }));
