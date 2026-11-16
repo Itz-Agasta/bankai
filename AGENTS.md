@@ -8,7 +8,9 @@ Bankai checks data center equipment on site. It reads photos and voice notes, li
 |---|---|
 | `packages/schemas` | zod schemas shared by everything |
 | `packages/core` | Project loader, linking, rules, perception, scripts |
-| `apps/cli` | `bankai` command line |
+| `apps/cli` | `bankai` command line (`bankai mcp` starts the MCP server) |
+| `apps/mcp` | MCP server: `verify_equipment`, `check_delivery`, `apply_update`, `explain` |
+| `skills/bankai` | The `bankai` skill the MCP server serves to agents |
 | `data/templates` | Empty project files to start from |
 | `data/fixtures/mini` | Tiny complete project used by tests |
 | `data/projects/` | Eval projects (Project Alpha, being built) |
