@@ -1,6 +1,9 @@
 import { expect, test } from "bun:test";
 import type { Verdict } from "@bankai/schemas";
-import { formatVerdict } from "../src/format";
+
+// Color is decided when the module loads; turn it off so only data could carry ESC.
+process.env.NO_COLOR = "1";
+const { formatVerdict } = await import("../src/format");
 
 test("control characters from data never reach the terminal", () => {
   const ESC = String.fromCharCode(27);
