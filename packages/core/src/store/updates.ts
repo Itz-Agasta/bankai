@@ -113,3 +113,28 @@ export function declineUpdate(
   if (u.approval !== "pending") return;
   appendAudit(auditFile, [event(u, actor, "declined", at)]);
 }
+
+/** A person said no: the update leaves pending for good. Idempotent; an approved update stays approved. */
+export function rejectUpdate(
+  db: Database,
+  id: string,
+  by: string,
+  at: string,
+  auditFile: string,
+): ProposedUpdate {
+  const actor = ActorId.parse(by);
+  return db
+    .transaction(() => {
+      const u = mustGet(db, id);
+      if (u.approval === "rejected") return u;
+      if (u.approval === "approved")
+        throw new BankaiFailure("APPROVAL_REQUIRED", `update ${id} was already approved`);
+      const rejected: ProposedUpdate = { ...u, approval: "rejected", approved_by: actor, at };
+      db.query(
+        `UPDATE updates SET json = $json, approval = 'rejected', approved_by = $by, at = $at WHERE id = $id`,
+      ).run({ json: JSON.stringify(rejected), by: actor, at, id });
+      appendAudit(auditFile, [event(rejected, actor, "rejected", at)]);
+      return rejected;
+    })
+    .immediate();
+}

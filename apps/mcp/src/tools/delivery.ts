@@ -1,7 +1,7 @@
-import { checkDelivery, loadProject } from "@bankai/core";
 import { VerifyResult } from "@bankai/schemas";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
+import { delivery } from "../actions";
 import type { ServerContext } from "../context";
 import { PhotoInput, resolvePhotos } from "../photos";
 import { fail, ok } from "../results";
@@ -38,15 +38,14 @@ export function registerDelivery(server: McpServer, ctx: ServerContext): void {
     },
     async ({ po, line, ticket, photos }) => {
       try {
-        const project = await loadProject(ctx.projectDir);
-        const runId = crypto.randomUUID();
-        const result = await checkDelivery(
-          { po, line, ticket, photos: photos && (await resolvePhotos(photos, ctx)) },
-          { project, models: ctx.models, tracer: ctx.store.tracer(runId), runId },
+        return ok(
+          await delivery(ctx, {
+            po,
+            line,
+            ticket,
+            photos: photos && (await resolvePhotos(photos, ctx)),
+          }),
         );
-        ctx.store.saveVerdict(result.verdict, new Date().toISOString());
-        ctx.store.saveUpdates(result.verdict.id, result.proposed_updates);
-        return ok(result);
       } catch (e) {
         return fail(e);
       }

@@ -1,8 +1,8 @@
-import { BankaiFailure, loadProject, processNote } from "@bankai/core";
 import { NoteRun } from "@bankai/schemas";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { AudioInput, resolveAudio } from "../audio";
+import { note } from "../actions";
 import type { ServerContext } from "../context";
 import { fail, ok } from "../results";
 
@@ -23,21 +23,7 @@ export function registerNote(server: McpServer, ctx: ServerContext): void {
     },
     async ({ audio }) => {
       try {
-        const { speech, extract } = ctx.models;
-        if (!speech || !extract)
-          throw new BankaiFailure(
-            "PERCEPTION_UNAVAILABLE",
-            "speech is not configured",
-            "set GROQ_API_KEY to process site notes",
-          );
-        const project = await loadProject(ctx.projectDir);
-        const path = await resolveAudio(audio, ctx);
-        const run = await processNote(
-          { audio: path },
-          { project, models: { speech, extract }, tracer: (id) => ctx.store.restartTrace(id) },
-        );
-        ctx.store.saveNote(run.result, new Date().toISOString());
-        return ok(run);
+        return ok(await note(ctx, { audio: await resolveAudio(audio, ctx) }));
       } catch (e) {
         return fail(e);
       }

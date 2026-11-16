@@ -1,7 +1,7 @@
-import { loadProject, proposeForVerify, verifyEquipment } from "@bankai/core";
 import { VerifyResult } from "@bankai/schemas";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
+import { verify } from "../actions";
 import type { ServerContext } from "../context";
 import { PhotoInput, resolvePhotos } from "../photos";
 import { fail, ok } from "../results";
@@ -37,21 +37,13 @@ export function registerVerify(server: McpServer, ctx: ServerContext): void {
     },
     async ({ photos, location, components }) => {
       try {
-        // Site records change during the day: read them fresh on every call.
-        const project = await loadProject(ctx.projectDir);
-        const runId = crypto.randomUUID();
-        const verdict = await verifyEquipment(
-          {
+        return ok(
+          await verify(ctx, {
             photos: await resolvePhotos(photos, ctx),
             location: location ?? null,
-            observedComponents: components,
-          },
-          { project, models: ctx.models, tracer: ctx.store.tracer(runId), runId },
+            components,
+          }),
         );
-        ctx.store.saveVerdict(verdict, new Date().toISOString());
-        const proposed = proposeForVerify(verdict, location ?? null, project);
-        ctx.store.saveUpdates(verdict.id, proposed);
-        return ok({ verdict, proposed_updates: proposed });
       } catch (e) {
         return fail(e);
       }

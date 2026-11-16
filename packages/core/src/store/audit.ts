@@ -4,7 +4,7 @@ import { appendFileSync } from "node:fs";
 export interface AuditEvent {
   at: string;
   actor: string;
-  action: "proposed" | "approved" | "declined";
+  action: "proposed" | "approved" | "declined" | "rejected";
   update_id: string;
   target: Citation;
   field: string;
