@@ -2,6 +2,7 @@ export const VERSION = "0.1.0";
 
 export * from "./citation";
 export * from "./errors";
+export * from "./eval";
 export * from "./numbers";
 export * from "./observation";
 export * from "./project";

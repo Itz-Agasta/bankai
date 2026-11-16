@@ -70,7 +70,7 @@ Label each nameplate exactly as printed:
 
 Never guess a value. `unreadable` is a valid label: it teaches retake and abstain behavior, which judges reward.
 
-The skill `label-photo` defines the file format when it lands. Until then, keep labels in the format CI expects once schemas land.
+Use the `label-photo` skill. File format: `data-format.md`.
 
 Deadlines: first 40 photos by Nov 15; 150 total by Nov 22. Draw detector boxes around nameplates in Week 2 only if the Nov 18 Gemini spot check says crops help.
 

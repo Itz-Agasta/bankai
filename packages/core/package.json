@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@bankai/schemas": "workspace:*",
+    "sharp": "^0.35.5",
     "zod": "^4.6.7"
   }
 }
