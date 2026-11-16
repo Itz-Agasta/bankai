@@ -84,6 +84,11 @@ describe("verifyEquipment", () => {
     });
   });
 
+  test("a painted tag decides the link: the identical twin does not lower confidence", async () => {
+    const v = await verify({ location: "PAD-B" });
+    expect(v.confidence).toBe(1);
+  });
+
   test("reading fewer ratings lowers confidence", async () => {
     const full = await verify({ location: "PAD-B" });
     const partial = await verify({

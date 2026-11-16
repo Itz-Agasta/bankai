@@ -117,7 +117,8 @@ export async function verifyEquipment(input: VerifyInput, deps: VerifyDeps): Pro
   const conf = confidence({
     agreementRate: agreementRate(perception.observations, perception.dropped),
     linkScore: link?.score ?? 0,
-    margin: link?.margin ?? 0,
+    // A tag read off the unit decides it (linkObservations); the twin's score gap is not doubt.
+    margin: link?.method === "exact" ? 1 : (link?.margin ?? 0),
     ratingCoverage: ratingCoverage(project, tag, perception.observations),
   });
   return done({
