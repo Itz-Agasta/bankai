@@ -103,12 +103,13 @@ describe("checkDelivery", () => {
     expect(r.proposed_updates).toEqual([]);
   });
 
-  test("a part only one model sees does not count", async () => {
-    const r = await checkDelivery(
-      { po: "PO-1042", line: 14, ticket: "DT-88", photos: [PLATE] },
-      deps(["controls cabinet"], []),
-    );
+  test("a part only one model sees does not count, and both replies are traced", async () => {
+    const d = deps(["controls cabinet"], []);
+    const r = await checkDelivery({ po: "PO-1042", line: 14, ticket: "DT-88", photos: [PLATE] }, d);
     expect(completeness(r).result).toBe("fail");
+    const steps = d.tracer.events().map((e) => `${e.step}: ${e.summary}`);
+    expect(steps).toContain("components.primary: controls cabinet");
+    expect(steps).toContain("components.checker: none");
   });
 
   test("a model failure while listing components is PERCEPTION_UNAVAILABLE", async () => {
