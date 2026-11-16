@@ -3,6 +3,7 @@ import { createGroq } from "@ai-sdk/groq";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { aiVision } from "./ai";
 import { withCache, withFallback } from "./cache";
+import { aiExtractor, withExtractCache, withExtractFallback } from "./extract";
 import { PRICES, type ModelConfig } from "./config";
 import type { Models } from "./env";
 import { aiTranscriber, SPEECH_PRICES, withSpeechCache, withSpeechFallback } from "./speech";
@@ -21,9 +22,11 @@ export function liveModels(cfg: ModelConfig): Models {
       throw new Error(`No price for model ${id}: add it to PRICES in models/config.ts`);
   }
   const vision = (id: string) => withCache(aiVision(id, google(id)), cache);
+  const extract = (id: string) => withExtractCache(aiExtractor(id, google(id)), cache);
   const models: Models = {
     primary: withFallback(vision(cfg.vision), vision(cfg.visionFallback)),
     checker: withCache(aiVision(cfg.checker, openrouter(cfg.checker)), cache),
+    extract: withExtractFallback(extract(cfg.vision), extract(cfg.visionFallback)),
   };
   if (cfg.keys.groq) {
     for (const id of [cfg.speech, cfg.speechFallback]) {

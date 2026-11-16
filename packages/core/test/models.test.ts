@@ -140,6 +140,10 @@ describe("speech config", () => {
     );
   });
 
+  test("extraction uses the vision models with their fallback", () => {
+    expect(liveModels(modelConfig({})).extract?.id).toBe("gemini-3.8-flash|gemini-3.5-flash-lite");
+  });
+
   test("an unpriced speech model is refused", () => {
     expect(() =>
       liveModels(modelConfig({ GROQ_API_KEY: "k", BANKAI_SPEECH_MODEL: "whisper-tiny" })),
