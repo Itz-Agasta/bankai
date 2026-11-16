@@ -24,23 +24,34 @@ export interface Tracer {
   events(): TraceEvent[];
 }
 
-/** In-memory trace (D29); the store-backed tracer arrives with the state store. */
+/** One trace event (D29). `index` orders events within a run. */
+export function traceEvent(
+  runId: string,
+  index: number,
+  step: string,
+  input: Uint8Array | string,
+  summary: string,
+  cost?: CallCost,
+): TraceEvent {
+  return {
+    id: `${runId}.${index}`,
+    run_id: runId,
+    step,
+    input_hash: sha256Hex(input).slice(0, 16),
+    summary,
+    model: cost?.model ?? null,
+    ms: cost?.ms ?? 0,
+    usd: cost?.usd ?? 0,
+    at: new Date().toISOString(),
+  };
+}
+
+/** In-memory trace for tests and one-off runs; the store keeps a durable one. */
 export function memoryTracer(runId: string): Tracer {
   const events: TraceEvent[] = [];
   return {
-    step(step, input, summary, cost) {
-      events.push({
-        id: `${runId}.${events.length}`,
-        run_id: runId,
-        step,
-        input_hash: sha256Hex(input).slice(0, 16),
-        summary,
-        model: cost?.model ?? null,
-        ms: cost?.ms ?? 0,
-        usd: cost?.usd ?? 0,
-        at: new Date().toISOString(),
-      });
-    },
+    step: (step, input, summary, cost) =>
+      void events.push(traceEvent(runId, events.length, step, input, summary, cost)),
     events: () => [...events],
   };
 }

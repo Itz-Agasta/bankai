@@ -1,12 +1,20 @@
-import { describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { Verdict } from "@bankai/schemas";
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { cp, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const ROOT = join(import.meta.dir, "../../..");
 const MAIN = join(ROOT, "apps/cli/src/main.ts");
 const PLATE = join(ROOT, "packages/core/test/fixtures/plate.jpg");
+
+// A temp copy: verify now writes .bankai/state.db next to the project files.
+let project = "";
+beforeAll(async () => {
+  project = join(await mkdtemp(join(tmpdir(), "bankai-cli-proj-")), "mini");
+  await cp(join(ROOT, "data/fixtures/mini"), project, { recursive: true });
+});
+afterAll(() => rm(join(project, ".."), { recursive: true, force: true }));
 
 async function fakeScript() {
   const entry = {
@@ -49,7 +57,7 @@ describe("bankai verify", () => {
       "verify",
       PLATE,
       "--project",
-      "data/fixtures/mini",
+      project,
       "--location",
       "PAD-A",
       "--json",
@@ -60,14 +68,7 @@ describe("bankai verify", () => {
   });
 
   test("human output names the status and each check", async () => {
-    const r = await bankai([
-      "verify",
-      PLATE,
-      "--project",
-      "data/fixtures/mini",
-      "--location",
-      "PAD-A",
-    ]);
+    const r = await bankai(["verify", PLATE, "--project", project, "--location", "PAD-A"]);
     expect(r.code).toBe(0);
     expect(r.out).toContain("FLAGGED");
     expect(r.out).toContain("belongs at PAD-B (E-201 rev C)");
@@ -76,7 +77,7 @@ describe("bankai verify", () => {
   test("an empty photo exits 2 with a structured error", async () => {
     const empty = join(await mkdtemp(join(tmpdir(), "bankai-cli-")), "empty.jpg");
     await writeFile(empty, "");
-    const r = await bankai(["verify", empty, "--project", "data/fixtures/mini", "--json"]);
+    const r = await bankai(["verify", empty, "--project", project, "--json"]);
     expect(r.code).toBe(2);
     expect(JSON.parse(r.out).error.code).toBe("INPUT_UNSUPPORTED");
   });
