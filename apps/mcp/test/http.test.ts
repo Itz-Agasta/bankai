@@ -1,6 +1,8 @@
 import { afterAll, describe, expect, test } from "bun:test";
-import { fakeExtractor, fakeTranscriber } from "@bankai/core";
+import { fakeExtractor, fakeTranscriber, sha256Hex } from "@bankai/core";
 import { NoteRun, VerifyResult } from "@bankai/schemas";
+import { chmodSync, mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { extractScript, N001, transcript } from "../../../packages/core/test/fixtures/notes";
 import { cleanup, PLATE } from "./helpers";
 import { form, startTest, stopAll } from "./http-helpers";
@@ -40,6 +42,18 @@ describe("HTTP API", () => {
     const r = await post(s.at("/api/verify"), form({ photos: [plate(), plate()] }));
     expect(r.status).toBe(200);
     VerifyResult.parse(await r.json());
+  });
+
+  test("an upload already on disk is not rewritten", async () => {
+    // Another request may be reading it: a rewrite truncates the file under that reader.
+    const s = await startTest();
+    const bytes = await Bun.file(PLATE).bytes();
+    const name = `${sha256Hex(bytes)}.jpg`;
+    mkdirSync(s.ctx().tmpDir, { recursive: true });
+    writeFileSync(join(s.ctx().tmpDir, name), bytes);
+    chmodSync(join(s.ctx().tmpDir, name), 0o444);
+    const r = await post(s.at("/api/verify"), form({ photos: plate() }));
+    expect(r.status).toBe(200);
   });
 
   test("a photos field that is text is 400", async () => {

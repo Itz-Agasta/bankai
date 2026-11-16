@@ -66,8 +66,9 @@ export async function startHttp(opts: {
     routes["/api/demo/reset"] = {
       POST: safe(async () => {
         // Build the new context first: a request never sees a half-made one.
+        const next = await build();
         const old = ctx;
-        ctx = await build();
+        ctx = next;
         retire(old);
         return json({ ok: true });
       }),

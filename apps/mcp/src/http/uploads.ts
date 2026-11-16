@@ -1,5 +1,5 @@
 import { audioMediaType, BankaiFailure, sha256Hex } from "@bankai/core";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { ServerContext } from "../context";
 
@@ -48,7 +48,13 @@ export async function saveUploads(
       );
     await mkdir(ctx.tmpDir, { recursive: true });
     const p = join(ctx.tmpDir, `${sha256Hex(bytes)}.${ext}`);
-    await writeFile(p, bytes);
+    // The name is the content: an existing file is this upload, and another request may be
+    // reading it. A new one appears whole, via rename.
+    if (!(await Bun.file(p).exists())) {
+      const tmp = `${p}.${crypto.randomUUID()}.tmp`;
+      await writeFile(tmp, bytes);
+      await rename(tmp, p);
+    }
     out.push(p);
   }
   return out;

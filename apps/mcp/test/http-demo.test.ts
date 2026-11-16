@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, test } from "bun:test";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -60,6 +60,15 @@ describe("demo mode", () => {
     const s = await startTest({ demo: true });
     const [a, b, c] = await Promise.all([reset(s), verify(s), fetch(s.at("/api/status"))]);
     expect([a.status, b.status, c.status]).toEqual([200, 200, 200]);
+  });
+
+  test("two resets at once leave nothing behind after stop", async () => {
+    const demos = () => readdirSync(tmpdir()).filter((d) => d.startsWith("bankai-demo-")).length;
+    const before = demos();
+    const s = await startTest({ demo: true });
+    await Promise.all([reset(s), reset(s)]);
+    await s.stop();
+    expect(demos()).toBe(before);
   });
 
   test("a replay miss is 503 with the demo message", async () => {
