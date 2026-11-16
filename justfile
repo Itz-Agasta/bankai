@@ -5,7 +5,10 @@ check:
     bunx oxlint && bunx oxfmt --write .
 
 check-ci:
-    bunx oxlint --deny-warnings && bunx oxfmt --check .
+    bunx oxlint --deny-warnings && bunx oxfmt --check . && bunx knip
+
+knip:
+    bunx knip
 
 types:
     bunx tsc -b

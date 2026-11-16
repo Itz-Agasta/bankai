@@ -7,7 +7,7 @@ import { sha256Hex } from "../../src/models/hash";
 import type { Transcript } from "../../src/models/types";
 
 /** Whisper-shaped words (edge punctuation kept), 0.4 s apart. */
-export const words = (text: string): Word[] =>
+const words = (text: string): Word[] =>
   text.split(" ").map((t, i) => ({ i, text: t, start: i * 0.4, end: i * 0.4 + 0.35 }));
 
 export const transcript = (text: string, avgLogprob = -0.1): Transcript => {
@@ -20,7 +20,7 @@ export const transcript = (text: string, avgLogprob = -0.1): Transcript => {
   };
 };
 
-export const raw = (over: Partial<RawClaim>): RawClaim => ({
+const raw = (over: Partial<RawClaim>): RawClaim => ({
   type: "status",
   word_start: 0,
   word_end: 0,
@@ -43,9 +43,9 @@ export const N002 = "Gen three has been set on pad A this morning. Day tank stil
 export const N003 =
   "Load bank test is delayed three days, waiting on the cable crew. Action for ELEC-02: confirm cable delivery by Friday. Ravi said the controls cabinet door is damaged.";
 /** N003 as the extractor sees it: names already redacted. */
-export const N003_REDACTED = N003.replace("Ravi", "[name]");
+const N003_REDACTED = N003.replace("Ravi", "[name]");
 
-export const CLAIMS: Record<string, RawClaim[]> = {
+const CLAIMS: Record<string, RawClaim[]> = {
   [N001]: [
     raw({
       tag: "GEN-3",

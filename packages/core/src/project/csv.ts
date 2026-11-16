@@ -7,14 +7,14 @@ export class CsvError extends Error {
   }
 }
 
-export interface CsvRow {
+interface CsvRow {
   /** File line the row starts on, 1-based. */
   line: number;
   cells: string[];
 }
 
 /** Strict RFC 4180: quotes only open a field, doubled quotes escape, CRLF or LF. */
-export function parseCsvRows(text: string): CsvRow[] {
+function parseCsvRows(text: string): CsvRow[] {
   const rows: CsvRow[] = [];
   let row: string[] = [];
   let field = "";

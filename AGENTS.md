@@ -25,7 +25,8 @@ bun install
 just test        # unit tests
 just types       # type check
 just check       # lint and format (rewrites files)
-just check-ci    # what CI runs, read only
+just knip        # unused files, exports and dependencies
+just check-ci    # what CI runs, read only (lint, format, knip)
 just validate-data data/fixtures/mini
 just validate-eval
 ```

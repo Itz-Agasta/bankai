@@ -8,7 +8,7 @@ import { impactOf } from "../rules/schedule-impact";
 import type { GroundedClaim } from "./ground";
 import type { ClaimLink } from "./link";
 
-export type DraftUpdate = Omit<ProposedUpdate, "confidence">;
+type DraftUpdate = Omit<ProposedUpdate, "confidence">;
 
 export interface ClaimOutcome {
   checks: Check[];

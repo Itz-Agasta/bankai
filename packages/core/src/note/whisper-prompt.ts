@@ -33,7 +33,7 @@ const say = (n: number) =>
       : String(n);
 
 /** "GEN-3" -> "gen three", so Whisper hears the tag the way people say it. */
-export const spokenTag = (tag: string) =>
+const spokenTag = (tag: string) =>
   tag
     .toLowerCase()
     .replace(/-?(\d+)/g, (_, d: string) => ` ${say(Number(d))}`)
