@@ -83,10 +83,16 @@ function downstream(activities: Activity[], start: Set<string>): Set<string> {
 /** How far a delay to this unit's activities pushes the last milestone, as a three-point range (D27). */
 export function scheduleImpact(ctx: RuleContext, delay: Range): Check {
   const acts = ctx.project.activities;
-  const recorded = delaysOf(acts);
-  const baseline = forwardPass(acts, "likely", recorded); // validates the network before any early return
+  forwardPass(acts); // validates the network before any early return
   const own = acts.filter((a) => a.tag !== null && a.tag === ctx.tag);
   if (own.length === 0) return check("schedule_impact", "unknown", "no_activity_for_tag");
+  return impactOf(acts, own, delay);
+}
+
+/** How far delaying `own` (their first activities) pushes the last milestone. */
+export function impactOf(acts: Activity[], own: Activity[], delay: Range): Check {
+  const recorded = delaysOf(acts);
+  const baseline = forwardPass(acts, "likely", recorded);
   const points = [delay.low, delay.likely, delay.high];
   if (
     !points.every((d) => Number.isFinite(d) && d >= 0) ||
