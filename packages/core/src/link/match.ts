@@ -123,8 +123,9 @@ export function linkObservations(
   // A tag read off the unit decides it, unless a second record carries the same tag.
   const ambiguous =
     top.method === "exact" && next?.method !== "exact" ? false : margin < AMBIGUOUS_MARGIN;
-  // A visible tag that matches no record must not be overridden by maker and ratings.
-  if (top.method !== "exact" && reading(obs, "tag")) return { links: [], candidates, ambiguous };
+  // A visible tag that matches no record (or two different tags) must not be overridden by maker and ratings.
+  if (top.method !== "exact" && obs.some((o) => o.field === "tag"))
+    return { links: [], candidates, ambiguous };
   const links: Link[] =
     !ambiguous && top.score >= MIN_LINK_SCORE
       ? [
