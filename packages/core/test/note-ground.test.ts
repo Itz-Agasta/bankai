@@ -256,3 +256,26 @@ describe("review fixes: names in lowercase transcripts", () => {
     expect([...findNames(w, vocab)]).toEqual(["ravi"]);
   });
 });
+
+describe("live fix: incidental activity", () => {
+  test("an unspoken activity on a status claim is cleared, not fatal", () => {
+    const w = words("GEN-3", "has", "been", "set", "on", "PAD-A", "this", "morning,");
+    const r = g(
+      claim({
+        tag: "GEN-3",
+        status_value: "set",
+        location: "PAD-A",
+        activity_id: "A20",
+        word_end: 7,
+      }),
+      w,
+    );
+    expect("claim" in r && r.claim.activity_id).toBeNull();
+  });
+
+  test("an unspoken activity on a date change still drops it", () => {
+    const w = words("GEN-3", "is", "delayed", "three", "days");
+    const r = g(claim({ type: "date_change", activity_id: "A30", delay_days: 3, word_end: 4 }), w);
+    expect(dropped(r)).toBe("activity_not_in_span");
+  });
+});

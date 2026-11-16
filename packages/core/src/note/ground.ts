@@ -195,9 +195,14 @@ export function ground(c: RawClaim, words: Word[], vocab: Vocab, audio: string):
     if (!m) return drop("location_not_in_span");
     exact &&= !m.folded;
   }
-  if (c.activity_id !== null) {
-    const a = vocab.activities.find((x) => x.id === c.activity_id);
-    if (!a || !activitySpoken(tokens, a)) return drop("activity_not_in_span");
+  // The activity is the fact only for a date change; elsewhere an unspoken one is cleared, like an owner.
+  let activity = c.activity_id;
+  if (activity !== null) {
+    const a = vocab.activities.find((x) => x.id === activity);
+    if (!a || !activitySpoken(tokens, a)) {
+      if (c.type === "date_change") return drop("activity_not_in_span");
+      activity = null;
+    }
   }
   if (c.delay_days !== null && !hasDelay(tokens, c.delay_days)) return drop("number_not_in_span");
   if (c.component !== null && !hasPhrase(tokens, c.component)) return drop("component_not_in_span");
@@ -229,6 +234,7 @@ export function ground(c: RawClaim, words: Word[], vocab: Vocab, audio: string):
     claim: {
       ...c,
       owner_role: owner,
+      activity_id: activity,
       exact,
       doubt,
       span: {
