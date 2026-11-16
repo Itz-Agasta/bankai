@@ -2,7 +2,7 @@ import { afterAll, describe, expect, test } from "bun:test";
 import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { fakeModelsFor, fieldMatches, renderReport, runEval } from "../src/eval";
+import { fakeModelsFor, fakeNoteModelsFor, fieldMatches, renderReport, runEval } from "../src/eval";
 import { firstNumber } from "../src/readings";
 
 const ROOT = join(import.meta.dir, "../../..");
@@ -19,7 +19,12 @@ async function copySet() {
 }
 
 const evaluate = async (set = SET) =>
-  runEval({ set, projectRoot: PROJECTS, models: await fakeModelsFor(set) });
+  runEval({
+    set,
+    projectRoot: PROJECTS,
+    models: await fakeModelsFor(set),
+    noteModels: await fakeNoteModelsFor(set),
+  });
 
 describe("eval inputs", () => {
   test("a photo reference cannot leave the set", async () => {
@@ -116,5 +121,61 @@ describe("runEval on the fixture set", () => {
     expect(md).toContain("| Coverage (not handed to a human) | 66.7% |");
     expect(md).toContain("Fabricated");
     expect(md).toContain("not_in_project");
+  });
+});
+
+describe("site note eval", () => {
+  const evalNotes = async (set = SET) =>
+    runEval({
+      set,
+      projectRoot: PROJECTS,
+      models: await fakeModelsFor(set),
+      noteModels: await fakeNoteModelsFor(set),
+    });
+
+  test("note metrics on the fixture set", async () => {
+    const r = await evalNotes();
+    expect(r.notes).not.toBeNull();
+    expect(r.notes!.cases.map((c) => c.id)).toEqual([
+      "n001-gen3-set",
+      "n002-gen3-wrong-pad",
+      "n003-delay-action",
+    ]);
+    expect(r.notes!.claimPrecision).toBe(1);
+    expect(r.notes!.claimRecall).toBe(1);
+    expect(r.notes!.statusAccuracy).toBe(1);
+    expect(r.notes!.fabricated).toBe(0);
+    expect(renderReport(r)).toContain("## Site notes");
+  });
+
+  test("a claim naming a tag absent from the script counts as fabricated", async () => {
+    const set = await copySet();
+    const file = join(set, "voice/n001-gen3-set.txt");
+    await writeFile(file, "Quick update from the yard. Something is set on pad B.");
+    const r = await evalNotes(set);
+    expect(r.notes!.fabricated).toBe(1);
+  });
+
+  test("an audio reference cannot leave the set", async () => {
+    const set = await copySet();
+    const file = join(set, "voice/n001-gen3-set.json");
+    await writeFile(
+      file,
+      (await readFile(file, "utf8")).replace('"n001-gen3-set.wav"', '"../../secret.wav"'),
+    );
+    await expect(evalNotes(set)).rejects.toThrow("plain file name");
+  });
+
+  test("a set without voice/ gives notes: null", async () => {
+    const set = await copySet();
+    await rm(join(set, "voice"), { recursive: true });
+    const r = await runEval({ set, projectRoot: PROJECTS, models: await fakeModelsFor(set) });
+    expect(r.notes).toBeNull();
+  });
+
+  test("a set with voice notes but no speech models is an error", async () => {
+    await expect(
+      runEval({ set: SET, projectRoot: PROJECTS, models: await fakeModelsFor(SET) }),
+    ).rejects.toThrow("GROQ_API_KEY");
   });
 });

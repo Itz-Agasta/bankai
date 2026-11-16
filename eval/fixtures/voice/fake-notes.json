@@ -1,0 +1,509 @@
+{
+  "n001-gen3-set.wav": {
+    "transcript": {
+      "words": [
+        {
+          "i": 0,
+          "text": "Quick",
+          "start": 0,
+          "end": 0.35
+        },
+        {
+          "i": 1,
+          "text": "update",
+          "start": 0.4,
+          "end": 0.75
+        },
+        {
+          "i": 2,
+          "text": "from",
+          "start": 0.8,
+          "end": 1.15
+        },
+        {
+          "i": 3,
+          "text": "the",
+          "start": 1.2000000000000002,
+          "end": 1.5500000000000003
+        },
+        {
+          "i": 4,
+          "text": "yard.",
+          "start": 1.6,
+          "end": 1.9500000000000002
+        },
+        {
+          "i": 5,
+          "text": "Gen",
+          "start": 2,
+          "end": 2.35
+        },
+        {
+          "i": 6,
+          "text": "three",
+          "start": 2.4000000000000004,
+          "end": 2.7500000000000004
+        },
+        {
+          "i": 7,
+          "text": "is",
+          "start": 2.8000000000000003,
+          "end": 3.1500000000000004
+        },
+        {
+          "i": 8,
+          "text": "set",
+          "start": 3.2,
+          "end": 3.5500000000000003
+        },
+        {
+          "i": 9,
+          "text": "on",
+          "start": 3.6,
+          "end": 3.95
+        },
+        {
+          "i": 10,
+          "text": "pad",
+          "start": 4,
+          "end": 4.35
+        },
+        {
+          "i": 11,
+          "text": "B,",
+          "start": 4.4,
+          "end": 4.75
+        },
+        {
+          "i": 12,
+          "text": "anchors",
+          "start": 4.800000000000001,
+          "end": 5.15
+        },
+        {
+          "i": 13,
+          "text": "done.",
+          "start": 5.2,
+          "end": 5.55
+        },
+        {
+          "i": 14,
+          "text": "The",
+          "start": 5.6000000000000005,
+          "end": 5.95
+        },
+        {
+          "i": 15,
+          "text": "controls",
+          "start": 6,
+          "end": 6.35
+        },
+        {
+          "i": 16,
+          "text": "cabinet",
+          "start": 6.4,
+          "end": 6.75
+        },
+        {
+          "i": 17,
+          "text": "looks",
+          "start": 6.800000000000001,
+          "end": 7.15
+        },
+        {
+          "i": 18,
+          "text": "fine.",
+          "start": 7.2,
+          "end": 7.55
+        }
+      ],
+      "segments": [
+        {
+          "start": 0,
+          "end": 7.55,
+          "avgLogprob": -0.1,
+          "noSpeechProb": 0.01
+        }
+      ],
+      "language": "en",
+      "duration": 7.55
+    },
+    "claims": [
+      {
+        "type": "status",
+        "word_start": 5,
+        "word_end": 11,
+        "tag": "GEN-3",
+        "activity_id": null,
+        "status_value": "set",
+        "location": "PAD-B",
+        "delay_days": null,
+        "spoken_date": null,
+        "component": null,
+        "issue_kind": null,
+        "owner_role": null,
+        "text": "GEN-3 set on PAD-B"
+      }
+    ]
+  },
+  "n002-gen3-wrong-pad.wav": {
+    "transcript": {
+      "words": [
+        {
+          "i": 0,
+          "text": "Gen",
+          "start": 0,
+          "end": 0.35
+        },
+        {
+          "i": 1,
+          "text": "three",
+          "start": 0.4,
+          "end": 0.75
+        },
+        {
+          "i": 2,
+          "text": "has",
+          "start": 0.8,
+          "end": 1.15
+        },
+        {
+          "i": 3,
+          "text": "been",
+          "start": 1.2000000000000002,
+          "end": 1.5500000000000003
+        },
+        {
+          "i": 4,
+          "text": "set",
+          "start": 1.6,
+          "end": 1.9500000000000002
+        },
+        {
+          "i": 5,
+          "text": "on",
+          "start": 2,
+          "end": 2.35
+        },
+        {
+          "i": 6,
+          "text": "pad",
+          "start": 2.4000000000000004,
+          "end": 2.7500000000000004
+        },
+        {
+          "i": 7,
+          "text": "A",
+          "start": 2.8000000000000003,
+          "end": 3.1500000000000004
+        },
+        {
+          "i": 8,
+          "text": "this",
+          "start": 3.2,
+          "end": 3.5500000000000003
+        },
+        {
+          "i": 9,
+          "text": "morning.",
+          "start": 3.6,
+          "end": 3.95
+        },
+        {
+          "i": 10,
+          "text": "Day",
+          "start": 4,
+          "end": 4.35
+        },
+        {
+          "i": 11,
+          "text": "tank",
+          "start": 4.4,
+          "end": 4.75
+        },
+        {
+          "i": 12,
+          "text": "still",
+          "start": 4.800000000000001,
+          "end": 5.15
+        },
+        {
+          "i": 13,
+          "text": "on",
+          "start": 5.2,
+          "end": 5.55
+        },
+        {
+          "i": 14,
+          "text": "the",
+          "start": 5.6000000000000005,
+          "end": 5.95
+        },
+        {
+          "i": 15,
+          "text": "truck.",
+          "start": 6,
+          "end": 6.35
+        }
+      ],
+      "segments": [
+        {
+          "start": 0,
+          "end": 6.35,
+          "avgLogprob": -0.1,
+          "noSpeechProb": 0.01
+        }
+      ],
+      "language": "en",
+      "duration": 6.35
+    },
+    "claims": [
+      {
+        "type": "status",
+        "word_start": 0,
+        "word_end": 7,
+        "tag": "GEN-3",
+        "activity_id": null,
+        "status_value": "set",
+        "location": "PAD-A",
+        "delay_days": null,
+        "spoken_date": null,
+        "component": null,
+        "issue_kind": null,
+        "owner_role": null,
+        "text": "GEN-3 set on PAD-A"
+      }
+    ]
+  },
+  "n003-delay-action.wav": {
+    "transcript": {
+      "words": [
+        {
+          "i": 0,
+          "text": "Load",
+          "start": 0,
+          "end": 0.35
+        },
+        {
+          "i": 1,
+          "text": "bank",
+          "start": 0.4,
+          "end": 0.75
+        },
+        {
+          "i": 2,
+          "text": "test",
+          "start": 0.8,
+          "end": 1.15
+        },
+        {
+          "i": 3,
+          "text": "is",
+          "start": 1.2000000000000002,
+          "end": 1.5500000000000003
+        },
+        {
+          "i": 4,
+          "text": "delayed",
+          "start": 1.6,
+          "end": 1.9500000000000002
+        },
+        {
+          "i": 5,
+          "text": "three",
+          "start": 2,
+          "end": 2.35
+        },
+        {
+          "i": 6,
+          "text": "days,",
+          "start": 2.4000000000000004,
+          "end": 2.7500000000000004
+        },
+        {
+          "i": 7,
+          "text": "waiting",
+          "start": 2.8000000000000003,
+          "end": 3.1500000000000004
+        },
+        {
+          "i": 8,
+          "text": "on",
+          "start": 3.2,
+          "end": 3.5500000000000003
+        },
+        {
+          "i": 9,
+          "text": "the",
+          "start": 3.6,
+          "end": 3.95
+        },
+        {
+          "i": 10,
+          "text": "cable",
+          "start": 4,
+          "end": 4.35
+        },
+        {
+          "i": 11,
+          "text": "crew.",
+          "start": 4.4,
+          "end": 4.75
+        },
+        {
+          "i": 12,
+          "text": "Action",
+          "start": 4.800000000000001,
+          "end": 5.15
+        },
+        {
+          "i": 13,
+          "text": "for",
+          "start": 5.2,
+          "end": 5.55
+        },
+        {
+          "i": 14,
+          "text": "ELEC-02:",
+          "start": 5.6000000000000005,
+          "end": 5.95
+        },
+        {
+          "i": 15,
+          "text": "confirm",
+          "start": 6,
+          "end": 6.35
+        },
+        {
+          "i": 16,
+          "text": "cable",
+          "start": 6.4,
+          "end": 6.75
+        },
+        {
+          "i": 17,
+          "text": "delivery",
+          "start": 6.800000000000001,
+          "end": 7.15
+        },
+        {
+          "i": 18,
+          "text": "by",
+          "start": 7.2,
+          "end": 7.55
+        },
+        {
+          "i": 19,
+          "text": "Friday.",
+          "start": 7.6000000000000005,
+          "end": 7.95
+        },
+        {
+          "i": 20,
+          "text": "Ravi",
+          "start": 8,
+          "end": 8.35
+        },
+        {
+          "i": 21,
+          "text": "said",
+          "start": 8.4,
+          "end": 8.75
+        },
+        {
+          "i": 22,
+          "text": "the",
+          "start": 8.8,
+          "end": 9.15
+        },
+        {
+          "i": 23,
+          "text": "controls",
+          "start": 9.200000000000001,
+          "end": 9.55
+        },
+        {
+          "i": 24,
+          "text": "cabinet",
+          "start": 9.600000000000001,
+          "end": 9.950000000000001
+        },
+        {
+          "i": 25,
+          "text": "door",
+          "start": 10,
+          "end": 10.35
+        },
+        {
+          "i": 26,
+          "text": "is",
+          "start": 10.4,
+          "end": 10.75
+        },
+        {
+          "i": 27,
+          "text": "damaged.",
+          "start": 10.8,
+          "end": 11.15
+        }
+      ],
+      "segments": [
+        {
+          "start": 0,
+          "end": 11.15,
+          "avgLogprob": -0.1,
+          "noSpeechProb": 0.01
+        }
+      ],
+      "language": "en",
+      "duration": 11.15
+    },
+    "claims": [
+      {
+        "type": "date_change",
+        "word_start": 0,
+        "word_end": 6,
+        "tag": null,
+        "activity_id": "A30",
+        "status_value": null,
+        "location": null,
+        "delay_days": 3,
+        "spoken_date": null,
+        "component": null,
+        "issue_kind": null,
+        "owner_role": null,
+        "text": "Load bank test delayed 3 days"
+      },
+      {
+        "type": "action_item",
+        "word_start": 12,
+        "word_end": 19,
+        "tag": null,
+        "activity_id": null,
+        "status_value": null,
+        "location": null,
+        "delay_days": null,
+        "spoken_date": null,
+        "component": null,
+        "issue_kind": null,
+        "owner_role": "ELEC-02",
+        "text": "confirm cable delivery by Friday"
+      },
+      {
+        "type": "issue",
+        "word_start": 20,
+        "word_end": 27,
+        "tag": null,
+        "activity_id": null,
+        "status_value": null,
+        "location": null,
+        "delay_days": null,
+        "spoken_date": null,
+        "component": "controls cabinet",
+        "issue_kind": "damaged",
+        "owner_role": null,
+        "text": "controls cabinet door damaged"
+      }
+    ]
+  }
+}

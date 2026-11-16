@@ -79,7 +79,7 @@ function* windows(tokens: Token[], max: number): Generator<Token[]> {
 }
 
 /** Which way the value was spoken: null if not at all, else whether folding was needed. */
-function spokenAs(tokens: Token[], value: string, norm: (s: string) => string, max = 4) {
+export function spokenAs(tokens: Token[], value: string, norm: (s: string) => string, max = 4) {
   const content = tokens.filter((x) => !FILLER.has(x.t));
   for (const w of windows(content, max)) {
     if (norm(w.map((x) => x.t).join(" ")) === value) return { folded: w.some((x) => x.folded) };
@@ -93,7 +93,7 @@ function hasPhrase(tokens: Token[], phrase: string): boolean {
   return t.some((_, a) => p.every((x, k) => t[a + k] === x));
 }
 
-function hasDelay(tokens: Token[], days: number): boolean {
+export function hasDelay(tokens: Token[], days: number): boolean {
   return tokens.some((x, k) => {
     const unit = tokens[k + 1]?.t ?? "";
     if (unit.startsWith("day")) return x.t === String(days);
@@ -102,7 +102,7 @@ function hasDelay(tokens: Token[], days: number): boolean {
   });
 }
 
-function activitySpoken(tokens: Token[], a: Vocab["activities"][number]): boolean {
+export function activitySpoken(tokens: Token[], a: Vocab["activities"][number]): boolean {
   if (a.tag && spokenAs(tokens, a.tag, normalizeTag)) return true;
   const have = new Set(tokens.map((x) => x.t));
   return foldSpoken(a.name.split(/\s+/)).every((x) => have.has(x));

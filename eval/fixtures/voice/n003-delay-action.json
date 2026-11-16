@@ -1,0 +1,23 @@
+{
+  "id": "n003-delay-action",
+  "project": "mini",
+  "audio": "n003-delay-action.wav",
+  "expected": {
+    "status": "needs_human",
+    "claims": [
+      {
+        "type": "date_change",
+        "activity": "A30",
+        "value": "3"
+      },
+      {
+        "type": "action_item",
+        "value": "ELEC-02"
+      },
+      {
+        "type": "issue",
+        "value": "controls cabinet"
+      }
+    ]
+  }
+}

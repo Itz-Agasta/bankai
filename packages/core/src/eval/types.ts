@@ -1,4 +1,5 @@
 import type { Models } from "../models/env";
+import type { NotesResult } from "./notes";
 import type { Field, Scenario, ScenarioKind, Verdict } from "@bankai/schemas";
 
 /** Models for one case, given its photos (live runs return the same pair; fakes script per photo). */
@@ -36,4 +37,6 @@ export interface EvalResult {
   meanLatencyMs: number;
   models: string[];
   noCrop: boolean;
+  /** Site notes; null when the set has none. */
+  notes: NotesResult | null;
 }

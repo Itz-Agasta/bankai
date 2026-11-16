@@ -1,0 +1,14 @@
+{
+  "id": "n002-gen3-wrong-pad",
+  "project": "mini",
+  "audio": "n002-gen3-wrong-pad.wav",
+  "expected": {
+    "status": "flagged",
+    "claims": [
+      {
+        "type": "status",
+        "tag": "GEN-3"
+      }
+    ]
+  }
+}
