@@ -52,8 +52,18 @@ const needPhoto = (file: string, photo: string) => {
     errors.push(`${rel(file)}: photo eval/photos/${photo} not found`);
 };
 
+// Ratings are labelled as the printed number without its unit: "415", "415/240", "2000".
+const RATING_FIELDS = ["voltage", "kva", "kw", "phase", "frequency"] as const;
+const RATING = /^\d+(\.\d+)?(\/\d+(\.\d+)?)*$/;
+
 const labels = await check("eval/labels", PhotoLabel, (file, l) => {
   needPhoto(file, l.photo);
+  for (const f of RATING_FIELDS) {
+    const v = l.fields[f];
+    if (v !== undefined && v !== "unreadable" && !RATING.test(v)) {
+      errors.push(`${rel(file)}: fields.${f} "${v}" must be the number only, without the unit`);
+    }
+  }
   const stem = l.photo.replace(/\.[^.]+$/, "");
   if (basename(file, ".json") !== stem) errors.push(`${rel(file)}: name the file ${stem}.json`);
 });
@@ -79,7 +89,9 @@ for (const file of await listFiles(PHOTOS)) {
     if (format !== "jpeg" && format !== "png")
       errors.push(`${rel(file)}: not a readable JPEG or PNG`);
     else if (hasMetadata(bytes))
-      errors.push(`${rel(file)}: has EXIF/XMP metadata, run just strip-exif eval/photos`);
+      errors.push(
+        `${rel(file)}: has photo metadata (EXIF, XMP or IPTC), run just strip-exif eval/photos`,
+      );
   }
   photos++;
 }
