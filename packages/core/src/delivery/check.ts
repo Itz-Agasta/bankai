@@ -1,15 +1,15 @@
-import type { Check, Citation, Verdict, VerifyResult } from "@bankai/schemas";
-import calibrator from "../../calibrator.json";
+import type { Check, Citation, PoLine, Verdict, VerifyResult } from "@bankai/schemas";
+import { basename } from "node:path";
 import { cite } from "../cite";
 import { BankaiFailure } from "../errors";
-import type { CallCost } from "../models/types";
-import { loadImage } from "../perceive";
+import type { CallCost, VisionModel } from "../models/types";
+import { call, loadImage } from "../perceive";
+import type { Project } from "../project/types";
 import { runRules } from "../rules";
 import { missingComponents } from "../rules/completeness";
-import { citeOrDrop, dropUncited } from "../verify/drop-uncited";
-import { proposeForDelivery } from "../verify/proposals";
-import { decideStatus } from "../verify/status";
-import { verifyEquipment, type VerifyDeps } from "../verify/verify";
+import { citeOrDrop } from "../verify/drop-uncited";
+import { NOTHING_RECEIVED, proposeForDelivery } from "../verify/proposals";
+import type { VerifyDeps } from "../verify/verify";
 
 export interface DeliveryInput {
   po: string;
@@ -18,17 +18,7 @@ export interface DeliveryInput {
   photos?: string[];
 }
 
-// Completeness reads "nothing observed" as unknown; nothing delivered is a known fail.
-const NOTHING_RECEIVED = "(nothing received)";
-
-const withCitations = (checks: Check[], extra: Citation[]): Check[] =>
-  checks.map((c) =>
-    c.name === "completeness" ? { ...c, citations: [...c.citations, ...extra] } : c,
-  );
-
-/** Delivery tickets against the PO line, plus whatever the photos show. */
-export async function checkDelivery(input: DeliveryInput, deps: VerifyDeps): Promise<VerifyResult> {
-  const { project } = deps;
+function findLine(project: Project, input: DeliveryInput): PoLine {
   const lines = project.poLines.filter(
     (l) => l.po === input.po && (input.line === undefined || l.line === input.line),
   );
@@ -41,71 +31,92 @@ export async function checkDelivery(input: DeliveryInput, deps: VerifyDeps): Pro
       "INPUT_UNSUPPORTED",
       `${input.po} has lines ${lines.map((l) => l.line).join(", ")}; pass line`,
     );
-  const po = lines[0]!;
+  return lines[0]!;
+}
 
+/** Components both model families see in a photo, picked only from the PO's own list. */
+async function seenInPhotos(
+  photos: string[],
+  po: PoLine,
+  models: VerifyDeps["models"],
+  costs: CallCost[],
+): Promise<{ seen: string[]; cites: Citation[] }> {
+  const ask = (m: VisionModel, img: Uint8Array) =>
+    call(() => {
+      if (!m.components) throw new Error(`${m.id} cannot list components`);
+      return m.components(img, po.components);
+    });
+  const seen = new Set<string>();
+  const cites: Citation[] = [];
+  for (const photo of photos) {
+    const img = await loadImage(photo);
+    const [a, b] = await Promise.all([ask(models.primary, img), ask(models.checker, img)]);
+    costs.push(a.cost, b.cost);
+    const agreed = a.value.filter((c) => b.value.includes(c));
+    agreed.forEach((c) => seen.add(c));
+    if (agreed.length) cites.push({ kind: "photo_region", ref: `${basename(photo)}#full` });
+  }
+  return { seen: [...seen], cites };
+}
+
+/**
+ * Delivery tickets against one PO line, plus components the photos show.
+ * No nameplate needed: the PO line names the unit, so identity comes from the records.
+ */
+export async function checkDelivery(input: DeliveryInput, deps: VerifyDeps): Promise<VerifyResult> {
+  const { project } = deps;
+  const po = findLine(project, input);
   const deliveries = project.deliveries.filter(
     (d) =>
       d.po === po.po &&
       d.tag === po.tag &&
       (input.ticket === undefined || d.ticket === input.ticket),
   );
-  const received = deliveries.map((d) => d.item);
-  const ticketCites = deliveries.map(cite.deliveryLine);
+  if (input.ticket !== undefined && deliveries.length === 0)
+    throw new BankaiFailure(
+      "NOT_FOUND",
+      `no lines for ${po.po} line ${po.line} on ticket ${input.ticket}`,
+    );
 
-  let verdict: Verdict;
-  let observed = received;
-  if (input.photos?.length) {
-    const { primary } = deps.models;
-    if (!primary.components)
-      throw new BankaiFailure("PERCEPTION_UNAVAILABLE", "vision model cannot list components");
-    const seen: string[] = [];
-    const costs: CallCost[] = [];
-    for (const photo of input.photos) {
-      const img = await loadImage(photo);
-      const r = await primary.components(img, po.components);
-      deps.tracer.step("components", img, r.value.join(", ") || "none", r.cost);
-      seen.push(...r.value);
-      costs.push(r.cost);
-    }
-    observed = [...new Set([...received, ...seen])];
-    const v = await verifyEquipment(
-      { photos: input.photos, location: null, observedComponents: observed },
-      deps,
-    );
-    verdict = dropUncited({
-      ...v,
-      checks: withCitations(v.checks, ticketCites),
-      models: [...new Set([...v.models, ...costs.map((c) => c.model)])],
-      cost_usd: costs.reduce((sum, c) => sum + c.usd, v.cost_usd),
-      latency_ms: costs.reduce((sum, c) => sum + c.ms, v.latency_ms),
-    });
-  } else {
-    const checks = citeOrDrop(
-      withCitations(
-        runRules({
-          project,
-          tag: po.tag,
-          observations: [],
-          location: null,
-          observedComponents: received.length ? received : [NOTHING_RECEIVED],
-        }),
-        ticketCites,
-      ),
-    );
-    // Records only, no perception: nothing for confidence to doubt.
-    verdict = {
-      id: deps.runId ?? crypto.randomUUID(),
-      subject_tag: po.tag,
-      status: decideStatus(checks, 1, calibrator.threshold),
-      checks,
-      confidence: 1,
-      retake_request: null,
-      candidates: [],
-      models: [],
-      cost_usd: 0,
-      latency_ms: 0,
-    };
-  }
+  const costs: CallCost[] = [];
+  const photo = input.photos?.length
+    ? await seenInPhotos(input.photos, po, deps.models, costs)
+    : { seen: [], cites: [] };
+  const observed = [...new Set([...deliveries.map((d) => d.item), ...photo.seen])];
+  const extra = [...deliveries.map(cite.deliveryLine), ...photo.cites];
+
+  const checks = citeOrDrop(
+    runRules({
+      project,
+      tag: po.tag,
+      observations: [],
+      location: null,
+      // Completeness reads "nothing observed" as unknown; nothing delivered is a known fail.
+      observedComponents: observed.length ? observed : [NOTHING_RECEIVED],
+    }).map((c): Check =>
+      c.name === "completeness" ? { ...c, citations: [...c.citations, ...extra] } : c,
+    ),
+  );
+  const completeness = checks.find((c) => c.name === "completeness")!;
+  const verdict: Verdict = {
+    id: deps.runId ?? crypto.randomUUID(),
+    subject_tag: po.tag,
+    // Only completeness is judged here; the other checks have nothing to look at.
+    status:
+      completeness.result === "unknown"
+        ? "needs_human"
+        : completeness.result === "fail"
+          ? "flagged"
+          : "confirmed",
+    checks,
+    // Records, plus components two model families agree on.
+    confidence: 1,
+    retake_request: null,
+    candidates: [],
+    models: [...new Set(costs.map((c) => c.model))],
+    cost_usd: costs.reduce((s, c) => s + c.usd, 0),
+    latency_ms: costs.reduce((s, c) => s + c.ms, 0),
+  };
   deps.tracer.step("decide", verdict.id, `delivery ${po.po}#L${po.line} ${verdict.status}`);
   return {
     verdict,

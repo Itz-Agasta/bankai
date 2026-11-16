@@ -13,5 +13,5 @@ export type { Perception } from "./perceive";
 export * from "./verify";
 export * from "./delivery";
 export * from "./eval";
-export { appendAudit, auditPath, openStore, storePath } from "./store";
+export { openStore, storePath } from "./store";
 export type { AuditEvent, OpenItem, Store } from "./store";

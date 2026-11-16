@@ -42,7 +42,7 @@ describe("proposeForVerify", () => {
     const us = proposeForVerify(v, "PAD-B", mini);
     expect(us).toHaveLength(1);
     expect(us[0]).toMatchObject({
-      id: `upd_${v.id.slice(0, 8)}_1`,
+      id: `upd_${v.id}_1`,
       field: "install_status",
       old: "",
       new: "installed at PAD-B",
@@ -59,6 +59,17 @@ describe("proposeForVerify", () => {
     const v = await verify("PAD-A");
     expect(v.status).toBe("flagged");
     expect(proposeForVerify(v, "PAD-A", mini)).toEqual([]);
+  });
+
+  test("a confirmed unit at a location the project does not know proposes nothing", async () => {
+    const v = await verify("PAD-Z");
+    expect(v.status).toBe("confirmed");
+    expect(proposeForVerify(v, "PAD-Z", mini)).toEqual([]);
+  });
+
+  test("a confirmed tag missing from the equipment schedule proposes nothing", async () => {
+    const v = await verify("PAD-B");
+    expect(proposeForVerify({ ...v, subject_tag: "PUMP-9" }, "PAD-B", mini)).toEqual([]);
   });
 
   test("no location, no proposal", async () => {

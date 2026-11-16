@@ -20,6 +20,7 @@ const event = (
   evidence: u.evidence,
 });
 
+/** Proposals always enter pending; only approveUpdate approves. Rows and audit lines commit together. */
 export function saveUpdates(
   db: Database,
   verdictId: string,
@@ -28,21 +29,22 @@ export function saveUpdates(
 ): void {
   const at = new Date().toISOString();
   const insert = db.query(
-    `INSERT INTO updates (id, verdict_id, json, approval, approved_by, at) VALUES ($id, $vid, $json, $approval, $by, $at)
+    `INSERT INTO updates (id, verdict_id, json, approval) VALUES ($id, $vid, $json, 'pending')
      ON CONFLICT(id) DO NOTHING`,
   );
   db.transaction(() => {
+    const events: AuditEvent[] = [];
     for (const u of us) {
-      const r = insert.run({
-        id: u.id,
-        vid: verdictId,
-        json: JSON.stringify(ProposedUpdate.parse(u)),
-        approval: u.approval,
-        by: u.approved_by,
-        at: u.at,
+      const pending = ProposedUpdate.parse({
+        ...u,
+        approval: "pending",
+        approved_by: null,
+        at: null,
       });
-      if (r.changes > 0) appendAudit(auditFile, event(u, "bankai", "proposed", at));
+      const r = insert.run({ id: u.id, vid: verdictId, json: JSON.stringify(pending) });
+      if (r.changes > 0) events.push(event(pending, "bankai", "proposed", at));
     }
+    appendAudit(auditFile, events);
   })();
 }
 
@@ -56,9 +58,7 @@ export function getUpdate(db: Database, id: string): ProposedUpdate | null {
 export function pendingUpdates(db: Database): ProposedUpdate[] {
   const rows = db
     .query(`SELECT json FROM updates WHERE approval = 'pending' ORDER BY rowid`)
-    .all() as {
-    json: string;
-  }[];
+    .all() as { json: string }[];
   return rows.map((r) => ProposedUpdate.parse(JSON.parse(r.json)));
 }
 
@@ -68,7 +68,7 @@ function mustGet(db: Database, id: string): ProposedUpdate {
   return u;
 }
 
-/** Idempotent: approving twice returns the first approval. The audit line and the row commit together. */
+/** Idempotent: approving twice returns the first approval. Read, check and write hold one write lock. */
 export function approveUpdate(
   db: Database,
   id: string,
@@ -77,26 +77,23 @@ export function approveUpdate(
   auditFile: string,
 ): ProposedUpdate {
   const actor = ActorId.parse(by);
-  const u = mustGet(db, id);
-  if (u.approval === "approved") return u;
-  if (u.approval === "rejected")
-    throw new BankaiFailure("APPROVAL_REQUIRED", `update ${id} was rejected`);
-  const approved: ProposedUpdate = { ...u, approval: "approved", approved_by: actor, at };
-  db.transaction(() => {
-    db.query(
-      `UPDATE updates SET json = $json, approval = 'approved', approved_by = $by, at = $at WHERE id = $id`,
-    ).run({
-      json: JSON.stringify(approved),
-      by: actor,
-      at,
-      id,
-    });
-    appendAudit(auditFile, event(approved, actor, "approved", at));
-  })();
-  return approved;
+  return db
+    .transaction(() => {
+      const u = mustGet(db, id);
+      if (u.approval === "approved") return u;
+      if (u.approval === "rejected")
+        throw new BankaiFailure("APPROVAL_REQUIRED", `update ${id} was rejected`);
+      const approved: ProposedUpdate = { ...u, approval: "approved", approved_by: actor, at };
+      db.query(
+        `UPDATE updates SET json = $json, approval = 'approved', approved_by = $by, at = $at WHERE id = $id`,
+      ).run({ json: JSON.stringify(approved), by: actor, at, id });
+      appendAudit(auditFile, [event(approved, actor, "approved", at)]);
+      return approved;
+    })
+    .immediate();
 }
 
-/** A declined approval leaves the update pending; only the audit log records it. */
+/** A declined approval leaves the update pending; only a pending update's decline is logged. */
 export function declineUpdate(
   db: Database,
   id: string,
@@ -105,5 +102,7 @@ export function declineUpdate(
   auditFile: string,
 ): void {
   const actor = ActorId.parse(by);
-  appendAudit(auditFile, event(mustGet(db, id), actor, "declined", at));
+  const u = mustGet(db, id);
+  if (u.approval !== "pending") return;
+  appendAudit(auditFile, [event(u, actor, "declined", at)]);
 }

@@ -13,7 +13,7 @@ export { validateField } from "./validators";
 const REQUIRED: Field[] = ["manufacturer", "model"];
 
 /** Any model failure (outage, timeout, bad key) surfaces as PERCEPTION_UNAVAILABLE. */
-async function call<T>(fn: () => Promise<T>): Promise<T> {
+export async function call<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
   } catch (e) {

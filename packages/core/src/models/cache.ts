@@ -47,10 +47,11 @@ export function withCache(m: VisionModel, opts: { dir: string; replayOnly: boole
     locate: (img) => cached("locate", img, () => m.locate(img)),
     read: (img) => cached("read", img, () => m.read(img)),
     components: m.components
-      ? (img, candidates) =>
-          cached(`components:${JSON.stringify([...candidates].sort())}`, img, () =>
-            m.components!(img, candidates),
-          )
+      ? async (img, candidates) => {
+          if (candidates.length === 0) return { value: [], cost: { model: m.id, ms: 0, usd: 0 } };
+          const key = `components:${JSON.stringify([...candidates].sort())}`;
+          return cached(key, img, () => m.components!(img, candidates));
+        }
       : undefined,
   };
 }

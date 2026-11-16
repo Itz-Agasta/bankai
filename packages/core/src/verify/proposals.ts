@@ -2,6 +2,8 @@ import type { Check, PoLine, ProposedUpdate, Verdict } from "@bankai/schemas";
 import { cite } from "../cite";
 import type { Project } from "../project/types";
 
+export const NOTHING_RECEIVED = "(nothing received)";
+
 const citationsOf = (v: Verdict, ...names: Check["name"][]) =>
   v.checks.filter((c) => names.includes(c.name)).flatMap((c) => c.citations);
 
@@ -9,7 +11,7 @@ const pending = (
   v: Verdict,
   u: Pick<ProposedUpdate, "target" | "field" | "old" | "new" | "evidence">,
 ): ProposedUpdate => ({
-  id: `upd_${v.id.slice(0, 8)}_1`,
+  id: `upd_${v.id}_1`,
   ...u,
   confidence: v.confidence,
   approval: "pending",
@@ -17,7 +19,7 @@ const pending = (
   at: null,
 });
 
-/** Rules propose, never a model (D15): a confirmed unit at a named spot can be marked installed. */
+/** Rules propose, never a model (D15): a confirmed unit whose location check passed can be marked installed. */
 export function proposeForVerify(
   v: Verdict,
   location: string | null,
@@ -25,6 +27,7 @@ export function proposeForVerify(
 ): ProposedUpdate[] {
   if (v.status !== "confirmed" || !location || !v.subject_tag) return [];
   if (!project.byTag.has(v.subject_tag)) return [];
+  if (v.checks.find((c) => c.name === "location")?.result !== "pass") return [];
   return [
     pending(v, {
       target: cite.equipmentRow(v.subject_tag),
@@ -49,7 +52,7 @@ export function proposeForDelivery(
       target: cite.poLine(po),
       field: "received_components",
       old: "",
-      new: `${received.join(", ")}; missing: ${missing.join(", ")}`,
+      new: `${received.join(", ") || NOTHING_RECEIVED}; missing: ${missing.join(", ")}`,
       evidence: citationsOf(v, "completeness"),
     }),
   ];
