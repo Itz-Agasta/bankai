@@ -69,7 +69,9 @@ export async function verifyEquipment(input: VerifyInput, deps: VerifyDeps): Pro
     noCrop: input.noCrop,
   });
 
-  const done = (v: Omit<Verdict, "id" | "models" | "cost_usd" | "latency_ms">): Verdict => {
+  const done = (
+    v: Omit<Verdict, "id" | "models" | "cost_usd" | "latency_ms" | "install_readiness">,
+  ): Verdict => {
     const verdict = dropUncited({ id: runId, ...v, ...meter.total() });
     tracer.step("decide", runId, `${verdict.status} ${verdict.confidence}`);
     return verdict;

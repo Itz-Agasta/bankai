@@ -37,10 +37,17 @@ export type RetakeRequest = z.infer<typeof RetakeRequest>;
 export const Status = z.enum(["confirmed", "flagged", "needs_human"]);
 export type Status = z.infer<typeof Status>;
 
+export const InstallReadiness = z.object({
+  status: z.enum(["ready", "blocked", "unknown"]),
+  blockers: z.array(CheckName),
+});
+export type InstallReadiness = z.infer<typeof InstallReadiness>;
+
 export const Verdict = z.object({
   id: z.string(),
   subject_tag: z.nullable(z.string()),
   status: Status,
+  install_readiness: InstallReadiness,
   checks: z.array(Check),
   confidence: Confidence,
   retake_request: z.nullable(RetakeRequest),
