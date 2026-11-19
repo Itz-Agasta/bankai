@@ -8,7 +8,6 @@ import type { Project } from "../project/types";
 import { runRules } from "../rules";
 import { confidence } from "./confidence";
 import { citeOrDrop, dropUncited } from "./drop-uncited";
-import { installReadiness } from "./readiness";
 import { decideStatus } from "./status";
 import { breakTie } from "./tiebreak";
 
@@ -73,11 +72,7 @@ export async function verifyEquipment(input: VerifyInput, deps: VerifyDeps): Pro
   const done = (
     v: Omit<Verdict, "id" | "models" | "cost_usd" | "latency_ms" | "install_readiness">,
   ): Verdict => {
-    const dropped = dropUncited({ id: runId, ...v, ...meter.total() });
-    const verdict = {
-      ...dropped,
-      install_readiness: installReadiness(dropped.status, dropped.checks),
-    };
+    const verdict = dropUncited({ id: runId, ...v, ...meter.total() });
     tracer.step("decide", runId, `${verdict.status} ${verdict.confidence}`);
     return verdict;
   };

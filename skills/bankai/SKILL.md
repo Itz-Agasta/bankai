@@ -26,8 +26,8 @@ A check marked `unknown` was not judged. Do not present it as a pass.
 `install_readiness` says whether the unit can go in, not only whether it arrived:
 
 - `ready`: identity, spec, substitution, location, revision and completeness all passed.
-- `blocked`: one of them failed. `blockers` names which, for example a right unit on the wrong pad is blocked on `location` until it is moved.
-- `unknown`: at least one was not judged, or the verdict needs a human. A delivery check judges only completeness, so a complete delivery is still `unknown`. Never call it ready.
+- `blocked`: one of them failed and the verdict is not `needs_human`. `blockers` names which, for example a right unit on the wrong pad is blocked on `location` until it is moved.
+- `unknown`: the verdict is `needs_human` (even if a check failed), or none failed but at least one was not judged. A delivery check judges only completeness, so a complete delivery is still `unknown`. Never call it ready.
 
 ## Walk notes
 

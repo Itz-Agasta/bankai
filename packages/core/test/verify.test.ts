@@ -159,7 +159,7 @@ describe("dropUncited", () => {
       id: "v",
       subject_tag: "GEN-3",
       status: "flagged",
-      install_readiness: { status: "unknown", blockers: [] },
+      install_readiness: { status: "blocked", blockers: ["spec"] },
       checks: [{ name: "spec", result: "fail", reason: "x", citations: [], range: null }],
       confidence: 0.9,
       retake_request: null,
@@ -171,5 +171,6 @@ describe("dropUncited", () => {
     const out = dropUncited(v);
     expect(out.checks[0]).toMatchObject({ result: "unknown", reason: "uncited" });
     expect(out.status).toBe("needs_human");
+    expect(out.install_readiness).toEqual({ status: "unknown", blockers: [] });
   });
 });
