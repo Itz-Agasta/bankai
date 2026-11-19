@@ -57,6 +57,7 @@ describe("verifyEquipment", () => {
     expect(v.status).toBe("flagged");
     expect(v.subject_tag).toBe("GEN-3");
     expect(failing(v)).toEqual(["location", "revision"]);
+    expect(v.install_readiness).toEqual({ status: "blocked", blockers: ["location", "revision"] });
     for (const c of v.checks.filter((c) => c.result !== "unknown"))
       expect(c.citations.length).toBeGreaterThan(0);
   });
@@ -69,6 +70,7 @@ describe("verifyEquipment", () => {
     const v = await verify({ location: "PAD-B", tags: [] });
     expect(v.status).toBe("needs_human");
     expect(v.candidates).toEqual(["GEN-3", "GEN-4"]);
+    expect(v.install_readiness).toEqual({ status: "unknown", blockers: [] });
     expect(v.subject_tag).toBeNull();
     expect(v.retake_request?.region).toBe("equipment tag");
     expect(v.retake_request?.why).toContain("GEN-3, GEN-4");
@@ -78,6 +80,7 @@ describe("verifyEquipment", () => {
     const v = await verify({ photo: BLANK, location: "PAD-B", tags: [], plate: null });
     expect(v.status).toBe("needs_human");
     expect(v.retake_request).toEqual({ region: "nameplate", why: "no nameplate found" });
+    expect(v.install_readiness.status).toBe("unknown");
     expect(v.checks.find((c) => c.name === "identity")).toMatchObject({
       result: "unknown",
       reason: "no_nameplate_found",
@@ -156,6 +159,7 @@ describe("dropUncited", () => {
       id: "v",
       subject_tag: "GEN-3",
       status: "flagged",
+      install_readiness: { status: "unknown", blockers: [] },
       checks: [{ name: "spec", result: "fail", reason: "x", citations: [], range: null }],
       confidence: 0.9,
       retake_request: null,

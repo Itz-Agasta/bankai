@@ -8,6 +8,7 @@ import type { Project } from "../project/types";
 import { runRules } from "../rules";
 import { missingComponents } from "../rules/completeness";
 import { citeOrDrop } from "../verify/drop-uncited";
+import { installReadiness } from "../verify/readiness";
 import { NOTHING_RECEIVED, proposeForDelivery } from "../verify/proposals";
 import type { VerifyDeps } from "../verify/verify";
 
@@ -100,16 +101,18 @@ export async function checkDelivery(input: DeliveryInput, deps: VerifyDeps): Pro
     ),
   );
   const completeness = checks.find((c) => c.name === "completeness")!;
+  // Only completeness is judged here; the other checks have nothing to look at.
+  const status =
+    completeness.result === "unknown"
+      ? "needs_human"
+      : completeness.result === "fail"
+        ? "flagged"
+        : "confirmed";
   const verdict: Verdict = {
     id: deps.runId ?? crypto.randomUUID(),
     subject_tag: po.tag,
-    // Only completeness is judged here; the other checks have nothing to look at.
-    status:
-      completeness.result === "unknown"
-        ? "needs_human"
-        : completeness.result === "fail"
-          ? "flagged"
-          : "confirmed",
+    status,
+    install_readiness: installReadiness(status, checks),
     checks,
     // Records, plus components two model families agree on.
     confidence: 1,

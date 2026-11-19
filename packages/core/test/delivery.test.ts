@@ -33,6 +33,7 @@ describe("checkDelivery", () => {
     const r = await checkDelivery({ po: "PO-1042", line: 14, ticket: "DT-88" }, deps());
     expect(r.verdict.status).toBe("flagged");
     expect(r.verdict.confidence).toBe(1);
+    expect(r.verdict.install_readiness).toEqual({ status: "blocked", blockers: ["completeness"] });
     const c = completeness(r);
     expect(c.result).toBe("fail");
     expect(c.reason).toContain("controls cabinet");
@@ -96,6 +97,8 @@ describe("checkDelivery", () => {
     );
     expect(r.verdict.subject_tag).toBe("GEN-3");
     expect(completeness(r).result).toBe("pass");
+    // Only completeness was judged: complete is not the same as installable.
+    expect(r.verdict.install_readiness).toEqual({ status: "unknown", blockers: [] });
     const refs = completeness(r).citations.map((x) => x.ref);
     expect(refs).toContain("DT-88#L1");
     expect(refs).toContain("plate.jpg#full");

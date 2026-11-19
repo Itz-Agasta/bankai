@@ -17,6 +17,7 @@ const verdict = {
   id: "v1",
   subject_tag: "GEN-3",
   status: "confirmed",
+  install_readiness: { status: "unknown", blockers: [] },
   checks: [
     { name: "identity", result: "pass", reason: "tag_match", citations: [cite], range: null },
   ],

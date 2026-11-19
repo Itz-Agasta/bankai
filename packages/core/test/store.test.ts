@@ -22,6 +22,7 @@ const verdict = (
   id,
   subject_tag: tag,
   status,
+  install_readiness: { status: "unknown", blockers: [] },
   checks: [
     {
       name: "identity",

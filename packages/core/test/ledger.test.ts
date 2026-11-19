@@ -138,6 +138,7 @@ describe("ledger", () => {
       id: "v1",
       subject_tag: "GEN-3",
       status: "needs_human",
+      install_readiness: { status: "unknown", blockers: [] },
       checks: [],
       confidence: 0.4,
       retake_request: null,

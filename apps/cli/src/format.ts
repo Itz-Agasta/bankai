@@ -47,6 +47,8 @@ export function formatVerdict(raw: Verdict): string {
   }
   if (v.retake_request)
     lines.push(`  retake: ${v.retake_request.region} (${v.retake_request.why})`);
+  const { status, blockers } = v.install_readiness;
+  lines.push(`  install: ${status}${blockers.length ? ` (${blockers.join(", ")})` : ""}`);
   const bill = `$${v.cost_usd.toFixed(4)}  ${(v.latency_ms / 1000).toFixed(1)}s`;
   lines.push(`  ${v.models.join(", ") || "no models"}  ${bill}`);
   return lines.join("\n");

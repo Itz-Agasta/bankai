@@ -23,6 +23,12 @@ Bankai checks what is on site against the project's purchase orders, submittals,
 
 A check marked `unknown` was not judged. Do not present it as a pass.
 
+`install_readiness` says whether the unit can go in, not only whether it arrived:
+
+- `ready`: identity, spec, substitution, location, revision and completeness all passed.
+- `blocked`: one of them failed. `blockers` names which, for example a right unit on the wrong pad is blocked on `location` until it is moved.
+- `unknown`: at least one was not judged, or the verdict needs a human. A delivery check judges only completeness, so a complete delivery is still `unknown`. Never call it ready.
+
 ## Walk notes
 
 `process_site_note` returns claims (status, delay, issue, decision, action item). Each claim has a time span in the audio (`note.wav@41.2-44.8`) and the words spoken there (`quote`).
