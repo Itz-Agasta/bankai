@@ -1,0 +1,14 @@
+{
+  "photo": "cast-resin-tx-tag.jpg",
+  "equipment_type": "transformer",
+  "fields": {
+    "manufacturer": "Trafo-Union",
+    "model": "TG 5644 D",
+    "serial": "K 7 80099",
+    "voltage": "20000/400",
+    "kva": "400",
+    "frequency": "50"
+  },
+  "hard": false,
+  "people_checked": true
+}

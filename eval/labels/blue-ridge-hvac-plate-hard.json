@@ -1,0 +1,15 @@
+{
+  "photo": "blue-ridge-hvac-plate-hard.jpg",
+  "equipment_type": "ahu",
+  "fields": {
+    "manufacturer": "unreadable",
+    "model": "unreadable",
+    "serial": "unreadable",
+    "voltage": "unreadable",
+    "kva": "unreadable",
+    "phase": "unreadable",
+    "frequency": "unreadable"
+  },
+  "hard": true,
+  "people_checked": true
+}

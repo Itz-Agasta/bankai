@@ -1,0 +1,11 @@
+{
+  "photo": "manchester-substation-plate-hard.jpg",
+  "equipment_type": "transformer",
+  "fields": {
+    "manufacturer": "Electricity North West Limited",
+    "serial": "172024",
+    "voltage": "6600"
+  },
+  "hard": true,
+  "people_checked": true
+}

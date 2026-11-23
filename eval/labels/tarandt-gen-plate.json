@@ -1,0 +1,13 @@
+{
+  "photo": "tarandt-gen-plate.jpg",
+  "equipment_type": "generator",
+  "fields": {
+    "model": "LD 6 182/8",
+    "serial": "254174",
+    "kva": "1000",
+    "kw": "800",
+    "frequency": "50"
+  },
+  "hard": false,
+  "people_checked": true
+}

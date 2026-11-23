@@ -1,0 +1,13 @@
+{
+  "photo": "folsom-gen4-plate.jpg",
+  "equipment_type": "generator",
+  "fields": {
+    "manufacturer": "General Electric",
+    "model": "AF",
+    "serial": "1975",
+    "voltage": "800",
+    "phase": "3"
+  },
+  "hard": false,
+  "people_checked": true
+}

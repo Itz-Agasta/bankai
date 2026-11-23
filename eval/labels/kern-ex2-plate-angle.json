@@ -1,0 +1,12 @@
+{
+  "photo": "kern-ex2-plate-angle.jpg",
+  "equipment_type": "generator",
+  "fields": {
+    "manufacturer": "General Electric",
+    "model": "MP",
+    "serial": "125452",
+    "voltage": "125/125"
+  },
+  "hard": false,
+  "people_checked": true
+}

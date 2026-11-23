@@ -1,0 +1,13 @@
+{
+  "photo": "tarandt-gen2-whole.jpg",
+  "equipment_type": "generator",
+  "fields": {
+    "model": "DG 182/8",
+    "serial": "254175",
+    "kva": "1000",
+    "kw": "800",
+    "frequency": "50"
+  },
+  "hard": false,
+  "people_checked": true
+}

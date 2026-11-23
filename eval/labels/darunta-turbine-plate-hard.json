@@ -1,0 +1,15 @@
+{
+  "photo": "darunta-turbine-plate-hard.jpg",
+  "equipment_type": "turbine",
+  "fields": {
+    "manufacturer": "УРАЛЭЛЕКТРОАППАРАТ",
+    "model": "ВГС-375/49-28",
+    "serial": "3534",
+    "voltage": "6300",
+    "kva": "4800",
+    "phase": "3",
+    "frequency": "50"
+  },
+  "hard": true,
+  "people_checked": true
+}

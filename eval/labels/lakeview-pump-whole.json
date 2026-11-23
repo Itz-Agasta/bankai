@@ -1,0 +1,11 @@
+{
+  "photo": "lakeview-pump-whole.jpg",
+  "equipment_type": "pump",
+  "fields": {
+    "manufacturer": "Nordberg",
+    "model": "unreadable",
+    "serial": "unreadable"
+  },
+  "hard": false,
+  "people_checked": true
+}

@@ -1,0 +1,13 @@
+{
+  "photo": "rush-ex2-tag.jpg",
+  "equipment_type": "generator",
+  "fields": {
+    "manufacturer": "General Electric",
+    "model": "ANG 3240",
+    "serial": "419177",
+    "kw": "75",
+    "voltage": "125/125"
+  },
+  "hard": false,
+  "people_checked": true
+}

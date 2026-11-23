@@ -1,0 +1,10 @@
+{
+  "photo": "bw-engine-plate.jpg",
+  "equipment_type": "engine",
+  "fields": {
+    "manufacturer": "Aktieselskabet Burmeister & Wain's Maskin og Skibsbyggeri",
+    "serial": "1"
+  },
+  "hard": false,
+  "people_checked": true
+}

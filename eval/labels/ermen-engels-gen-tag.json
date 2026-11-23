@@ -1,0 +1,11 @@
+{
+  "photo": "ermen-engels-gen-tag.jpg",
+  "equipment_type": "generator",
+  "fields": {
+    "manufacturer": "AEG",
+    "model": "unreadable",
+    "serial": "unreadable"
+  },
+  "hard": false,
+  "people_checked": true
+}
