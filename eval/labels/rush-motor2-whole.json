@@ -1,14 +1,7 @@
 {
   "photo": "rush-motor2-whole.jpg",
   "equipment_type": "motor",
-  "fields": {
-    "manufacturer": "General Electric",
-    "model": "56F214G1",
-    "serial": "5287226",
-    "voltage": "2200",
-    "phase": "3",
-    "frequency": "50"
-  },
+  "fields": {},
   "hard": false,
   "people_checked": true
 }

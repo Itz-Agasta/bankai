@@ -1,14 +1,7 @@
 {
   "photo": "zimmer-gen-whole.jpg",
   "equipment_type": "generator",
-  "fields": {
-    "manufacturer": "Westinghouse",
-    "serial": "unreadable",
-    "voltage": "22000",
-    "kva": "729000",
-    "phase": "3",
-    "frequency": "60"
-  },
+  "fields": {},
   "hard": false,
   "people_checked": true
 }

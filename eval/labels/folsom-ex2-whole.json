@@ -1,12 +1,7 @@
 {
   "photo": "folsom-ex2-whole.jpg",
   "equipment_type": "generator",
-  "fields": {
-    "manufacturer": "General Electric",
-    "model": "MP",
-    "serial": "1885",
-    "voltage": "600/600"
-  },
+  "fields": {},
   "hard": false,
   "people_checked": true
 }

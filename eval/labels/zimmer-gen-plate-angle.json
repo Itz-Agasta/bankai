@@ -3,9 +3,10 @@
   "equipment_type": "generator",
   "fields": {
     "manufacturer": "Westinghouse",
-    "serial": "unreadable",
+    "serial": "1-SS-7900195",
     "voltage": "22000",
-    "kva": "729000",
+    "kva": "780000",
+    "kw": "729300",
     "phase": "3",
     "frequency": "60"
   },

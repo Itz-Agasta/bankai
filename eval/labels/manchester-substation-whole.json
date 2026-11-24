@@ -1,11 +1,7 @@
 {
   "photo": "manchester-substation-whole.jpg",
   "equipment_type": "transformer",
-  "fields": {
-    "manufacturer": "Electricity North West Limited",
-    "serial": "172024",
-    "voltage": "6600"
-  },
+  "fields": {},
   "hard": false,
   "people_checked": true
 }

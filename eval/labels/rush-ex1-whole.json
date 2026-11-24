@@ -1,12 +1,7 @@
 {
   "photo": "rush-ex1-whole.jpg",
   "equipment_type": "generator",
-  "fields": {
-    "manufacturer": "General Electric",
-    "serial": "449182",
-    "kw": "60",
-    "voltage": "125/125"
-  },
+  "fields": {},
   "hard": false,
   "people_checked": true
 }

@@ -3,7 +3,7 @@
   "equipment_type": "generator",
   "fields": {
     "manufacturer": "General Electric",
-    "model": "AF",
+    "model": "AP",
     "serial": "1975",
     "voltage": "800",
     "phase": "3"

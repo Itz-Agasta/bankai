@@ -1,10 +1,7 @@
 {
   "photo": "skagit-diablo31-whole.jpg",
   "equipment_type": "turbine",
-  "fields": {
-    "manufacturer": "S. Morgan Smith",
-    "serial": "8580"
-  },
+  "fields": {},
   "hard": false,
   "people_checked": true
 }

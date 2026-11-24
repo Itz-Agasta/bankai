@@ -110,7 +110,9 @@ A missing `decisions.json` or `actions.json` means no rows. `tag`, `activity`, `
 | `hard` | `true` for the deliberate glare, shadow or blur shot |
 | `people_checked` | Must be `true`: you checked the photo has no people |
 
-Never guess a value. `"unreadable"` is a correct label.
+Never guess a value. `"unreadable"` is a correct label. A whole-unit shot usually shows no legible
+plate, so its label may have `fields: {}`: the photo is still part of the set, but nothing in it is
+being asserted.
 
 ## Scenarios
 

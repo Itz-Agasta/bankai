@@ -2,7 +2,7 @@
   "photo": "mge-eps6000-plate-hard.jpg",
   "equipment_type": "ups",
   "fields": {
-    "manufacturer": "MGE",
+    "manufacturer": "unreadable",
     "tag": "UPS A"
   },
   "hard": true,

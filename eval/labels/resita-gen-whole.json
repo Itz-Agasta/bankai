@@ -1,11 +1,7 @@
 {
   "photo": "resita-gen-whole.jpg",
   "equipment_type": "generator",
-  "fields": {
-    "manufacturer": "Uzinele de Fier Reşiţa",
-    "model": "unreadable",
-    "serial": "unreadable"
-  },
+  "fields": {},
   "hard": false,
   "people_checked": true
 }

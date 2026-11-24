@@ -1,15 +1,7 @@
 {
   "photo": "bonn-tg2-whole.jpg",
   "equipment_type": "generator",
-  "fields": {
-    "manufacturer": "General Electric",
-    "model": "ATI 96",
-    "serial": "5263352",
-    "voltage": "13800",
-    "kva": "43000",
-    "phase": "3",
-    "frequency": "60"
-  },
+  "fields": {},
   "hard": false,
   "people_checked": true
 }

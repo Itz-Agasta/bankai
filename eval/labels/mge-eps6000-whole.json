@@ -1,10 +1,7 @@
 {
   "photo": "mge-eps6000-whole.jpg",
   "equipment_type": "ups",
-  "fields": {
-    "manufacturer": "MGE",
-    "tag": "UPS A"
-  },
+  "fields": {},
   "hard": false,
   "people_checked": true
 }

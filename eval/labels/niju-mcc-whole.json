@@ -1,9 +1,7 @@
 {
   "photo": "niju-mcc-whole.jpg",
   "equipment_type": "panel",
-  "fields": {
-    "tag": "HOVEDTAVLE J"
-  },
+  "fields": {},
   "hard": false,
   "people_checked": true
 }

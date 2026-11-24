@@ -1,14 +1,7 @@
 {
   "photo": "hoellenstein-gen-whole.jpg",
   "equipment_type": "generator",
-  "fields": {
-    "manufacturer": "Maffei-Schwartzkopff Werke Berlin",
-    "model": "DGV1200/250",
-    "serial": "36734",
-    "voltage": "5250",
-    "kva": "1200",
-    "frequency": "50"
-  },
+  "fields": {},
   "hard": false,
   "people_checked": true
 }

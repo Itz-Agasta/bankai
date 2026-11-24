@@ -1,13 +1,7 @@
 {
   "photo": "leinau-gen-whole.jpg",
   "equipment_type": "generator",
-  "fields": {
-    "manufacturer": "Otto Bartholdi AG",
-    "model": "WQ 1250/1120 M22",
-    "voltage": "5250",
-    "kva": "920",
-    "frequency": "50"
-  },
+  "fields": {},
   "hard": false,
   "people_checked": true
 }
