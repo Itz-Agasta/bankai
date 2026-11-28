@@ -31,8 +31,18 @@
   },
   {
     "id": "A30",
-    "name": "Set TX-1 & SWGR-1",
+    "name": "Set TX-1",
     "tag": "TX-1",
+    "duration_days": 2,
+    "duration_low_days": 1,
+    "duration_high_days": 4,
+    "predecessors": [],
+    "milestone": false
+  },
+  {
+    "id": "A35",
+    "name": "Set SWGR-1",
+    "tag": "SWGR-1",
     "duration_days": 2,
     "duration_low_days": 1,
     "duration_high_days": 4,
@@ -46,12 +56,12 @@
     "duration_days": 2,
     "duration_low_days": 1,
     "duration_high_days": 3,
-    "predecessors": ["A30"],
+    "predecessors": ["A30", "A35"],
     "milestone": false
   },
   {
     "id": "A50",
-    "name": "Set UPS-A & UPS-2",
+    "name": "Set UPS-A",
     "tag": "UPS-A",
     "duration_days": 3,
     "duration_low_days": 2,
@@ -60,22 +70,52 @@
     "milestone": false
   },
   {
+    "id": "A55",
+    "name": "Set UPS-2",
+    "tag": "UPS-2",
+    "duration_days": 3,
+    "duration_low_days": 2,
+    "duration_high_days": 5,
+    "predecessors": ["A40"],
+    "milestone": false
+  },
+  {
     "id": "A60",
-    "name": "Set PDU-E & PDU-2",
+    "name": "Set PDU-E",
     "tag": "PDU-E",
     "duration_days": 2,
     "duration_low_days": 1,
     "duration_high_days": 3,
-    "predecessors": ["A50"],
+    "predecessors": ["A50", "A55"],
+    "milestone": false
+  },
+  {
+    "id": "A65",
+    "name": "Set PDU-2",
+    "tag": "PDU-2",
+    "duration_days": 2,
+    "duration_low_days": 1,
+    "duration_high_days": 3,
+    "predecessors": ["A50", "A55"],
     "milestone": false
   },
   {
     "id": "A70",
-    "name": "Set CH-1 & CRAH-1",
+    "name": "Set CH-1",
     "tag": "CH-1",
     "duration_days": 3,
     "duration_low_days": 2,
     "duration_high_days": 5,
+    "predecessors": [],
+    "milestone": false
+  },
+  {
+    "id": "A75",
+    "name": "Set CRAH-1",
+    "tag": "CRAH-1",
+    "duration_days": 2,
+    "duration_low_days": 1,
+    "duration_high_days": 4,
     "predecessors": [],
     "milestone": false
   },
@@ -86,7 +126,7 @@
     "duration_days": 4,
     "duration_low_days": 3,
     "duration_high_days": 6,
-    "predecessors": ["A20", "A60", "A70"],
+    "predecessors": ["A20", "A60", "A65", "A70", "A75"],
     "milestone": false
   },
   {
