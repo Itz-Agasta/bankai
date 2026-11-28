@@ -1,0 +1,354 @@
+[
+  {
+    "id": "SUB-01",
+    "tag": "GEN-1",
+    "manufacturer": "Cummins",
+    "model": "CJ 300 D5P",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-02",
+    "tag": "GEN-2",
+    "manufacturer": "Westinghouse",
+    "model": "G-30000",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-03",
+    "tag": "GEN-3",
+    "manufacturer": "General Electric",
+    "model": "ATI 96",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-04",
+    "tag": "GEN-4",
+    "manufacturer": "Caterpillar",
+    "model": "3516B",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-05",
+    "tag": "GEN-5",
+    "manufacturer": "Siemens",
+    "model": "LD 6 182/8",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-06",
+    "tag": "GEN-6",
+    "manufacturer": "Siemens",
+    "model": "DG 182/8",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-07",
+    "tag": "GEN-7",
+    "manufacturer": "General Electric",
+    "model": "AP",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-08",
+    "tag": "GEN-8",
+    "manufacturer": "Westinghouse",
+    "model": "W-94",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-09",
+    "tag": "GEN-9",
+    "manufacturer": "Otto Bartholdi AG",
+    "model": "WQ 1250/1120 M22",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-10",
+    "tag": "GEN-10",
+    "manufacturer": "General Electric",
+    "model": "MP",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-11",
+    "tag": "TX-1",
+    "manufacturer": "Trafo-Union",
+    "model": "TG 5644 D",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-12",
+    "tag": "TX-2",
+    "manufacturer": "ABB",
+    "model": "RESIBLOC 1600",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-13",
+    "tag": "TX-3",
+    "manufacturer": "Trafo-Union",
+    "model": "TG 5644 D",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-14",
+    "tag": "TX-4",
+    "manufacturer": "Siemens",
+    "model": "GEAFOL 2500",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-15",
+    "tag": "TX-5",
+    "manufacturer": "Schneider",
+    "model": "Trihal 2000",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-16",
+    "tag": "SWGR-1",
+    "manufacturer": "S&C",
+    "model": "CPE-EX12",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-17",
+    "tag": "SWGR-2",
+    "manufacturer": "Eaton",
+    "model": "Magnum DS",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-18",
+    "tag": "SWGR-3",
+    "manufacturer": "Schneider",
+    "model": "Masterpact MTZ",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-19",
+    "tag": "SWGR-4",
+    "manufacturer": "ABB",
+    "model": "UniGear ZS1",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-20",
+    "tag": "SWGR-5",
+    "manufacturer": "Siemens",
+    "model": "NXAIR",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-21",
+    "tag": "UPS-A",
+    "manufacturer": "MGE",
+    "model": "EPS 6000",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-22",
+    "tag": "UPS-2",
+    "manufacturer": "MGE",
+    "model": "EPS 8000A",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-23",
+    "tag": "UPS-3",
+    "manufacturer": "Vertiv",
+    "model": "Liebert EXL S1",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-24",
+    "tag": "UPS-4",
+    "manufacturer": "Eaton",
+    "model": "9395P",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-25",
+    "tag": "UPS-5",
+    "manufacturer": "APC",
+    "model": "Symmetra PX",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-26",
+    "tag": "PDU-E",
+    "manufacturer": "MGE",
+    "model": "PMM-120",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-27",
+    "tag": "PDU-2",
+    "manufacturer": "MGE",
+    "model": "PMM-480",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-28",
+    "tag": "PDU-3",
+    "manufacturer": "Eaton",
+    "model": "PDI WaveStar",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-29",
+    "tag": "PDU-4",
+    "manufacturer": "Vertiv",
+    "model": "Liebert FPC",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-30",
+    "tag": "PDU-5",
+    "manufacturer": "Schneider",
+    "model": "Galaxy PDU",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-31",
+    "tag": "ATS-1",
+    "manufacturer": "ASCO",
+    "model": "7000 SERIES",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-32",
+    "tag": "ATS-2",
+    "manufacturer": "ASCO",
+    "model": "4000 SERIES",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-33",
+    "tag": "ATS-3",
+    "manufacturer": "Eaton",
+    "model": "ATC-900",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-34",
+    "tag": "CH-1",
+    "manufacturer": "Trane",
+    "model": "AquaStream 3G",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-35",
+    "tag": "CH-2",
+    "manufacturer": "Trane",
+    "model": "CenTraVac CVHF",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-36",
+    "tag": "CH-3",
+    "manufacturer": "Carrier",
+    "model": "30XA",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-37",
+    "tag": "CRAH-1",
+    "manufacturer": "Vertiv",
+    "model": "PX080",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-38",
+    "tag": "CRAH-2",
+    "manufacturer": "Vertiv",
+    "model": "PX060",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-39",
+    "tag": "CRAH-3",
+    "manufacturer": "Stulz",
+    "model": "CyberAir 3",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-40",
+    "tag": "PUMP-1",
+    "manufacturer": "Nordberg",
+    "model": "NP-150",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-41",
+    "tag": "MTR-1",
+    "manufacturer": "General Electric",
+    "model": "56F214G1",
+    "status": "approved",
+    "deviations": []
+  },
+  {
+    "id": "SUB-91",
+    "tag": "GEN-4",
+    "manufacturer": "Siemens-Schuckert Werke",
+    "model": "D.U.G 400/40",
+    "status": "rejected",
+    "deviations": []
+  },
+  {
+    "id": "SUB-92",
+    "tag": "TX-2",
+    "manufacturer": "N.V. P.E.B. IN FRIESLAND",
+    "model": "BLOKSLEAT 1",
+    "status": "rejected",
+    "deviations": []
+  },
+  {
+    "id": "SUB-93",
+    "tag": "CRAH-1",
+    "manufacturer": "Stulz",
+    "model": "CyberAir 3",
+    "status": "rejected",
+    "deviations": []
+  }
+]

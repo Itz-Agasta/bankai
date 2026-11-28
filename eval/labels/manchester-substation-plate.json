@@ -1,0 +1,10 @@
+{
+  "photo": "manchester-substation-plate.jpg",
+  "equipment_type": "transformer",
+  "fields": {
+    "tag": "172024",
+    "voltage": "6600"
+  },
+  "hard": false,
+  "people_checked": true
+}

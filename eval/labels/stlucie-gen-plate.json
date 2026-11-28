@@ -1,0 +1,14 @@
+{
+  "photo": "stlucie-gen-plate.jpg",
+  "equipment_type": "generator",
+  "fields": {
+    "manufacturer": "Westinghouse",
+    "serial": "1817PII",
+    "voltage": "208/120",
+    "kva": "94",
+    "phase": "3",
+    "frequency": "60"
+  },
+  "hard": false,
+  "people_checked": true
+}

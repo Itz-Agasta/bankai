@@ -1,0 +1,11 @@
+{
+  "photo": "ermen-engels-gen-plate-hard.jpg",
+  "equipment_type": "generator",
+  "fields": {
+    "manufacturer": "AEG",
+    "model": "unreadable",
+    "serial": "unreadable"
+  },
+  "hard": true,
+  "people_checked": true
+}

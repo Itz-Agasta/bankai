@@ -1,0 +1,14 @@
+{
+  "photo": "massarelos-gen-plate-hard.jpg",
+  "equipment_type": "generator",
+  "fields": {
+    "manufacturer": "Siemens-Schuckert Werke",
+    "model": "D.U.G 400/40",
+    "serial": "470830 N",
+    "voltage": "550",
+    "kw": "500",
+    "frequency": "50"
+  },
+  "hard": true,
+  "people_checked": true
+}

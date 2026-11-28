@@ -1,0 +1,11 @@
+{
+  "photo": "lakeview-pump-plate-hard.jpg",
+  "equipment_type": "pump",
+  "fields": {
+    "manufacturer": "Nordberg",
+    "model": "unreadable",
+    "serial": "unreadable"
+  },
+  "hard": true,
+  "people_checked": true
+}

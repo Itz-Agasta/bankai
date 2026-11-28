@@ -1,0 +1,14 @@
+{
+  "photo": "skagit-gorge21-tag.jpg",
+  "equipment_type": "generator",
+  "fields": {
+    "manufacturer": "Westinghouse",
+    "serial": "2657420",
+    "voltage": "11000",
+    "kva": "30000",
+    "phase": "3",
+    "frequency": "60"
+  },
+  "hard": false,
+  "people_checked": true
+}

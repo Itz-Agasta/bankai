@@ -1,0 +1,14 @@
+{
+  "photo": "skagit-gorge21-plate-hard.jpg",
+  "equipment_type": "generator",
+  "fields": {
+    "manufacturer": "Westinghouse",
+    "serial": "unreadable",
+    "voltage": "unreadable",
+    "kva": "unreadable",
+    "phase": "unreadable",
+    "frequency": "unreadable"
+  },
+  "hard": true,
+  "people_checked": true
+}

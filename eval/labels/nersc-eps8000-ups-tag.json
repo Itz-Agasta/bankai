@@ -1,0 +1,9 @@
+{
+  "photo": "nersc-eps8000-ups-tag.jpg",
+  "equipment_type": "ups",
+  "fields": {
+    "tag": "UPS"
+  },
+  "hard": false,
+  "people_checked": true
+}

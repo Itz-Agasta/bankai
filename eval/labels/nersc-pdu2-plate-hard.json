@@ -1,0 +1,12 @@
+{
+  "photo": "nersc-pdu2-plate-hard.jpg",
+  "equipment_type": "pdu",
+  "fields": {
+    "manufacturer": "MGE",
+    "tag": "unreadable",
+    "voltage": "unreadable",
+    "phase": "unreadable"
+  },
+  "hard": true,
+  "people_checked": true
+}

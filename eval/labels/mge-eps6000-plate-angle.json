@@ -1,0 +1,10 @@
+{
+  "photo": "mge-eps6000-plate-angle.jpg",
+  "equipment_type": "ups",
+  "fields": {
+    "manufacturer": "MGE",
+    "tag": "UPS A"
+  },
+  "hard": false,
+  "people_checked": true
+}

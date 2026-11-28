@@ -1,0 +1,10 @@
+{
+  "photo": "asco-7000-ats-plate-hard.jpg",
+  "equipment_type": "ats",
+  "fields": {
+    "manufacturer": "ASCO",
+    "model": "unreadable"
+  },
+  "hard": true,
+  "people_checked": true
+}

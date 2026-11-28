@@ -1,0 +1,9 @@
+{
+  "photo": "asco-7000-ats-tag.jpg",
+  "equipment_type": "ats",
+  "fields": {
+    "tag": "ATS UI-A"
+  },
+  "hard": false,
+  "people_checked": true
+}
