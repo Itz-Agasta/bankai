@@ -1,0 +1,9 @@
+{
+  "photo": "mge-pdu-e-tag.jpg",
+  "equipment_type": "pdu",
+  "fields": {
+    "tag": "PDU-E"
+  },
+  "hard": false,
+  "people_checked": true
+}

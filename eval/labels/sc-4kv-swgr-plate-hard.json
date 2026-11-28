@@ -1,0 +1,10 @@
+{
+  "photo": "sc-4kv-swgr-plate-hard.jpg",
+  "equipment_type": "switchgear",
+  "fields": {
+    "manufacturer": "S&C",
+    "tag": "unreadable"
+  },
+  "hard": true,
+  "people_checked": true
+}

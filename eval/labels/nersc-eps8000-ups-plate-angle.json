@@ -1,0 +1,10 @@
+{
+  "photo": "nersc-eps8000-ups-plate-angle.jpg",
+  "equipment_type": "ups",
+  "fields": {
+    "manufacturer": "MGE",
+    "model": "EPS 8000A"
+  },
+  "hard": false,
+  "people_checked": true
+}

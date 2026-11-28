@@ -1,0 +1,10 @@
+{
+  "photo": "cummins-cj300-gen-plate-angle.jpg",
+  "equipment_type": "generator",
+  "fields": {
+    "manufacturer": "Cummins",
+    "model": "CJ 300 D5P"
+  },
+  "hard": false,
+  "people_checked": true
+}

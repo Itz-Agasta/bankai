@@ -1,0 +1,10 @@
+{
+  "photo": "asco-7000-ats-plate.jpg",
+  "equipment_type": "ats",
+  "fields": {
+    "manufacturer": "ASCO",
+    "model": "7000 SERIES"
+  },
+  "hard": false,
+  "people_checked": true
+}

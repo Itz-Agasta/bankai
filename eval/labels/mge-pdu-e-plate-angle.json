@@ -1,0 +1,14 @@
+{
+  "photo": "mge-pdu-e-plate-angle.jpg",
+  "equipment_type": "pdu",
+  "fields": {
+    "manufacturer": "MGE",
+    "model": "unreadable",
+    "serial": "unreadable",
+    "voltage": "unreadable",
+    "phase": "3",
+    "frequency": "60"
+  },
+  "hard": false,
+  "people_checked": true
+}

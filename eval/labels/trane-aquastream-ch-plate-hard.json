@@ -1,0 +1,10 @@
+{
+  "photo": "trane-aquastream-ch-plate-hard.jpg",
+  "equipment_type": "chiller",
+  "fields": {
+    "manufacturer": "unreadable",
+    "model": "unreadable"
+  },
+  "hard": true,
+  "people_checked": true
+}

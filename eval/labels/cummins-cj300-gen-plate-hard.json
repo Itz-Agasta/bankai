@@ -1,0 +1,10 @@
+{
+  "photo": "cummins-cj300-gen-plate-hard.jpg",
+  "equipment_type": "generator",
+  "fields": {
+    "manufacturer": "Cummins",
+    "model": "unreadable"
+  },
+  "hard": true,
+  "people_checked": true
+}

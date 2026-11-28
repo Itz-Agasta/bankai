@@ -1,0 +1,10 @@
+{
+  "photo": "sc-4kv-swgr-whole.jpg",
+  "equipment_type": "switchgear",
+  "fields": {
+    "manufacturer": "S&C",
+    "tag": "CPE:EX12"
+  },
+  "hard": false,
+  "people_checked": true
+}

@@ -1,0 +1,10 @@
+{
+  "photo": "nersc-eps8000-ups-plate-hard.jpg",
+  "equipment_type": "ups",
+  "fields": {
+    "manufacturer": "MGE",
+    "model": "unreadable"
+  },
+  "hard": true,
+  "people_checked": true
+}

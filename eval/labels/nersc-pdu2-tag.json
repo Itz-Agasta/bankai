@@ -1,0 +1,11 @@
+{
+  "photo": "nersc-pdu2-tag.jpg",
+  "equipment_type": "pdu",
+  "fields": {
+    "tag": "PDU-#2",
+    "voltage": "480",
+    "phase": "3"
+  },
+  "hard": false,
+  "people_checked": true
+}

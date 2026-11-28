@@ -1,0 +1,10 @@
+{
+  "photo": "mge-pdu-e-whole.jpg",
+  "equipment_type": "pdu",
+  "fields": {
+    "manufacturer": "MGE",
+    "tag": "PDU-E"
+  },
+  "hard": false,
+  "people_checked": true
+}

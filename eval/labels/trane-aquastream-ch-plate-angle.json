@@ -1,0 +1,10 @@
+{
+  "photo": "trane-aquastream-ch-plate-angle.jpg",
+  "equipment_type": "chiller",
+  "fields": {
+    "manufacturer": "Trane",
+    "model": "AquaStream 3G"
+  },
+  "hard": false,
+  "people_checked": true
+}
