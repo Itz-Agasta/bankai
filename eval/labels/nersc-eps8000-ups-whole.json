@@ -1,11 +1,7 @@
 {
   "photo": "nersc-eps8000-ups-whole.jpg",
   "equipment_type": "ups",
-  "fields": {
-    "manufacturer": "MGE",
-    "model": "EPS 8000A",
-    "tag": "UPS"
-  },
+  "fields": {},
   "hard": false,
   "people_checked": true
 }

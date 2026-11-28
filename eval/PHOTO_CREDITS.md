@@ -255,11 +255,11 @@ cropped to the nameplate; the `Derived from` column says which.
 
 | File | Source | Author | Licence | Derived from |
 |---|---|---|---|---|
-| `sc-4kv-swgr-whole.jpg` | [4.16kV switchgear.jpg](https://commons.wikimedia.org/wiki/File:4.16kV_switchgear.jpg) | Wikimedia Commons contributor | CC0 | no |
-| `sc-4kv-swgr-plate.jpg` | [4.16kV switchgear.jpg](https://commons.wikimedia.org/wiki/File:4.16kV_switchgear.jpg) | Wikimedia Commons contributor | CC0 | `sc-4kv-swgr-whole.jpg` |
-| `sc-4kv-swgr-plate-angle.jpg` | [4.16kV switchgear.jpg](https://commons.wikimedia.org/wiki/File:4.16kV_switchgear.jpg) | Wikimedia Commons contributor | CC0 | `sc-4kv-swgr-plate.jpg` |
-| `sc-4kv-swgr-plate-hard.jpg` | [4.16kV switchgear.jpg](https://commons.wikimedia.org/wiki/File:4.16kV_switchgear.jpg) | Wikimedia Commons contributor | CC0 | `sc-4kv-swgr-plate.jpg` |
-| `sc-4kv-swgr-tag.jpg` | [4.16kV switchgear.jpg](https://commons.wikimedia.org/wiki/File:4.16kV_switchgear.jpg) | Wikimedia Commons contributor | CC0 | `sc-4kv-swgr-whole.jpg` |
+| `sc-4kv-swgr-whole.jpg` | [4.16kV switchgear.jpg](https://commons.wikimedia.org/wiki/File:4.16kV_switchgear.jpg) | Rsparks3 | CC0 | no |
+| `sc-4kv-swgr-plate.jpg` | [4.16kV switchgear.jpg](https://commons.wikimedia.org/wiki/File:4.16kV_switchgear.jpg) | Rsparks3 | CC0 | `sc-4kv-swgr-whole.jpg` |
+| `sc-4kv-swgr-plate-angle.jpg` | [4.16kV switchgear.jpg](https://commons.wikimedia.org/wiki/File:4.16kV_switchgear.jpg) | Rsparks3 | CC0 | `sc-4kv-swgr-plate.jpg` |
+| `sc-4kv-swgr-plate-hard.jpg` | [4.16kV switchgear.jpg](https://commons.wikimedia.org/wiki/File:4.16kV_switchgear.jpg) | Rsparks3 | CC0 | `sc-4kv-swgr-plate.jpg` |
+| `sc-4kv-swgr-tag.jpg` | [4.16kV switchgear.jpg](https://commons.wikimedia.org/wiki/File:4.16kV_switchgear.jpg) | Rsparks3 | CC0 | `sc-4kv-swgr-whole.jpg` |
 
 ## trane-aquastream-ch (chiller)
 

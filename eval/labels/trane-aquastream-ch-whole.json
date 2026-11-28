@@ -1,10 +1,7 @@
 {
   "photo": "trane-aquastream-ch-whole.jpg",
   "equipment_type": "chiller",
-  "fields": {
-    "manufacturer": "Trane",
-    "model": "AquaStream 3G"
-  },
+  "fields": {},
   "hard": false,
   "people_checked": true
 }

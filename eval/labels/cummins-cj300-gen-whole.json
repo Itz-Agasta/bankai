@@ -1,10 +1,7 @@
 {
   "photo": "cummins-cj300-gen-whole.jpg",
   "equipment_type": "generator",
-  "fields": {
-    "manufacturer": "Cummins",
-    "model": "CJ 300 D5P"
-  },
+  "fields": {},
   "hard": false,
   "people_checked": true
 }

@@ -1,0 +1,102 @@
+[
+  {
+    "id": "A10",
+    "name": "Set GEN-1 on PAD-B",
+    "tag": "GEN-1",
+    "duration_days": 2,
+    "duration_low_days": 1,
+    "duration_high_days": 3,
+    "predecessors": [],
+    "milestone": false
+  },
+  {
+    "id": "A15",
+    "name": "Set GEN-2 on PAD-D",
+    "tag": "GEN-2",
+    "duration_days": 3,
+    "duration_low_days": 2,
+    "duration_high_days": 5,
+    "predecessors": [],
+    "milestone": false
+  },
+  {
+    "id": "A20",
+    "name": "Terminate GEN-1 & GEN-2",
+    "tag": null,
+    "duration_days": 4,
+    "duration_low_days": 3,
+    "duration_high_days": 6,
+    "predecessors": ["A10", "A15"],
+    "milestone": false
+  },
+  {
+    "id": "A30",
+    "name": "Set TX-1 & SWGR-1",
+    "tag": "TX-1",
+    "duration_days": 2,
+    "duration_low_days": 1,
+    "duration_high_days": 4,
+    "predecessors": [],
+    "milestone": false
+  },
+  {
+    "id": "A40",
+    "name": "Set ATS-1",
+    "tag": "ATS-1",
+    "duration_days": 2,
+    "duration_low_days": 1,
+    "duration_high_days": 3,
+    "predecessors": ["A30"],
+    "milestone": false
+  },
+  {
+    "id": "A50",
+    "name": "Set UPS-A & UPS-2",
+    "tag": "UPS-A",
+    "duration_days": 3,
+    "duration_low_days": 2,
+    "duration_high_days": 5,
+    "predecessors": ["A40"],
+    "milestone": false
+  },
+  {
+    "id": "A60",
+    "name": "Set PDU-E & PDU-2",
+    "tag": "PDU-E",
+    "duration_days": 2,
+    "duration_low_days": 1,
+    "duration_high_days": 3,
+    "predecessors": ["A50"],
+    "milestone": false
+  },
+  {
+    "id": "A70",
+    "name": "Set CH-1 & CRAH-1",
+    "tag": "CH-1",
+    "duration_days": 3,
+    "duration_low_days": 2,
+    "duration_high_days": 5,
+    "predecessors": [],
+    "milestone": false
+  },
+  {
+    "id": "A80",
+    "name": "Integrated systems test",
+    "tag": null,
+    "duration_days": 4,
+    "duration_low_days": 3,
+    "duration_high_days": 6,
+    "predecessors": ["A20", "A60", "A70"],
+    "milestone": false
+  },
+  {
+    "id": "A90",
+    "name": "Data Hall 1 Energization",
+    "tag": null,
+    "duration_days": 0,
+    "duration_low_days": 0,
+    "duration_high_days": 0,
+    "predecessors": ["A80"],
+    "milestone": true
+  }
+]

@@ -1,12 +1,7 @@
 {
   "photo": "nersc-pdu2-whole.jpg",
   "equipment_type": "pdu",
-  "fields": {
-    "manufacturer": "MGE",
-    "tag": "PDU-#2",
-    "voltage": "480",
-    "phase": "3"
-  },
+  "fields": {},
   "hard": false,
   "people_checked": true
 }
